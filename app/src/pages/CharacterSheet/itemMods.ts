@@ -13,12 +13,26 @@ import { periciasDoEfeito, textoDoEfeito, type EfeitoEscolhido } from './efeitos
 // valem eles e o texto do efeito fica só como descrição (senão contaria duas vezes).
 export type AppliedModifier = { kind: 'modificacao' | 'maldicao'; name: string; effect: string; elemento: string | null; efeitos?: EfeitoEscolhido[]; proprio?: boolean }
 
+// Maior "bônus em perícia sobe pra +N" das modificações/maldições do item (Aprimorado).
+export function bonusDePericiaQueSobe(mods: AppliedModifier[] | null | undefined): number {
+  let n = 0
+  for (const m of mods ?? []) {
+    const r = /per[ií]cia[^.;]*?(?:sobe|aumenta|passa)\s+(?:pra|para)\s*\+\s*(\d+)/i.exec(m.effect ?? '')
+    if (r) n = Math.max(n, Number(r[1]))
+  }
+  return n
+}
+
 // Efeitos escolhidos no próprio item (Editar Item, pedido 11/10: Vestimenta/Utensílio com bônus numa
 // perícia escolhida) entram nas contas como uma modificação embutida, marcada como "proprio":
 // não aparece na lista de modificações nem sobe a categoria.
 export function modsComEfeitosDoItem(stats: Record<string, unknown> | null | undefined, mods: AppliedModifier[] | null | undefined, nome?: string | null): AppliedModifier[] {
-  const efeitos = Array.isArray(stats?.efeitos) ? (stats!.efeitos as EfeitoEscolhido[]).filter((e) => e && e.valor) : []
+  let efeitos = Array.isArray(stats?.efeitos) ? (stats!.efeitos as EfeitoEscolhido[]).filter((e) => e && e.valor) : []
   if (!efeitos.length) return mods ?? []
+  // "Aprimorado: Bônus em perícia sobe pra +5" (bug 11/10): não soma, troca. Os bônus de perícia do
+  // próprio item passam a valer esse número (o +2 da Vestimenta vira +5).
+  const sobe = bonusDePericiaQueSobe(mods)
+  if (sobe) efeitos = efeitos.map((e) => (['pericia', 'resistencias', 'todos_testes'].includes(e.alvo) && e.modo === 'valor' && e.valor > 0 && e.valor < sobe ? { ...e, valor: sobe } : e))
   return [...(mods ?? []), { kind: 'modificacao', name: nome || 'item', effect: '', elemento: null, efeitos, proprio: true }]
 }
 

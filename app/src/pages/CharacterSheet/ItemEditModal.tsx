@@ -300,7 +300,7 @@ export default function ItemEditModal({
             </div>
 
             <div className="attack-section-title"><span>BÔNUS DO ITEM</span></div>
-            <p className="efeitos-escolhidos-dica">Ex.: Vestimenta ou Utensílio com +2 numa perícia. Escolha a perícia e quanto; "só quando ligado" vira um liga/desliga no item.</p>
+            <p className="efeitos-escolhidos-dica">Ex.: Vestimenta ou Utensílio com +2 numa perícia. Escolha a perícia e quanto; "só quando ligado" vira um liga/desliga no item. Com a modificação Aprimorado, o +2 vira +5 sozinho; com Função adicional, adicione outra linha com a segunda perícia.</p>
             <EditorDeEfeitos contexto="item" efeitos={efeitosDoItem} onChange={setEfeitosDoItem} />
 
             <div className="attack-section-title attack-section-title-inline">

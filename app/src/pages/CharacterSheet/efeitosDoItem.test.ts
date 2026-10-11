@@ -21,3 +21,18 @@ describe('bônus do próprio item (Vestimenta/Utensílio)', () => {
     expect(somaBonuses(modsComEfeitosDoItem(escudo, [], 'Amuleto')).attackTestBonus).toBe(1)
   })
 })
+
+describe('Aprimorado ("bônus em perícia sobe pra +5")', () => {
+  const aprimorado = { kind: 'modificacao' as const, name: 'Aprimorado', effect: 'Bônus em perícia sobe pra +5', elemento: null }
+  const funcao = { kind: 'modificacao' as const, name: 'Função adicional', effect: '+2 numa perícia adicional', elemento: null }
+  it('o +2 escolhido no item vira +5 (troca, não soma)', () => {
+    const stats = { efeitos: [{ alvo: 'pericia', qual: 'Vontade', modo: 'valor', valor: 2 }] }
+    const v = efeitosValendo('', modsComEfeitosDoItem(stats, [aprimorado], 'Vestimenta'), [])
+    expect(v.filter((e) => e.pericias).map((e) => [e.pericias, e.valor])).toEqual([[['Vontade'], 5]])
+  })
+  it('sem Aprimorado continua +2; texto de Função adicional não vira bônus sozinho', () => {
+    const stats = { efeitos: [{ alvo: 'pericia', qual: 'Vontade', modo: 'valor', valor: 2 }] }
+    const v = efeitosValendo('', modsComEfeitosDoItem(stats, [funcao], 'Vestimenta'), [])
+    expect(v.filter((e) => e.pericias).map((e) => e.valor)).toEqual([2])
+  })
+})
