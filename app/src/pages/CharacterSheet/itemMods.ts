@@ -11,7 +11,16 @@ import { periciasDoEfeito, textoDoEfeito, type EfeitoEscolhido } from './efeitos
 
 // efeitos: escolhidos na mão ao criar uma personalizada (efeitosEscolhidos.ts). Quando existem,
 // valem eles e o texto do efeito fica só como descrição (senão contaria duas vezes).
-export type AppliedModifier = { kind: 'modificacao' | 'maldicao'; name: string; effect: string; elemento: string | null; efeitos?: EfeitoEscolhido[] }
+export type AppliedModifier = { kind: 'modificacao' | 'maldicao'; name: string; effect: string; elemento: string | null; efeitos?: EfeitoEscolhido[]; proprio?: boolean }
+
+// Efeitos escolhidos no próprio item (Editar Item, pedido 11/10: Vestimenta/Utensílio com bônus numa
+// perícia escolhida) entram nas contas como uma modificação embutida, marcada como "proprio":
+// não aparece na lista de modificações nem sobe a categoria.
+export function modsComEfeitosDoItem(stats: Record<string, unknown> | null | undefined, mods: AppliedModifier[] | null | undefined, nome?: string | null): AppliedModifier[] {
+  const efeitos = Array.isArray(stats?.efeitos) ? (stats!.efeitos as EfeitoEscolhido[]).filter((e) => e && e.valor) : []
+  if (!efeitos.length) return mods ?? []
+  return [...(mods ?? []), { kind: 'modificacao', name: nome || 'item', effect: '', elemento: null, efeitos, proprio: true }]
+}
 
 export type ModBonuses = {
   attackTestBonus: number
@@ -549,10 +558,10 @@ export function efeitosDoItem(
     if (m.efeitos?.length) {
       m.efeitos.forEach((e, i) => {
         if (!e.valor) return
-        const base = { chave: `mod-${m.name}-esc-${i}`, condicao: e.ligavel ? 'Só quando ligado' : '', valor: e.valor, mod: { kind: m.kind, name: m.name } }
+        const base = { chave: m.proprio ? `item-esc-${i}` : `mod-${m.name}-esc-${i}`, condicao: e.ligavel ? 'Só quando ligado' : '', valor: e.valor, mod: m.proprio ? undefined : { kind: m.kind, name: m.name } }
         const pericias = periciasDoEfeito(e, PERICIAS)
         if (pericias.length) {
-          lista.push({ ...base, rotulo: `${textoDoEfeito({ ...e, ligavel: false })} (${m.name})`, pericias })
+          lista.push({ ...base, rotulo: m.proprio ? textoDoEfeito({ ...e, ligavel: false }) : `${textoDoEfeito({ ...e, ligavel: false })} (${m.name})`, pericias })
         } else if (e.alvo === 'atributo' && e.qual) {
           lista.push({ ...base, rotulo: `${rotuloDeFicha(e.qual as AlvoDeBonus, e.valor)} (${m.name})`, alvo: e.qual as AlvoDeBonus })
         } else if (e.alvo === 'pv' || e.alvo === 'pe') {
@@ -622,7 +631,7 @@ export function bonusDeCarga(itens: { is_equipped: boolean; item: { name: string
 export const CATEGORIAS = ['0', 'I', 'II', 'III', 'IV']
 
 export function degrausDeCategoria(mods: AppliedModifier[] | null | undefined): number {
-  const unicos = (kind: AppliedModifier['kind']) => new Set((mods ?? []).filter((m) => m.kind === kind).map((m) => m.name.trim().toLowerCase())).size
+  const unicos = (kind: AppliedModifier['kind']) => new Set((mods ?? []).filter((m) => m.kind === kind && !m.proprio).map((m) => m.name.trim().toLowerCase())).size
   const maldicoes = unicos('maldicao')
   return unicos('modificacao') + (maldicoes > 0 ? maldicoes + 1 : 0)
 }
@@ -647,4 +656,13 @@ export function rdDeBloqueio(texto: string | null | undefined): number {
     if (m) total += Number(m[1].replace(/\s+/g, ''))
   }
   return total
+}
+
+// ---- Atributo efetivo (bug 11/10): maldição/modificação "+1 Agilidade" aparecia como "+1" verde
+// mas não entrava na rolagem. O valor que vale é o da ficha mais o dos itens equipados. ----
+export function atributosComBonus<T extends Record<string, number>>(atributos: T, bonus: Partial<Record<string, number>> | undefined): T {
+  if (!bonus) return atributos
+  const r = { ...atributos } as Record<string, number>
+  for (const k of ['forca', 'agilidade', 'intelecto', 'vigor', 'presenca']) if (bonus[k]) r[k] = (r[k] ?? 0) + (bonus[k] ?? 0)
+  return r as T
 }

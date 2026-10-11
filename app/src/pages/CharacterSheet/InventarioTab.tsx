@@ -4,7 +4,7 @@ import type { CharacterRecord } from './index'
 import InventarioTopBox from './InventarioTopBox'
 import InventoryItemCard from './InventoryItemCard'
 import EquipmentPickerModal, { type EquipmentPickResult } from './EquipmentPickerModal'
-import { bonusDeCarga, categoriaComMods, espacoComModificadores, numerosDoAtaque, statsComModificadores } from './itemMods'
+import { bonusDeCarga, categoriaComMods, espacoComModificadores, numerosDoAtaque, statsComModificadores, modsComEfeitosDoItem } from './itemMods'
 import ItemEditModal, { type ItemToEdit } from './ItemEditModal'
 import ItemModifiersModal from './ItemModifiersModal'
 import { efeitosLigaveis, type AppliedModifier } from './itemMods'
@@ -206,8 +206,7 @@ export default function InventarioTab({ character, editMode }: { character: Char
     const stats = item.stats ?? {}
     const isMelee = stats.natureza === 'corpo_a_corpo' || !stats.natureza
     const linkedAmmo = inv.linked_ammo_id ? items.find((it) => it.id === inv.linked_ammo_id) : null
-    const todosMods = [...(inv.applied_modifiers ?? []), ...(linkedAmmo?.applied_modifiers ?? [])]
-    const numeros = numerosDoAtaque(stats, todosMods)
+    const numeros = numerosDoAtaque(stats, [...modsComEfeitosDoItem(stats, inv.applied_modifiers), ...(linkedAmmo?.applied_modifiers ?? [])])
 
     const modificadores = [
       ...(inv.applied_modifiers ?? []).map((m) => ({ ...m, origem: 'Arma' as const })),
@@ -329,7 +328,7 @@ export default function InventarioTab({ character, editMode }: { character: Char
                 ...item,
                 category: inv.category_override ?? item.category,
                 spaces: espacoComModificadores(item.spaces, inv.applied_modifiers),
-                stats: statsComModificadores(item.stats, inv.applied_modifiers),
+                stats: statsComModificadores(item.stats, modsComEfeitosDoItem(item.stats, inv.applied_modifiers)),
               }}
               expanded={isExpanded}
               onToggle={() => setExpanded(isExpanded ? null : inv.id)}
@@ -421,7 +420,7 @@ export default function InventarioTab({ character, editMode }: { character: Char
               {/* Bonus que so valem em certa situacao: a pessoa liga na hora em que vale,
                   em vez de o numero ficar inflado o tempo todo na ficha. */}
               {(() => {
-                const ligaveis = efeitosLigaveis(item.description, inv.applied_modifiers)
+                const ligaveis = efeitosLigaveis(item.description, modsComEfeitosDoItem(item.stats, inv.applied_modifiers))
                 if (ligaveis.length === 0) return null
                 const ligados = inv.active_bonuses ?? []
                 return (

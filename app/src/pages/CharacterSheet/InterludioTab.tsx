@@ -109,7 +109,7 @@ export default function InterludioTab({ character, onUpdated }: { character: Cha
     const formula = classe ? computeDerivedStats(classe, character.attributes, character.nex_percent, poderes) : null
     const maxPv = character.max_pv_override ?? formula?.maxPv ?? null
     const maxSanity = character.max_sanity_override ?? formula?.maxSanity ?? null
-    const maxPe = formula?.maxPe ?? null
+    const maxPe = character.max_pe_override ?? formula?.maxPe ?? null
     const maxPd = formula?.maxPd ?? null
 
     if (selectedActions.includes('dormir')) {

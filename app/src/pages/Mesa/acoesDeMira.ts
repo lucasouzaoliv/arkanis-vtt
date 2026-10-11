@@ -155,6 +155,7 @@ export async function maximoDoAlvo(d: DadosDoAlvo, recurso: Recurso): Promise<nu
   if (d.tipo !== 'ficha') return null
   if (recurso === 'pv' && d.max_pv_override != null) return d.max_pv_override
   if (recurso === 'san' && d.max_sanity_override != null) return d.max_sanity_override
+  if (recurso === 'pe' && d.max_pe_override != null) return d.max_pe_override
   let classe: Parameters<typeof computeDerivedStats>[0] | null = null
   if (d.class_id) {
     const { data } = await supabase.from('classes').select('*').eq('id', d.class_id).maybeSingle()

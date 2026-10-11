@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import { recordRoll } from '../../lib/rollHistory'
-import { custoDoRitual, notaDoGasto, recursoDoRitual, type ModoRitual } from './ritualCusto'
+import { custoDoRitual, descontoDeElemento, dtDoRitual, notaDoGasto, recursoDoRitual, type ElementosEscolhidos, type ModoRitual } from './ritualCusto'
+import { usePoderes } from './usePoderes'
+import { useBonusDosItens } from './useBonusDosItens'
+import { atributosComBonus } from './itemMods'
 import { custoExtraDeCondicoes, penalidadeDeCondicoes, rotuloComCondicoes } from './condicoes'
 import { attrValue, rollAttributeTest, rollDiceFormula, trainingBonus, type Training } from '../../lib/rules'
 import type { CharacterRecord } from './index'
@@ -85,6 +88,21 @@ const ELEMENTOS = ['sangue', 'morte', 'conhecimento', 'energia', 'medo'] as cons
 const CIRCULOS = [1, 2, 3, 4]
 
 export default function RituaisTab({ character, onGastar }: { character: CharacterRecord; onGastar: (campo: 'current_pe' | 'current_pd', valor: number) => Promise<void> }) {
+  // DT e custo dependem dos poderes, da Presença (com itens) e do elemento escolhido (11/10).
+  const poderes = usePoderes(character.id)
+  const atributos = atributosComBonus(character.attributes, useBonusDosItens(character.id))
+  const [elementos, setElementos] = useState<ElementosEscolhidos>(character.elementos_escolhidos ?? {})
+  const temPoder = (nome: string) => poderes.some((p) => p.trim().toLowerCase() === nome)
+  async function escolherElemento(chave: keyof ElementosEscolhidos, elemento: string) {
+    const novos = { ...elementos, [chave]: elemento || null }
+    setElementos(novos)
+    await supabase.from('characters').update({ elementos_escolhidos: novos }).eq('id', character.id)
+  }
+  const dtGeral = dtDoRitual({ nexPercent: character.nex_percent, presenca: atributos.presenca ?? 0, poderes, elementos })
+  const dtDe = (elemento: string | null) => dtDoRitual({ nexPercent: character.nex_percent, presenca: atributos.presenca ?? 0, poderes, elementos, elementoDoRitual: elemento })
+  // Custo de conjurar: círculo + variação + condições (Alquebrado…) - Mestre em Elemento.
+  const custoFinal = (r: { circle: number; discenteCost: number | null; verdadeiroCost: number | null; elemento: string | null }, mode: ModoRitual) =>
+    Math.max(0, custoDoRitual(r.circle, mode, r.discenteCost, r.verdadeiroCost) + custoExtraDeCondicoes(character.conditions, lerCondicoesPersonalizadas(character.condicoes_personalizadas)) - descontoDeElemento(poderes, elementos, r.elemento))
   const { session } = useAuth()
   const [known, setKnown] = useState<CharacterRitual[]>([])
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -123,7 +141,7 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
     if (!ocultismoSkill) return
     const attr = ocultismoBonus.attribute_override ?? ocultismoSkill.default_attribute
     const cond = penalidadeDeCondicoes(character.conditions, { atributo: attr, pericia: 'Ocultismo' }, lerCondicoesPersonalizadas(character.condicoes_personalizadas))
-    const score = attrValue(character.attributes, attr) + cond.dados
+    const score = attrValue(atributos, attr) + cond.dados
     const { rolls, kept } = rollAttributeTest(score)
     const bonus = trainingBonus(ocultismoBonus.training) + ocultismoBonus.extra_bonus + cond.valor
     const label = rotuloComCondicoes('Teste de Ocultismo', cond.motivos)
@@ -250,7 +268,7 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
     const som = somDoRitual(arma?.elemento ?? ritual.elemento)
     if (som) tocarSom(som)
     // Alquebrado: +1 PE no custo.
-    const custo = custoDoRitual(ritual.circle, mode, ritual.discenteCost, ritual.verdadeiroCost) + custoExtraDeCondicoes(character.conditions, lerCondicoesPersonalizadas(character.condicoes_personalizadas))
+    const custo = custoFinal(ritual, mode)
     const recurso = recursoDoRitual(character.optional_rules)
     const antes = (character as unknown as Record<string, number | null>)[recurso.campo] ?? 0
     if (antes < custo && !window.confirm(`Você tem ${antes} ${recurso.sigla} e o ritual custa ${custo}. Conjurar mesmo assim?`)) return
@@ -298,7 +316,7 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
         fonte: `o ritual ${ritual.name}${modeLabel}`,
         formula: formula ?? cura.formula,
         recurso: cura.recurso,
-        teste: { nome: 'Ocultismo', dados: attrValue(character.attributes, attr) + cond.dados, bonus: trainingBonus(ocultismoBonus.training) + ocultismoBonus.extra_bonus + cond.valor },
+        teste: { nome: 'Ocultismo', dados: attrValue(atributos, attr) + cond.dados, bonus: trainingBonus(ocultismoBonus.training) + ocultismoBonus.extra_bonus + cond.valor },
         alvos,
       })
       if (erro) setAvisoGasto(erro)
@@ -434,6 +452,29 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
           </div>
         </div>
 
+        <div className="rituais-dt" title={dtGeral.motivos.join('\n')}>
+          <span className="rituais-dt-rotulo">DT</span>
+          <strong>{dtGeral.dt}</strong>
+          {temPoder('especialista em elemento') && (
+            <label title="Especialista em Elemento: +2 na DT dos rituais desse elemento">
+              +2 DT
+              <select value={elementos.especialista ?? ''} onChange={(e) => escolherElemento('especialista', e.target.value)} aria-label="Elemento do Especialista em Elemento">
+                <option value="">—</option>
+                {ELEMENTOS.map((e) => <option key={e} value={e}>{e}</option>)}
+              </select>
+            </label>
+          )}
+          {temPoder('mestre em elemento') && (
+            <label title="Mestre em Elemento: rituais desse elemento custam 1 PE a menos">
+              -1 PE
+              <select value={elementos.mestre ?? ''} onChange={(e) => escolherElemento('mestre', e.target.value)} aria-label="Elemento do Mestre em Elemento">
+                <option value="">—</option>
+                {ELEMENTOS.map((e) => <option key={e} value={e}>{e}</option>)}
+              </select>
+            </label>
+          )}
+        </div>
+
         <button type="button" className="rituais-skill-btn" onClick={rollOcultismo}>
           <img src={d20Icon} alt="" />
           <span>Ocultismo</span>
@@ -453,7 +494,8 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
               expanded={expanded === cr.id}
               onToggle={() => setExpanded(expanded === cr.id ? null : cr.id)}
               onRoll={(mode, formula) => conjurar(view, mode, formula)}
-              custo={(mode) => custoDoRitual(view.circle, mode, view.discenteCost, view.verdadeiroCost) + custoExtraDeCondicoes(character.conditions, lerCondicoesPersonalizadas(character.condicoes_personalizadas))}
+              custo={(mode) => custoFinal(view, mode)}
+              dt={dtDe(view.elemento)}
               sigla={recursoDoRitual(character.optional_rules).sigla}
               onRemove={() => removeRitual(cr.id)}
               onEdit={() => setEditing(cr)}

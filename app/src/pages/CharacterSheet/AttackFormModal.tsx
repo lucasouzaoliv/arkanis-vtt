@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import type { AttributeKey } from '../../lib/rules'
+import { TextareaFormatada } from '../../components/TextoRico'
 import mysteryIcon from '../../assets/combate/op-icon-misterio-custom.png'
 
 type DamageRow = { formula: string; tipo: string }
@@ -240,7 +241,7 @@ function ModifiersModal({ onClose, onAdd }: { onClose: () => void; onAdd: (m: Mo
             </div>
           )}
           <div className="attack-section-title"><span>DESCRIÇÃO</span></div>
-          <textarea className="attack-textarea" placeholder="Descrição aqui" value={effect} onChange={(e) => setEffect(e.target.value)} />
+          <TextareaFormatada className="attack-textarea" placeholder="Descrição aqui" value={effect} onChange={(e) => setEffect(e.target.value)} />
           <div className="attack-modmodal-actions">
             <button type="button" className="attack-modmodal-back" onClick={() => setCreating(false)}>Voltar</button>
             <button type="button" className="attack-modmodal-create" onClick={submitCustom}>Adicionar</button>

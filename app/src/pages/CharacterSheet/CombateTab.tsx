@@ -10,7 +10,7 @@ import CombateModifiersPanel from './CombateModifiersPanel'
 import AttackFormModal, { type AttackToEdit } from './AttackFormModal'
 import AttackCard from './AttackCard'
 import { penalidadeDeCondicoes, rotuloComCondicoes } from './condicoes'
-import { efeitosValendo, rdDeBloqueio, numerosDoAtaque, resistenciasDoItemEquipado, somaBonusNoDano, textoDasResistencias, type AppliedModifier, type Resistencia } from './itemMods'
+import { atributosComBonus, efeitosValendo, rdDeBloqueio, numerosDoAtaque, resistenciasDoItemEquipado, somaBonusNoDano, textoDasResistencias, type AppliedModifier, type Resistencia, modsComEfeitosDoItem } from './itemMods'
 import { useAlvosDaMesa } from '../../lib/miraDaMesa'
 import { defesaDosItens, defesaTotal, origemDoItem, origensDaDefesaDosItens, textoDasOrigens, type ItemDeDefesa } from './defesa'
 import { usePoderesDaFicha } from './usePoderes'
@@ -24,6 +24,9 @@ import resetIcon from '../../assets/combate/seta-reset.svg'
 import mysteryIcon from '../../assets/combate/op-icon-misterio-custom.png'
 import { lerCondicoesPersonalizadas } from './efeitosEscolhidos'
 import { useClasseDaFicha } from './useClasseDaFicha'
+import { useBonusDosItens } from './useBonusDosItens'
+
+const NOME_DO_ATRIBUTO: Record<string, string> = { forca: 'Força', agilidade: 'Agilidade', intelecto: 'Intelecto', vigor: 'Vigor', presenca: 'Presença' }
 import { dentroDaMesa, tocarSomDeArma } from '../../lib/sons'
 
 type Attack = {
@@ -80,13 +83,18 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
   const [bonusDeItens, setBonusDeItens] = useState<Record<string, number>>({})
   // RD a mais no Bloqueio vinda de itens equipados (Braçadeira reforçada), com a origem.
   const [bloqueioDeItens, setBloqueioDeItens] = useState<{ valor: number; origens: string[] }>({ valor: 0, origens: [] })
+  // Relido junto com a proteção (botão de atualizar / equipar): bônus de atributo dos itens.
+  const [recarregarItens, setRecarregarItens] = useState(0)
+  const bonusDosItens = useBonusDosItens(character.id, recarregarItens)
+  // Atributo que vale: o da ficha + itens equipados (maldição "+1 Agilidade"…), bug 11/10.
+  const atributos = atributosComBonus(character.attributes, bonusDosItens)
   const { nomes: poderes, carregado: poderesCarregados } = usePoderesDaFicha(character.id)
   // Bloqueio/Esquiva dependem de tudo isso. Antes de tudo chegar, a conta é parcial: salvar ou
   // mostrar esse valor fazia o número variar a cada F5 (5 numa, 9 na outra), bug 08/10.
   const [carregou, setCarregou] = useState({ pericias: false, treino: false, itens: false })
   const classe = useClasseDaFicha(character)
   // Machucado = metade dos PV ou menos (Inquebrável da Tropa de Choque dá +5 Defesa).
-  const maxPv = character.max_pv_override ?? (classe ? computeDerivedStats(classe, character.attributes, character.nex_percent, poderes).maxPv : null)
+  const maxPv = character.max_pv_override ?? (classe ? computeDerivedStats(classe, atributos, character.nex_percent, poderes).maxPv : null)
   const machucado = maxPv != null && maxPv > 0 && (character.current_pv ?? maxPv) <= maxPv / 2
   const limitePE = limiteDePE(character.nex_percent, poderes)
   const condicoesProprias = lerCondicoesPersonalizadas(character.condicoes_personalizadas)
@@ -139,6 +147,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
   }
 
   function loadEquippedProtection() {
+    setRecarregarItens((n) => n + 1)
     supabase
       .from('character_inventory')
       .select('is_equipped, applied_modifiers, active_bonuses, equipment_items(type, stats, name, description), custom_item')
@@ -162,7 +171,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
         setEquippedDefense(defesaDosItens(itens))
         const porPericia: Record<string, number> = {}
         for (const i of data ?? []) {
-          for (const e of efeitosValendo((i as any).equipment_items?.description ?? (i as any).custom_item?.description, (i as any).applied_modifiers ?? [], (i as any).active_bonuses ?? [])) {
+          for (const e of efeitosValendo((i as any).equipment_items?.description ?? (i as any).custom_item?.description, modsComEfeitosDoItem((i as any).custom_item?.stats, (i as any).applied_modifiers), (i as any).active_bonuses ?? [])) {
             if (e.pericias) for (const p of e.pericias) porPericia[p] = (porPericia[p] ?? 0) + e.valor
           }
         }
@@ -241,7 +250,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
     const origem = inventoryAmmo.find((i) => i.id === a.from_inventory_item_id)
     if (!origem) return a // item apagado do inventario: o ataque fica como estava
     const municao = origem.linked_ammo_id ? inventoryAmmo.find((i) => i.id === origem.linked_ammo_id) : null
-    const numeros = numerosDoAtaque(origem.stats, [...origem.applied_modifiers, ...(municao?.applied_modifiers ?? [])])
+    const numeros = numerosDoAtaque(origem.stats, [...modsComEfeitosDoItem(origem.stats, origem.applied_modifiers), ...(municao?.applied_modifiers ?? [])])
     const encantos = [...origem.encantos, ...(municao?.encantos ?? [])]
     return numerosComEncantos({
       ...a,
@@ -309,7 +318,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
     // Condições: Fraco/Debilitado no atributo do ataque, Caído no corpo a corpo, Ofuscado…
     const corpo = /corpo/i.test(attack.general_info?.tipo ?? '') || /corpo/i.test(attack.general_info?.alcance ?? '')
     const cond = penalidadeDeCondicoes(character.conditions, { atributo: attack.attribute, ataque: corpo ? 'corpo' : 'distancia' }, condicoesProprias)
-    const score = attrValue(character.attributes, attack.attribute) + attackDiceBonus + cond.dados
+    const score = attrValue(atributos, attack.attribute) + attackDiceBonus + cond.dados
     const { rolls, kept } = rollAttributeTest(score)
     const skillBonus = attack.skill_id ? (charSkillBonus[attack.skill_id] ?? 0) : 0
     const bonus = skillBonus + attack.d20_bonus + attackValueBonus + cond.valor
@@ -333,7 +342,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
           margem: effectiveThreatMargin,
           multiplicador: attack.multiplier + activeAttackMods.reduce((sum, m) => sum + m.multiplier_bonus, 0),
           partes: attack.damage.map((d) => ({ formula: formulaDaEmpunhadura(d.formula, attack.general_info?.empunhadura), tipo: d.tipo, origem: d.origem, elemento: d.elemento })),
-          bonus_dano: activeDamageMods.reduce((sum, m) => sum + m.value_bonus, 0) + (attack.general_info?.damage_bonus_from_mods ?? 0),
+          bonus_dano: activeDamageMods.reduce((sum, m) => sum + m.value_bonus, 0) + (attack.general_info?.damage_bonus_from_mods ?? 0) + atributoNoDano(attack),
           corpo,
         },
       }).then((erro) => {
@@ -372,12 +381,22 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
     }
   }
 
+  // Corpo a corpo e arremesso somam o atributo de dano (Força, por padrão) no dano; disparo e
+  // arma de fogo não (OPRPG). Antes o campo "Atributo Dano" era salvo e nunca usado (bug 11/10).
+  function atributoNoDano(attack: Attack): number {
+    const g = attack.general_info
+    const corpoOuArremesso = /corpo|arremess/i.test(g?.tipo ?? '') || /corpo/i.test(g?.alcance ?? '')
+    if (!corpoOuArremesso) return 0
+    return attrValue(atributos, attack.damage_attribute ?? 'forca')
+  }
+
   function rollDamage(attack: Attack, isCrit: boolean) {
     const activeAttackMods = attackMods.filter((m) => m.is_active)
     const activeDamageMods = damageMods.filter((m) => m.is_active)
 
     const multiplierBonus = activeAttackMods.reduce((sum, m) => sum + m.multiplier_bonus, 0)
-    const damageValueBonus = activeDamageMods.reduce((sum, m) => sum + m.value_bonus, 0) + (attack.general_info?.damage_bonus_from_mods ?? 0)
+    const noDano = atributoNoDano(attack)
+    const damageValueBonus = activeDamageMods.reduce((sum, m) => sum + m.value_bonus, 0) + (attack.general_info?.damage_bonus_from_mods ?? 0) + noDano
     const critMultiplier = isCrit ? attack.multiplier + multiplierBonus : 1
 
     const dice: RollCardDie[] = []
@@ -405,6 +424,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
       extraLines.push(`${formula}${tipo ? ` ${tipo}` : ''}${d.origem ? ` (${d.origem})` : ''}: ${valor}`)
     })
 
+    if (noDano) extraLines.push(`${NOME_DO_ATRIBUTO[attack.damage_attribute ?? 'forca'] ?? 'Força'}: ${noDano > 0 ? '+' : ''}${noDano}`)
     const label = isCrit ? `Dano Crítico: ${attack.name} (x${critMultiplier})` : `Dano: ${attack.name}`
     setDamageRoll({ title: character.name, subtitle: label, total, dice, extraLines, bonus: damageValueBonus })
     setPendingAttack(null)
@@ -418,7 +438,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
     }
   }
 
-  const agilidade = character.attributes.agilidade
+  const agilidade = atributos.agilidade
   // Condições (Vulnerável -2, Desprevenido -5, Indefeso -10) entram sozinhas na Defesa.
   // Mesma conta da mesa (defesa.ts): 10 + AGI + itens + poderes fixos + outros + condições.
   const defesa = defesaTotal({ agilidade, outros: character.defense_other_bonus, condicoes: character.conditions, itens: itensEquipados, poderes, condicoesPersonalizadas: condicoesProprias, machucado })
@@ -430,7 +450,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
   // Bloqueio: o bônus de Fortitude vira resistência a dano. Esquiva: o bônus de Reflexos soma
   // na Defesa, então o número mostrado é a Defesa de quem esquiva.
   // Casca Grossa (Tropa de Choque): ao bloquear, soma o Vigor na resistência a dano.
-  const cascaGrossa = poderes.some((n) => n.trim().toLowerCase() === 'casca grossa') ? character.attributes.vigor ?? 0 : 0
+  const cascaGrossa = poderes.some((n) => n.trim().toLowerCase() === 'casca grossa') ? atributos.vigor ?? 0 : 0
   const bloqueioAuto = fortitudeSkill ? bonusDaPericia(fortitudeSkill) + cascaGrossa + bloqueioDeItens.valor : 0
   const esquivaAuto = defenseTotal + (reflexosSkill ? bonusDaPericia(reflexosSkill) : 0)
 
@@ -655,7 +675,7 @@ Presença Poderosa: +${character.attributes.presenca ?? 0} só pra conjurar ritu
           <AttackCard
             key={a.id}
             name={a.name}
-            ataque={`${attrValue(character.attributes, a.attribute)}d20${a.d20_bonus ? `+${a.d20_bonus}` : ''}`}
+            ataque={`${attrValue(atributos, a.attribute)}d20${a.d20_bonus ? `+${a.d20_bonus}` : ''}`}
             dano={(() => {
               const [principal, ...extras] = a.damage
               if (!principal) return '—'

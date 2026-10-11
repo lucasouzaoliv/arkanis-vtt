@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { TextareaFormatada } from '../../components/TextoRico'
 import { createPortal } from 'react-dom'
 
 export type AbilityEditDraft = { name: string; hasElement: boolean; element: string; description: string }
@@ -52,7 +53,7 @@ export default function AbilityEditModal({
           </div>
 
           <div className="attack-section-title"><span>DESCRIÇÃO</span></div>
-          <textarea className="attack-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Escreva aqui a descrição" />
+          <TextareaFormatada className="attack-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Escreva aqui a descrição" />
 
           <button type="button" className="attack-submit-btn" onClick={submit}>Editar Habilidade</button>
         </div>

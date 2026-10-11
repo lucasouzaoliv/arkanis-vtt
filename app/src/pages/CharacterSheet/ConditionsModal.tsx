@@ -19,6 +19,7 @@ import ritual1Icon from '../../assets/condicoes/ritual-1.svg'
 import ritual2Icon from '../../assets/condicoes/ritual-2.svg'
 import EditorDeEfeitos from './EditorDeEfeitos'
 import type { CondicaoPersonalizada, EfeitoEscolhido } from './efeitosEscolhidos'
+import { TextareaFormatada } from '../../components/TextoRico'
 import ritual3Icon from '../../assets/condicoes/ritual-3.svg'
 
 type CategoryKey = 'conditions' | 'enemy-effects' | 'rituals' | 'skills' | 'extra'
@@ -263,7 +264,7 @@ export default function ConditionsModal({
               </div>
 
               <label className="conditions-modal-custom-label">Descrição</label>
-              <textarea
+              <TextareaFormatada
                 className="conditions-modal-custom-description"
                 value={customDescription}
                 onChange={(e) => setCustomDescription(e.target.value)}

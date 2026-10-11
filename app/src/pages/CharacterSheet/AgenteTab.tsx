@@ -12,7 +12,7 @@ import RituaisTab from './RituaisTab'
 import { fotoNaMoldura } from './molduras'
 import { penalidadeDeCondicoes, rotuloComCondicoes } from './condicoes'
 import InventarioTab from './InventarioTab'
-import { efeitosValendo, penalidadeDeCarga, type AlvoDeBonus } from './itemMods'
+import { efeitosValendo, penalidadeDeCarga, type AlvoDeBonus, atributosComBonus, modsComEfeitosDoItem } from './itemMods'
 import CombateTab from './CombateTab'
 import ModifiersPanel, { type Modifier } from './ModifiersPanel'
 import PericiasTable from './PericiasTable'
@@ -46,6 +46,7 @@ import conditionsBorderBottom from '../../assets/conditions-border-bottom.svg'
 import { bonusDosPoderes, origemDoItem, temProtecaoLeve } from './defesa'
 import { usePoderes } from './usePoderes'
 import { lerCondicoesPersonalizadas, resumoDosEfeitos, type CondicaoPersonalizada } from './efeitosEscolhidos'
+import { TextoRico } from '../../components/TextoRico'
 import { tocarSom } from '../../lib/sons'
 
 function pvIconFor(pct: number): string {
@@ -122,6 +123,8 @@ export default function AgenteTab({
   const [origensCarga, setOrigensCarga] = useState<string[]>([])
   // Atributo, PV e PE que os itens equipados somam (ex.: Pujanca +1 Forca).
   const [bonusDeFicha, setBonusDeFicha] = useState<Partial<Record<AlvoDeBonus, number>>>({})
+  // Atributo que vale nas contas: o da ficha + itens equipados (o "+1" verde), bug 11/10.
+  const atributos = atributosComBonus(character.attributes, bonusDeFicha)
   const [charSkills, setCharSkills] = useState<Record<string, CharacterSkillRow>>({})
   const [roll, setRoll] = useState<RollResultData | null>(null)
   const [rightTab, setRightTab] = useState<'Combate' | 'Habilidades' | 'Rituais' | 'Inventário'>('Combate')
@@ -223,7 +226,7 @@ export default function AgenteTab({
         const linhas = (data ?? []).map((i: any) => ({
           nome: (i.equipment_items?.name ?? i.custom_item?.name) as string | undefined,
           descricao: i.equipment_items?.description ?? i.custom_item?.description,
-          mods: i.applied_modifiers ?? [],
+          mods: modsComEfeitosDoItem(i.custom_item?.stats, i.applied_modifiers, i.equipment_items?.name ?? i.custom_item?.name),
           ligados: (i.active_bonuses ?? []) as string[],
         }))
         setCargaPenalty(linhas.reduce((soma, l) => soma + penalidadeDeCarga(l.descricao), 0))
@@ -268,8 +271,8 @@ export default function AgenteTab({
 
   const derived = useMemo(() => {
     if (!classRow) return { maxPv: 0, maxPe: 0, maxSanity: 0, maxPd: 0 }
-    return computeDerivedStats(classRow, character.attributes, character.nex_percent, poderes)
-  }, [classRow, character.attributes, character.nex_percent, poderes])
+    return computeDerivedStats(classRow, atributos, character.nex_percent, poderes)
+  }, [classRow, atributos, character.nex_percent, poderes])
 
   async function updateAttribute(key: keyof typeof character.attributes, value: number) {
     const attributes = { ...character.attributes, [key]: value }
@@ -325,7 +328,7 @@ export default function AgenteTab({
   function rollAttribute(key: AttributeKey, abbr: string) {
     // Condições (Frustrado, Fraco…) tiram dados sozinhas, e a rolagem diz por quê.
     const cond = penalidadeDeCondicoes(character.conditions, { atributo: key }, condicoesProprias)
-    const score = character.attributes[key] + cond.dados
+    const score = atributos[key] + cond.dados
     const { rolls, kept } = rollAttributeTest(score)
     const label = rotuloComCondicoes(`Teste de ${abbr}`, cond.motivos)
     setRoll({ label, rolls, kept, bonus: cond.valor, characterName: character.name, diceTray: character.dice_tray })
@@ -353,7 +356,7 @@ export default function AgenteTab({
     const cs = charSkills[skill.id] ?? { skill_id: skill.id, training: 'nenhum' as const, attribute_override: null, extra_bonus: 0 }
     const attr = cs.attribute_override ?? skill.default_attribute
     const cond = penalidadeDeCondicoes(character.conditions, { atributo: attr, pericia: skill.name }, condicoesProprias)
-    const score = attrValue(character.attributes, attr) + testDiceBonus + cond.dados
+    const score = attrValue(atributos, attr) + testDiceBonus + cond.dados
     const { rolls, kept } = rollAttributeTest(score)
     // O mesmo total da tabela: itens equipados (o +N verde) e a penalidade da Proteção Pesada.
     const bonus = trainingBonus(cs.training) + cs.extra_bonus + testValueBonus + (bonusDeItens[skill.name] ?? 0) + (skill.carga_penalty ? cargaPenalty : 0) + cond.valor
@@ -369,10 +372,12 @@ export default function AgenteTab({
   }
 
   const maxPv = character.max_pv_override ?? derived.maxPv
+  // PE máximo digitável como a Vida (pedido 11/10); vazio volta pra conta da classe.
+  const maxPe = character.max_pe_override ?? derived.maxPe
   const maxSanity = character.max_sanity_override ?? derived.maxSanity
   const pct = (cur: number, max: number) => (max > 0 ? Math.max(0, Math.min(100, (cur / max) * 100)) : 0)
   const maxPdPatente = character.optional_rules.evolucao_patente && classRow
-    ? computePatentePd(classRow.pd_patente_initial, classRow.pd_patente_per_patente, character.attributes.presenca, character.patente)
+    ? computePatentePd(classRow.pd_patente_initial, classRow.pd_patente_per_patente, atributos.presenca, character.patente)
     : null
 
   return (
@@ -512,9 +517,9 @@ export default function AgenteTab({
               />
               <StatBar
                 label="Esforço"
-                icon={effortIconFor(pct(character.current_pe ?? 0, derived.maxPe))}
+                icon={effortIconFor(pct(character.current_pe ?? 0, maxPe))}
                 current={character.current_pe ?? 0}
-                max={derived.maxPe}
+                max={maxPe}
                 temp={character.temp_pe}
                 colorClass="esforco"
                 onDecrement={() => updateCharacterField('current_pe', (character.current_pe ?? 0) - 1)}
@@ -522,6 +527,7 @@ export default function AgenteTab({
                 onTempDecrement={() => updateCharacterField('temp_pe', Math.max(0, (character.temp_pe ?? 0) - 1))}
                 onTempIncrement={() => updateCharacterField('temp_pe', (character.temp_pe ?? 0) + 1)}
                 onCurrentChange={(value) => updateCharacterField('current_pe', value)}
+                onMaxChange={(value) => updateCharacterField('max_pe_override', value)}
               />
             </>
           )}
@@ -585,7 +591,7 @@ export default function AgenteTab({
                   if (!propria) return <p>{conditionCatalog[openConditionDetail]?.description ?? 'Condição personalizada.'}</p>
                   return (
                     <>
-                      <p>{propria.descricao || 'Condição personalizada.'}</p>
+                      <p><TextoRico texto={propria.descricao || 'Condição personalizada.'} /></p>
                       {propria.efeitos.length > 0 && <p><strong>Efeitos:</strong> {resumoDosEfeitos(propria.efeitos)}</p>}
                     </>
                   )
@@ -609,7 +615,7 @@ export default function AgenteTab({
           <PericiasTable
             skills={skills}
             charSkills={charSkills}
-            attributes={character.attributes}
+            attributes={atributos}
             testDiceBonus={testDiceBonus}
             dadosDeCondicoes={(nome, atributo) => penalidadeDeCondicoes(character.conditions, { atributo, pericia: nome }, condicoesProprias).dados}
             valorDeCondicoes={(nome, atributo) => penalidadeDeCondicoes(character.conditions, { atributo, pericia: nome }, condicoesProprias).valor}

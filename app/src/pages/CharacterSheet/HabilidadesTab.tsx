@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import type { CharacterRecord } from './index'
 import AbilityPickerModal, { textoDoAliado, type AbilityPickResult } from './AbilityPickerModal'
+import { TextoRico } from '../../components/TextoRico'
 import AbilityEditModal, { type AbilityEditDraft } from './AbilityEditModal'
 
 type AbilityEntry = {
@@ -13,6 +14,8 @@ type AbilityEntry = {
   element: string | null
   /** Token do aliado. */
   imageUrl?: string | null
+  /** Poder do livro com texto editado só nesta ficha: dá pra voltar ao original. */
+  editadoDoLivro?: boolean
 }
 
 export default function HabilidadesTab({ character }: { character: CharacterRecord }) {
@@ -34,15 +37,18 @@ export default function HabilidadesTab({ character }: { character: CharacterReco
       .eq('character_id', character.id)
 
     const entries: AbilityEntry[] = (data ?? []).map((row: any) => {
+      // Poder do livro (classe, paranormal, geral, origem, trilha) também é editável (pedido 11/10):
+      // o texto editado fica em custom_ability desta ficha e o vínculo com o livro continua.
+      const doLivro = !!(row.class_powers || row.paranormal_powers || row.general_powers || row.origins || row.class_track_tiers)
       if (row.custom_ability) {
-        return { id: row.id, name: row.custom_ability.name, description: row.custom_ability.description, editable: true, hasElement: !!row.custom_ability.hasElement, element: row.custom_ability.element ?? null }
+        return { id: row.id, name: row.custom_ability.name, description: row.custom_ability.description, editable: true, hasElement: !!row.custom_ability.hasElement, element: row.custom_ability.element ?? null, editadoDoLivro: doLivro }
       }
-      if (row.class_powers) return { id: row.id, name: row.class_powers.name, description: row.class_powers.description, editable: false, hasElement: false, element: null }
-      if (row.paranormal_powers) return { id: row.id, name: row.paranormal_powers.name, description: row.paranormal_powers.description, editable: false, hasElement: false, element: null }
-      if (row.general_powers) return { id: row.id, name: row.general_powers.name, description: row.general_powers.description, editable: false, hasElement: false, element: null }
-      if (row.origins) return { id: row.id, name: row.origins.power_name, description: row.origins.power_description, editable: false, hasElement: false, element: null }
+      if (row.class_powers) return { id: row.id, name: row.class_powers.name, description: row.class_powers.description, editable: true, hasElement: false, element: null }
+      if (row.paranormal_powers) return { id: row.id, name: row.paranormal_powers.name, description: row.paranormal_powers.description, editable: true, hasElement: false, element: null }
+      if (row.general_powers) return { id: row.id, name: row.general_powers.name, description: row.general_powers.description, editable: true, hasElement: false, element: null }
+      if (row.origins) return { id: row.id, name: row.origins.power_name, description: row.origins.power_description, editable: true, hasElement: false, element: null }
       if (row.allies) return { id: row.id, name: row.allies.name, description: textoDoAliado(row.allies), editable: false, hasElement: false, element: null, imageUrl: row.allies.image_url }
-      if (row.class_track_tiers) return { id: row.id, name: row.class_track_tiers.name, description: row.class_track_tiers.description, editable: false, hasElement: false, element: null }
+      if (row.class_track_tiers) return { id: row.id, name: row.class_track_tiers.name, description: row.class_track_tiers.description, editable: true, hasElement: false, element: null }
       return { id: row.id, name: '(desconhecida)', description: '', editable: false, hasElement: false, element: null }
     })
     setCurrent(entries)
@@ -60,6 +66,11 @@ export default function HabilidadesTab({ character }: { character: CharacterReco
       custom_ability: { name: draft.name, hasElement: draft.hasElement, element: draft.hasElement ? draft.element : null, description: draft.description },
     }).eq('id', entry.id)
     setEditing(null)
+    await loadCurrent()
+  }
+
+  async function voltarAoOriginal(entry: AbilityEntry) {
+    await supabase.from('character_abilities').update({ custom_ability: null }).eq('id', entry.id)
     await loadCurrent()
   }
 
@@ -113,10 +124,11 @@ export default function HabilidadesTab({ character }: { character: CharacterReco
           </button>
           {expandedId === a.id && (
             <div className="ability-body">
-              <p className="ability-description">{a.description}</p>
+              <p className="ability-description"><TextoRico texto={a.description} /></p>
               <div className="ability-actions">
                 <button type="button" className="ability-action-btn" onClick={() => removeAbility(a.id)}>Remover</button>
                 {a.editable && <button type="button" className="ability-action-btn" onClick={() => setEditing(a)}>Editar</button>}
+                {a.editadoDoLivro && <button type="button" className="ability-action-btn" onClick={() => voltarAoOriginal(a)} title="Desfaz a edição e volta ao texto do livro">Voltar ao original</button>}
               </div>
             </div>
           )}

@@ -6,6 +6,9 @@ import mysteryIcon from '../../assets/combate/op-icon-misterio-custom.png'
 import { BuscaBiblioteca } from '../Mesa/JanelaBiblioteca'
 import { buscaInicialDoItem } from '../Mesa/biblioteca'
 import { categoriaComMods, partesDoCritico } from './itemMods'
+import { TextareaFormatada } from '../../components/TextoRico'
+import EditorDeEfeitos from './EditorDeEfeitos'
+import type { EfeitoEscolhido } from './efeitosEscolhidos'
 import ItemModifiersModal, { type AppliedModifier } from './ItemModifiersModal'
 
 type ItemType = 'arma' | 'municao' | 'protecao' | 'geral' | 'paranormal'
@@ -151,6 +154,8 @@ export default function ItemEditModal({
 
   const [modifiers, setModifiers] = useState<AppliedModifier[]>(item.applied_modifiers ?? [])
   const [showModModal, setShowModModal] = useState(false)
+  // Bônus do próprio item (Vestimenta/Utensílio: +2 numa perícia escolhida…), pedido 11/10.
+  const [efeitosDoItem, setEfeitosDoItem] = useState<EfeitoEscolhido[]>(() => (Array.isArray(s.efeitos) ? (s.efeitos as EfeitoEscolhido[]) : []))
   const [tipoDoItem, setTipoDoItem] = useState<ItemType>(item.type)
 
   async function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -197,6 +202,7 @@ export default function ItemEditModal({
       tipo_municao: tipoMunicao || null,
       capacidade: Number(capacidade) || 0,
     }
+    stats.efeitos = efeitosDoItem.filter((e) => e.valor)
     if (margemFinal || multFinal) {
       stats.critico = `${margemFinal || '20'}/x${multFinal || '2'}`
     }
@@ -293,6 +299,10 @@ export default function ItemEditModal({
               <button type="button" className="attack-image-alter attack-image-biblioteca" onClick={() => setBiblioteca(true)}>Escolher da Biblioteca</button>
             </div>
 
+            <div className="attack-section-title"><span>BÔNUS DO ITEM</span></div>
+            <p className="efeitos-escolhidos-dica">Ex.: Vestimenta ou Utensílio com +2 numa perícia. Escolha a perícia e quanto; "só quando ligado" vira um liga/desliga no item.</p>
+            <EditorDeEfeitos contexto="item" efeitos={efeitosDoItem} onChange={setEfeitosDoItem} />
+
             <div className="attack-section-title attack-section-title-inline">
               <span>MODIFICADORES E MALDIÇÕES</span>
               <button type="button" className="attack-add-row-btn" onClick={() => setShowModModal(true)}>Adicionar</button>
@@ -312,7 +322,7 @@ export default function ItemEditModal({
             )}
 
             <div className="attack-section-title"><span>DESCRIÇÃO</span></div>
-            <textarea className="attack-textarea" value={descricao} placeholder="Descrição aqui" onChange={(e) => setDescricao(e.target.value)} />
+            <TextareaFormatada className="attack-textarea" value={descricao} placeholder="Descrição aqui" onChange={(e) => setDescricao(e.target.value)} />
 
             <button type="button" className="attack-submit-btn" onClick={salvar}>Editar</button>
           </div>

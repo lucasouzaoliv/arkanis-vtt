@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { custoDoRitual, notaDoGasto, recursoDoRitual } from './ritualCusto'
+import { custoDoRitual, descontoDeElemento, dtDoRitual, notaDoGasto, recursoDoRitual } from './ritualCusto'
 
 describe('custo do ritual', () => {
   it('custo base por círculo', () => {
@@ -20,5 +20,21 @@ describe('custo do ritual', () => {
 
   it('texto do gasto', () => {
     expect(notaDoGasto(3, 'PE', 12, 9)).toBe('Gastou 3 PE (12 → 9)')
+  })
+})
+
+describe('DT dos rituais', () => {
+  it('10 + limite de PE + Presença', () => {
+    expect(dtDoRitual({ nexPercent: 25, presenca: 3, poderes: [] }).dt).toBe(18)
+  })
+  it('Rituais Eficientes +5 e Especialista em Elemento +2 só no elemento escolhido', () => {
+    const base = { nexPercent: 25, presenca: 3, poderes: ['Rituais Eficientes', 'Especialista em Elemento'], elementos: { especialista: 'sangue' } }
+    expect(dtDoRitual({ ...base, elementoDoRitual: 'sangue' }).dt).toBe(25)
+    expect(dtDoRitual({ ...base, elementoDoRitual: 'morte' }).dt).toBe(23)
+  })
+  it('Mestre em Elemento tira 1 PE só do elemento escolhido', () => {
+    expect(descontoDeElemento(['Mestre em Elemento'], { mestre: 'energia' }, 'energia')).toBe(1)
+    expect(descontoDeElemento(['Mestre em Elemento'], { mestre: 'energia' }, 'medo')).toBe(0)
+    expect(descontoDeElemento([], { mestre: 'energia' }, 'energia')).toBe(0)
   })
 })

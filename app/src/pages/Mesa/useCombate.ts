@@ -34,10 +34,11 @@ type FichaBarras = {
   current_sanity: number | null
   max_pv_override: number | null
   max_sanity_override: number | null
+  max_pe_override?: number | null
   pv_death_marks: number | null
 }
 
-const CAMPOS_FICHA = 'id, name, avatar_url, attributes, nex_percent, class_id, current_pv, current_pe, current_sanity, max_pv_override, max_sanity_override, pv_death_marks'
+const CAMPOS_FICHA = 'id, name, avatar_url, attributes, nex_percent, class_id, current_pv, current_pe, current_sanity, max_pv_override, max_pe_override, max_sanity_override, pv_death_marks'
 
 type FichaIniciativa = { id: string; user_id: string; name: string | null; avatar_url: string | null; attributes: unknown; conditions: unknown; condicoes_personalizadas?: unknown }
 
@@ -128,7 +129,7 @@ export function useCombate(campanhaId: string | undefined) {
     const maxSan = f.max_sanity_override ?? max?.maxSanity ?? null
     return {
       pv: [f.current_pv ?? maxPv ?? 0, maxPv],
-      pe: [f.current_pe ?? max?.maxPe ?? 0, max?.maxPe ?? null],
+      pe: [f.current_pe ?? f.max_pe_override ?? max?.maxPe ?? 0, f.max_pe_override ?? max?.maxPe ?? null],
       san: [f.current_sanity ?? maxSan ?? 0, maxSan],
       mortes: f.pv_death_marks ?? 0,
     }

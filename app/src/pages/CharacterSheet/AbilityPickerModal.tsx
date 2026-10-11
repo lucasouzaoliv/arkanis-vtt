@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import radioChecked from '../../assets/combate/radio-checked.svg'
+import { TextareaFormatada } from '../../components/TextoRico'
 import radioEmpty from '../../assets/combate/radio-empty.svg'
 
 type Category = 'Combatente' | 'Especialista' | 'Ocultista' | 'Sobrevivente' | 'Mundano' | 'Poderes Paranormais' | 'Poderes Gerais' | 'Origens' | 'Aliados'
@@ -223,7 +224,7 @@ export default function AbilityPickerModal({
                 </div>
 
                 <h4 className="conditions-modal-custom-section-title">Descrição</h4>
-                <textarea className="conditions-modal-custom-description" value={customDescription} onChange={(e) => setCustomDescription(e.target.value)} placeholder="Escreva aqui a descrição" />
+                <TextareaFormatada className="conditions-modal-custom-description" value={customDescription} onChange={(e) => setCustomDescription(e.target.value)} placeholder="Escreva aqui a descrição" />
 
                 <div className="conditions-modal-custom-submit-row">
                   <button type="button" className="conditions-modal-add-btn" onClick={submitCustom}>Adicionar Habilidade</button>

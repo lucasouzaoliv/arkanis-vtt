@@ -1,4 +1,4 @@
-import { defesaDeModificadores, type AppliedModifier } from './itemMods'
+import { defesaDeModificadores, type AppliedModifier, modsComEfeitosDoItem } from './itemMods'
 import type { CondicaoPersonalizada } from './efeitosEscolhidos'
 import { defesaDeCondicoes } from './condicoes'
 
@@ -57,7 +57,7 @@ export type ItemDeDefesa = { tipo: string | null | undefined; nome?: string | nu
 
 // Proteção conta a Defesa dela; modificação/maldição que dá Defesa vale em qualquer item equipado.
 export function defesaDosItens(itens: ItemDeDefesa[]): number {
-  return itens.reduce((s, i) => s + (i.tipo === 'protecao' ? Number(i.stats?.defesa ?? 0) : 0) + defesaDeModificadores(i.mods ?? undefined), 0)
+  return itens.reduce((s, i) => s + (i.tipo === 'protecao' ? Number(i.stats?.defesa ?? 0) : 0) + defesaDeModificadores(modsComEfeitosDoItem(i.stats, i.mods, i.nome)), 0)
 }
 
 export function temProtecaoLeve(itens: ItemDeDefesa[]): boolean {
@@ -88,9 +88,9 @@ export function origensDaDefesaDosItens(itens: ItemDeDefesa[]): string[] {
   for (const i of itens) {
     const base = i.tipo === 'protecao' ? Number(i.stats?.defesa ?? 0) : 0
     if (base) lista.push(origemDoItem(i.nome, base))
-    for (const m of i.mods ?? []) {
+    for (const m of modsComEfeitosDoItem(i.stats, i.mods, i.nome)) {
       const v = defesaDeModificadores([m])
-      if (v) lista.push(origemDoItem(i.nome, v, m))
+      if (v) lista.push(origemDoItem(i.nome, v, m.proprio ? undefined : m))
     }
   }
   return lista

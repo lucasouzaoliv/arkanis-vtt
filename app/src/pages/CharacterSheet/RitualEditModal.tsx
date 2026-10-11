@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import defaultRitualImg from '../../assets/rituais/op-default-ritual-img.svg'
+import { TextareaFormatada } from '../../components/TextoRico'
 import type { RitualView } from './RitualCard'
 
 const CIRCLES = [1, 2, 3, 4]
@@ -168,7 +169,7 @@ export default function RitualEditModal({
                 <input className="conditions-modal-custom-name" type="number" value={discenteCost} onChange={(e) => setDiscenteCost(e.target.value)} placeholder="—" />
               </div>
             </div>
-            <textarea className="conditions-modal-custom-description" value={discenteEffect} onChange={(e) => setDiscenteEffect(e.target.value)} placeholder="O que muda usando Discente" />
+            <TextareaFormatada className="conditions-modal-custom-description" value={discenteEffect} onChange={(e) => setDiscenteEffect(e.target.value)} placeholder="O que muda usando Discente" />
 
             <h4 className="conditions-modal-custom-section-title">Verdadeiro</h4>
             <div className="ritual-form-row">
@@ -177,7 +178,7 @@ export default function RitualEditModal({
                 <input className="conditions-modal-custom-name" type="number" value={verdadeiroCost} onChange={(e) => setVerdadeiroCost(e.target.value)} placeholder="—" />
               </div>
             </div>
-            <textarea className="conditions-modal-custom-description" value={verdadeiroEffect} onChange={(e) => setVerdadeiroEffect(e.target.value)} placeholder="O que muda usando Verdadeiro" />
+            <TextareaFormatada className="conditions-modal-custom-description" value={verdadeiroEffect} onChange={(e) => setVerdadeiroEffect(e.target.value)} placeholder="O que muda usando Verdadeiro" />
 
             <h4 className="conditions-modal-custom-section-title">Imagem</h4>
             <div className="ritual-form-image">
@@ -189,7 +190,7 @@ export default function RitualEditModal({
             </div>
 
             <h4 className="conditions-modal-custom-section-title">Descrição</h4>
-            <textarea className="conditions-modal-custom-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Escreva aqui a descrição" />
+            <TextareaFormatada className="conditions-modal-custom-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Escreva aqui a descrição" />
 
             <div className="conditions-modal-custom-submit-row">
               <button type="button" className="ritual-add-btn ritual-add-btn-inline" onClick={save}>Salvar Ritual</button>

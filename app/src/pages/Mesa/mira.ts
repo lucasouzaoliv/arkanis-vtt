@@ -104,6 +104,7 @@ export type DadosDoAlvo =
       custom_class?: Record<string, number | string | null> | null
       max_pv_override?: number | null
       max_sanity_override?: number | null
+      max_pe_override?: number | null
       pv?: number | null
       san?: number | null
       pe?: number | null

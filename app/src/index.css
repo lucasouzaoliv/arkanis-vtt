@@ -18447,3 +18447,24 @@ label.janela-botao {
 /* "Aplicar na ficha" na Progressão (08/10): mesmo botão do "Trocar". */
 .prog-aplicar { align-self: center; white-space: nowrap; }
 .prog-aplicar:disabled { opacity: 0.45; cursor: default; }
+
+/* Perícias (pedido 11/10): borda mais grossa, mesmas cores de treino. */
+.pericias-row { border-width: 2px; }
+
+/* Barra de formatação das descrições (11/10): B I U S em cima da caixa de texto. */
+.texto-formatado { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.texto-formatado > textarea { width: 100%; box-sizing: border-box; }
+.texto-formatado-barra { display: flex; gap: 4px; }
+.texto-formatado-barra button {
+  min-width: 26px; height: 24px; padding: 0 6px;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid #333; border-radius: 4px;
+  color: inherit; font-family: inherit; font-size: 12px; cursor: pointer;
+}
+.texto-formatado-barra button:hover { border-color: var(--accent); }
+
+/* DT dos rituais (11/10), ao lado do Ocultismo. */
+.rituais-dt { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0 10px; font-size: 11px; color: var(--text-dim); }
+.rituais-dt strong { font-size: 20px; color: #fff; line-height: 1; }
+.rituais-dt-rotulo { letter-spacing: 0.1em; }
+.rituais-dt label { display: flex; gap: 4px; align-items: center; white-space: nowrap; }
+.rituais-dt select { background: #1b1a20; color: #fff; border: 1px solid #333; font-size: 11px; }

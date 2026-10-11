@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import type { AppliedModifier } from './itemMods'
 import EditorDeEfeitos from './EditorDeEfeitos'
 import { resumoDosEfeitos, type EfeitoEscolhido } from './efeitosEscolhidos'
+import { TextareaFormatada } from '../../components/TextoRico'
 import { supabase } from '../../lib/supabase'
 
 export type { AppliedModifier } from './itemMods'
@@ -148,7 +149,7 @@ export default function ItemModifiersModal({
                 <label className="conditions-modal-custom-label">Elemento</label>
                 <input className="conditions-modal-custom-name" value={customElement} onChange={(e) => setCustomElement(e.target.value)} placeholder="Nenhum" />
                 <label className="conditions-modal-custom-label">Efeito</label>
-                <textarea className="conditions-modal-custom-description" value={customEffect} onChange={(e) => setCustomEffect(e.target.value)} placeholder="O que essa alteração faz" />
+                <TextareaFormatada className="conditions-modal-custom-description" value={customEffect} onChange={(e) => setCustomEffect(e.target.value)} placeholder="O que essa alteração faz" />
                 <label className="conditions-modal-custom-label">O que ela mexe na ficha</label>
                 <EditorDeEfeitos contexto="item" efeitos={customEfeitos} onChange={setCustomEfeitos} />
               </>

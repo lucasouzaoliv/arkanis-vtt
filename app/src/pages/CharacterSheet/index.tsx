@@ -66,6 +66,9 @@ export type CharacterRecord = {
   conditions: string[]
   // Condições criadas na mão, com os efeitos escolhidos (efeitosEscolhidos.ts).
   condicoes_personalizadas?: unknown
+  // PE máximo digitado à mão (como Vida/Sanidade) e o elemento dos poderes de elemento (11/10).
+  max_pe_override?: number | null
+  elementos_escolhidos?: { especialista?: string | null; mestre?: string | null } | null
   sheet_banner: string
   dice_tray: string
   defense_other_bonus: number

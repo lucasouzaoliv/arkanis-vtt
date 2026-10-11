@@ -3,6 +3,7 @@ import sangueTexture from '../../assets/rituais/sangue-texture.webp'
 import morteTexture from '../../assets/rituais/morte-texture.webp'
 import conhecimentoTexture from '../../assets/rituais/conhecimento-texture.webp'
 import energiaTexture from '../../assets/rituais/energia-texture.webp'
+import { TextoRico } from '../../components/TextoRico'
 import medoTexture from '../../assets/rituais/medo-texture.webp'
 
 export const ELEMENT_TEXTURE: Record<string, string> = {
@@ -55,6 +56,7 @@ export default function RitualCard({
   onRemove,
   onEdit,
   custo,
+  dt,
   sigla = 'PE',
 }: {
   ritual: RitualView
@@ -63,6 +65,8 @@ export default function RitualCard({
   // Conjura no modo escolhido; formula = null quando o ritual não rola dados.
   onRoll: (mode: 'normal' | 'discente' | 'verdadeiro', formula: string | null) => void
   custo?: (mode: 'normal' | 'discente' | 'verdadeiro') => number
+  // DT pra resistir (10 + limite de PE + Presença + poderes), mostrada quando o ritual tem resistência.
+  dt?: { dt: number; motivos: string[] }
   sigla?: string
   onRemove: () => void
   onEdit: () => void
@@ -81,7 +85,7 @@ export default function RitualCard({
     { label: 'Alvo', value: ritual.target },
     { label: 'Área', value: ritual.area },
     { label: 'Duração', value: ritual.duration },
-    { label: 'Resistência', value: ritual.resistance },
+    { label: 'Resistência', value: ritual.resistance && dt && !/^(nenhuma|—|-)$/i.test(ritual.resistance.trim()) ? `${ritual.resistance} · DT ${dt.dt}` : ritual.resistance },
     { label: 'Efeito', value: ritual.effect },
   ].filter((m) => m.value)
 
@@ -118,7 +122,7 @@ export default function RitualCard({
           <div className="ritual-card-meta">
             {meta.map((m) => (
               <p key={m.label}>
-                <strong>{m.label.toUpperCase()}</strong> {m.value}
+                <strong>{m.label.toUpperCase()}</strong> <TextoRico texto={m.value} />
               </p>
             ))}
           </div>
@@ -127,18 +131,18 @@ export default function RitualCard({
             <div className="ritual-card-variants">
               {ritual.discenteEffect && (
                 <p>
-                  <strong>DISCENTE{ritual.discenteCost != null ? ` (${ritual.discenteCost} PE)` : ''}</strong> {ritual.discenteEffect}
+                  <strong>DISCENTE{ritual.discenteCost != null ? ` (${ritual.discenteCost} PE)` : ''}</strong> <TextoRico texto={ritual.discenteEffect} />
                 </p>
               )}
               {ritual.verdadeiroEffect && (
                 <p>
-                  <strong>VERDADEIRO{ritual.verdadeiroCost != null ? ` (${ritual.verdadeiroCost} PE)` : ''}</strong> {ritual.verdadeiroEffect}
+                  <strong>VERDADEIRO{ritual.verdadeiroCost != null ? ` (${ritual.verdadeiroCost} PE)` : ''}</strong> <TextoRico texto={ritual.verdadeiroEffect} />
                 </p>
               )}
             </div>
           )}
 
-          {ritual.description && <p className="ritual-card-desc">{ritual.description}</p>}
+          {ritual.description && <p className="ritual-card-desc"><TextoRico texto={ritual.description} /></p>}
 
           <div className="ritual-card-actions">
             <button type="button" className="ritual-card-action" onClick={onRemove}>Remover</button>

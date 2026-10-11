@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import { TextoRico } from '../../components/TextoRico'
 import mysteryIcon from '../../assets/combate/op-icon-misterio-custom.png'
 
 export type InventoryCardItem = {
@@ -131,7 +132,7 @@ export default function InventoryItemCard({
           {item.description && (
             <>
               <div className="inv-item-divider" />
-              <p className="inv-item-description">{item.description}</p>
+              <p className="inv-item-description"><TextoRico texto={item.description} /></p>
             </>
           )}
 

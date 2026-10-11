@@ -17,6 +17,7 @@ import sangueTexture from '../../assets/rituais/sangue-texture.webp'
 import morteTexture from '../../assets/rituais/morte-texture.webp'
 import conhecimentoTexture from '../../assets/rituais/conhecimento-texture.webp'
 import energiaTexture from '../../assets/rituais/energia-texture.webp'
+import { TextareaFormatada } from '../../components/TextoRico'
 import medoTexture from '../../assets/rituais/medo-texture.webp'
 
 type ElementKey = 'sangue' | 'morte' | 'conhecimento' | 'energia' | 'medo'
@@ -406,7 +407,7 @@ export default function RitualPickerModal({
                 </div>
 
                 <h4 className="conditions-modal-custom-section-title">Descrição</h4>
-                <textarea className="conditions-modal-custom-description" value={draft.description} onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))} placeholder="Escreva aqui a descrição" />
+                <TextareaFormatada className="conditions-modal-custom-description" value={draft.description} onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))} placeholder="Escreva aqui a descrição" />
 
                 <div className="conditions-modal-custom-submit-row">
                   <button type="button" className="ritual-add-btn ritual-add-btn-inline" onClick={submitCustom}>Adicionar Ritual</button>
