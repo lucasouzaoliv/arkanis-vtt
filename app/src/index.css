@@ -18483,3 +18483,24 @@ label.janela-botao {
 .rituais-direita .rituais-dt { flex-direction: row; align-items: baseline; gap: 6px; padding: 0; flex-wrap: wrap; justify-content: center; max-width: 9em; }
 .rituais-direita .rituais-dt strong { font-size: 16px; }
 .rituais-direita .rituais-skill-btn { align-self: stretch; justify-content: center; }
+
+/* DT dos rituais num quadradinho no mesmo estilo do botão Ocultismo (pedido 11/10: estava feio). */
+.rituais-direita .rituais-dt {
+  display: flex; flex-direction: column; align-items: center; gap: 0.25em;
+  max-width: none; align-self: stretch;
+  background: #0e0d12; border: 1px solid #4a4a4a; border-radius: 6px;
+  padding: 0.35em 0.6em 0.4em;
+  font-family: 'Westsac', var(--heading); color: #fff;
+}
+.rituais-direita .rituais-dt-rotulo { font-size: 10px; letter-spacing: 0.2em; color: rgba(255, 255, 255, 0.55); line-height: 1; }
+.rituais-direita .rituais-dt strong { font-family: 'Westsac', var(--heading); font-weight: 400; font-size: 22px; line-height: 1; color: #fff; }
+.rituais-direita .rituais-dt label {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.4em; width: 100%;
+  font-family: var(--poppins); font-size: 9px; color: rgba(255, 255, 255, 0.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 0.3em;
+}
+.rituais-direita .rituais-dt select {
+  background: #17151d; color: #fff; border: 1px solid #3a3a3a; border-radius: 4px;
+  font-family: var(--poppins); font-size: 9px; padding: 1px 2px; text-transform: capitalize;
+}
+.rituais-direita .rituais-dt:hover { border-color: #7a7a7a; }

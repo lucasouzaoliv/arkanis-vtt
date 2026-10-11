@@ -37,10 +37,22 @@ describe('Aprimorado ("bônus em perícia sobe pra +5")', () => {
   })
 })
 
-describe('Aprimorado no bônus escrito na descrição', () => {
-  it('Câmera Filmadora: "+2 Investigação/Percepção" vira +5 nas duas', () => {
+describe('bônus "uma OU outra" (Câmera: Investigação/Percepção)', () => {
+  const desc = '+2 Investigação/Percepção; lanterna 9m ou visão no escuro.'
+  it('nenhuma ligada: não soma em nenhuma; a pessoa escolhe', () => {
+    expect(efeitosValendo(desc, [], []).filter((e) => e.pericias)).toEqual([])
+  })
+  it('ligar Percepção soma só em Percepção', () => {
+    const v = efeitosValendo(desc, [], ['desc-pericia-0-Percepção'])
+    expect(v.filter((e) => e.pericias).map((e) => [e.pericias, e.valor])).toEqual([[['Percepção'], 2]])
+  })
+  it('com Aprimorado a escolhida vale +5', () => {
     const aprimorado = { kind: 'modificacao' as const, name: 'Aprimorado', effect: 'Bônus em perícia sobe pra +5', elemento: null }
-    const v = efeitosValendo('+2 Investigação/Percepção; lanterna 9m ou visão no escuro.', [aprimorado], [])
-    expect(v.filter((e) => e.pericias).map((e) => [e.pericias, e.valor])).toEqual([[['Investigação', 'Percepção'], 5]])
+    const v = efeitosValendo(desc, [aprimorado], ['desc-pericia-0-Investigação'])
+    expect(v.filter((e) => e.pericias).map((e) => [e.pericias, e.valor])).toEqual([[['Investigação'], 5]])
+  })
+  it('"e" continua valendo nas duas', () => {
+    const v = efeitosValendo('+2 Religião e Vontade.', [], [])
+    expect(v.filter((e) => e.pericias).map((e) => e.pericias)).toEqual([['Religião', 'Vontade']])
   })
 })

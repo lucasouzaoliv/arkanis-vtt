@@ -425,6 +425,8 @@ export type BonusDePericia = {
   valor: number
   /** O "se" do bonus, como esta escrito. Vazio quando vale sempre. */
   condicao: string
+  /** "+2 Investigação/Percepção": uma OU outra, a pessoa escolhe na hora (pedido 11/10). Com "e", vale nas duas. */
+  alternativa?: boolean
 }
 
 // Uma frase so vale sempre se nao tiver um "pra/para/contra/quando/em cena..." depois do
@@ -462,7 +464,8 @@ export function bonusDePericiaDaDescricao(descricao: string | null | undefined):
       ? frase.trim()
       : ''
 
-    encontrados.push({ pericias, valor, condicao })
+    const alternativa = pericias.length > 1 && listaBruta.includes('/') && !/\be\b/i.test(listaBruta)
+    encontrados.push({ pericias, valor, condicao, ...(alternativa ? { alternativa } : {}) })
   }
   return encontrados
 }
@@ -538,6 +541,8 @@ export type EfeitoDeItem = {
   valor: number
   // Modificação/maldição de onde veio (pra mostrar a origem do bônus ao passar o mouse).
   mod?: { kind: AppliedModifier['kind']; name: string }
+  // Opções do mesmo grupo se excluem: ligar uma desliga as outras (Câmera: Investigação OU Percepção).
+  grupo?: string
 }
 
 function rotuloDeFicha(alvo: AlvoDeBonus, valor: number) {
@@ -559,6 +564,14 @@ export function efeitosDoItem(
 
   bonusDePericiaDaDescricao(descricao).forEach((b, i) => {
     const valor = sobe && b.valor > 0 && b.valor < sobe ? sobe : b.valor
+    if (b.alternativa) {
+      // Uma opção por perícia; só uma fica ligada (a pessoa escolhe na hora qual usar).
+      const escolha = `Escolha uma: ${b.pericias.join(' ou ')}${b.condicao ? ` · ${b.condicao}` : ''}`
+      for (const p of b.pericias) {
+        lista.push({ chave: `desc-pericia-${i}-${p}`, rotulo: `${valor > 0 ? '+' : ''}${valor} ${p}`, condicao: escolha, pericias: [p], valor, grupo: `desc-pericia-${i}` })
+      }
+      return
+    }
     lista.push({
       chave: `desc-pericia-${i}`,
       rotulo: `${valor > 0 ? '+' : ''}${valor} ${b.pericias.join(' / ')}`,

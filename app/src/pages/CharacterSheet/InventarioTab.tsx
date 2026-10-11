@@ -126,9 +126,12 @@ export default function InventarioTab({ character, editMode }: { character: Char
   }
 
   // Liga ou desliga um bonus condicional do item (Binoculos, Corda, Mascara de Gas...).
-  async function alternarBonus(inv: InventoryItem, chave: string) {
+  // Opções de um mesmo grupo (Investigação OU Percepção da câmera) se excluem: ligar uma desliga as outras.
+  async function alternarBonus(inv: InventoryItem, chave: string, grupo?: string, doGrupo: string[] = []) {
     const ligados = inv.active_bonuses ?? []
-    const proximo = ligados.includes(chave) ? ligados.filter((c) => c !== chave) : [...ligados, chave]
+    const proximo = ligados.includes(chave)
+      ? ligados.filter((c) => c !== chave)
+      : [...ligados.filter((c) => !(grupo && doGrupo.includes(c))), chave]
     await supabase.from('character_inventory').update({ active_bonuses: proximo }).eq('id', inv.id)
     await loadInventory()
   }
@@ -434,7 +437,7 @@ export default function InventarioTab({ character, editMode }: { character: Char
                         <input
                           type="checkbox"
                           checked={ligados.includes(e.chave)}
-                          onChange={() => alternarBonus(inv, e.chave)}
+                          onChange={() => alternarBonus(inv, e.chave, e.grupo, ligaveis.filter((x) => x.grupo === e.grupo).map((x) => x.chave))}
                         />
                         <span className="inv-bonus-valor">{e.rotulo}</span>
                         <span className="inv-bonus-condicao">{e.condicao}</span>
