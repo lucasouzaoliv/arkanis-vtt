@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronDown, faChevronRight, faEllipsisVertical, faEye, faThumbtack, faTrash, faUser } from '@fortawesome/free-solid-svg-icons'
 import AcaoNoChat from './AcaoNoChat'
 import PartesDoDano from './PartesDoDano'
+import { SimboloDoRitual, fundoDoRitual } from './RitualNoChat'
 import { destinatario, ehPrivada, formulaDaRolagem, sanitizarHtml, tempoRelativo, type Mensagem } from './chat'
 
 // Um card do chat (12.3): foto, nome, "Para:" nas privadas, tempo relativo e o ⋮ do mestre.
@@ -73,8 +74,15 @@ export default function ChatMensagem({ mensagem, souMestre, nomeMestre, agora, o
       </header>
 
       {r && (
-        <div className="chat-rolagem">
-          <p className="chat-rolagem-rotulo">{r.label}</p>
+        <div className={`chat-rolagem${r.ritual ? ' chat-rolagem-ritual' : ''}`} style={r.ritual ? fundoDoRitual(r.ritual.elemento) : undefined}>
+          {r.ritual ? (
+            <div className="chat-ritual-cabeca">
+              <SimboloDoRitual ritual={r.ritual} />
+              <p className="chat-rolagem-rotulo">{r.label}</p>
+            </div>
+          ) : (
+            <p className="chat-rolagem-rotulo">{r.label}</p>
+          )}
           {!r.sem_rolagem && (
             <>
               <div className="chat-rolagem-formula">{formulaDaRolagem(r)}</div>

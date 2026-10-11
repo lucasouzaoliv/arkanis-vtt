@@ -44,6 +44,8 @@ export async function recordRoll(params: {
   semChat?: boolean
   // Dano com cada parte separada ("1d6 Impacto: 3", "4d6 Energia (Amaldiçoar Arma): 8").
   partes?: { formula: string; tipo: string; origem?: string; elemento?: string; lados: number; total: number }[]
+  // Ritual conjurado: o chat mostra a textura do elemento e o símbolo (11/10).
+  ritual?: { nome: string; elemento: string | null; imagem: string | null } | null
 }) {
   if (!(await podeRegistrarNaFicha(params.characterId))) return
   await supabase.from('character_rolls').insert({
@@ -60,6 +62,7 @@ export async function recordRoll(params: {
     sem_rolagem: params.semRolagem ?? false,
     sem_chat: params.semChat ?? false,
     partes: params.partes?.length ? params.partes : null,
+    ritual: params.ritual ?? null,
   })
   window.dispatchEvent(new CustomEvent('vtt-roll-recorded'))
 }

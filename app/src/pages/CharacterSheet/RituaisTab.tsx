@@ -291,12 +291,14 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
 
     const modeLabel = mode === 'normal' ? '' : mode === 'discente' ? ' (Discente)' : ' (Verdadeiro)'
     const label = `Ritual: ${ritual.name}${modeLabel}`
+    const ritualNoChat = { nome: ritual.name, elemento: arma?.elemento ?? ritual.elemento ?? null, imagem: ritual.image_url ?? null }
 
     if (arma && encanto) {
       const notaArma = `${nota} · ${arma.arma.item} de ${arma.arma.personagem}: ${textoDoEncanto(encanto)}`
       setRitualRoll({ title: character.name, subtitle: label, total: 0, dice: [], bonus: 0, nota: notaArma, semRolagem: true })
       if (session) {
         recordRoll({
+          ritual: ritualNoChat,
           characterId: character.id, userId: session.user.id, campaignId: character.campaign_id, characterName: character.name,
           label, total: 0, detail: '', nota: notaArma, semRolagem: true,
         })
@@ -317,6 +319,8 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
         characterId: character.id,
         autor: { nome: character.name, foto: character.avatar_url },
         fonte: `o ritual ${ritual.name}${modeLabel}`,
+        imagem: ritual.image_url ?? null,
+        elemento: ritual.elemento ?? null,
         formula: formula ?? cura.formula,
         recurso: cura.recurso,
         teste: { nome: 'Ocultismo', dados: attrValue(atributos, attr) + cond.dados, bonus: trainingBonus(ocultismoBonus.training) + ocultismoBonus.extra_bonus + cond.valor },
@@ -326,6 +330,7 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
       else setRitualRoll({ title: character.name, subtitle: label, total: 0, dice: [], bonus: 0, nota: `${nota} · enviado pro chat (Teste de Ocultismo e Curar)`, semRolagem: true })
       if (session) {
         recordRoll({
+          ritual: ritualNoChat,
           characterId: character.id, userId: session.user.id, campaignId: character.campaign_id, characterName: character.name,
           label, total: 0, detail: '', nota, semRolagem: true, semChat: true,
         })
@@ -341,6 +346,7 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
       setRitualRoll({ title: character.name, subtitle: label, total: rolled.total, dice, bonus: rolled.modifier, nota })
       if (session) {
         recordRoll({
+          ritual: ritualNoChat,
           characterId: character.id, userId: session.user.id, campaignId: character.campaign_id, characterName: character.name,
           label, total: rolled.total, detail: `${formula}: ${rolled.rolls.join(', ')}${rolled.modifier ? ` ${rolled.modifier > 0 ? '+' : ''}${rolled.modifier}` : ''}`,
           dice, bonus: rolled.modifier, nota,
@@ -350,6 +356,7 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
       setRitualRoll({ title: character.name, subtitle: label, total: 0, dice: [], bonus: 0, nota, semRolagem: true })
       if (session) {
         recordRoll({
+          ritual: ritualNoChat,
           characterId: character.id, userId: session.user.id, campaignId: character.campaign_id, characterName: character.name,
           label, total: 0, detail: '', nota, semRolagem: true,
         })

@@ -120,12 +120,13 @@ export async function postarCura(p: {
   autor: { nome: string; foto: string | null }
   fonte: string
   imagem?: string | null
+  elemento?: string | null
   formula: string
   recurso: Recurso
   teste: AcaoCura['teste']
   alvos: Alvo[]
 }): Promise<string | null> {
-  const acao: Omit<AcaoCura, 'estado'> = { tipo: 'cura', curador: p.autor.nome, fonte: p.fonte, ...(p.imagem ? { imagem: p.imagem } : {}), formula: p.formula, recurso: p.recurso, teste: p.teste, alvos: p.alvos }
+  const acao: Omit<AcaoCura, 'estado'> = { tipo: 'cura', curador: p.autor.nome, fonte: p.fonte, ...(p.imagem ? { imagem: p.imagem } : {}), ...(p.elemento ? { elemento: p.elemento } : {}), formula: p.formula, recurso: p.recurso, teste: p.teste, alvos: p.alvos }
   const { error } = await supabase.rpc('postar_acao', {
     p_campaign_id: p.campanhaId, p_character_id: p.characterId, p_autor_nome: p.autor.nome, p_autor_foto: p.autor.foto, p_acao: acao,
   })

@@ -4,6 +4,7 @@ import { faBriefcase, faChevronDown, faChevronRight, faCrosshairs, faDiceD20, fa
 import type { Mensagem } from './chat'
 import { nomeDoTipo, SIGLA_RECURSO, textoDosAlvos, type AcaoAtaque, type AcaoCura, type AcaoInteracao } from './mira'
 import PartesDoDano from './PartesDoDano'
+import { SimboloDoRitual, fundoDoRitual } from './RitualNoChat'
 import { reagirAoAtaque, rolarAtaqueDaMensagem, rolarCuraDaMensagem, rolarDanoDaMensagem, rolarTesteDaCura } from './acoesDeMira'
 
 // Quem está olhando o chat: pra saber quem pode clicar em Ataque/Dano e quem reage.
@@ -175,11 +176,22 @@ function CartaoCura({ mensagem, acao }: { mensagem: Mensagem; acao: AcaoCura }) 
   const podeCurar = !acao.teste || !!teste
 
   return (
-    <div className="chat-acao">
-      <p className="chat-acao-titulo">
-        <FontAwesomeIcon icon={faHeartPulse} /> <strong>{acao.curador}</strong> está usando {acao.fonte} em <strong>{textoDosAlvos(acao.alvos)}</strong>
-      </p>
-      {acao.imagem && <img className="chat-acao-imagem" src={acao.imagem} alt="" />}
+    <div className={`chat-acao${acao.elemento ? ' chat-rolagem-ritual' : ''}`} style={acao.elemento ? fundoDoRitual(acao.elemento) : undefined}>
+      {acao.elemento ? (
+        <div className="chat-ritual-cabeca">
+          <SimboloDoRitual ritual={{ elemento: acao.elemento, imagem: acao.imagem }} />
+          <p className="chat-acao-titulo">
+            <FontAwesomeIcon icon={faHeartPulse} /> <strong>{acao.curador}</strong> está usando {acao.fonte} em <strong>{textoDosAlvos(acao.alvos)}</strong>
+          </p>
+        </div>
+      ) : (
+        <>
+          <p className="chat-acao-titulo">
+            <FontAwesomeIcon icon={faHeartPulse} /> <strong>{acao.curador}</strong> está usando {acao.fonte} em <strong>{textoDosAlvos(acao.alvos)}</strong>
+          </p>
+          {acao.imagem && <img className="chat-acao-imagem" src={acao.imagem} alt="" />}
+        </>
+      )}
       <p className="chat-rolagem-rotulo">Cura: {acao.formula} {sigla}</p>
 
       {acao.teste && (
