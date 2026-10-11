@@ -452,6 +452,8 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
           </div>
         </div>
 
+        {/* DT em cima do Ocultismo: do lado dos círculos ela era espremida e o "IV" ficava por cima (11/10). */}
+        <div className="rituais-direita">
         <div className="rituais-dt" title={dtGeral.motivos.join('\n')}>
           <span className="rituais-dt-rotulo">DT</span>
           <strong>{dtGeral.dt}</strong>
@@ -479,6 +481,7 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
           <img src={d20Icon} alt="" />
           <span>Ocultismo</span>
         </button>
+        </div>
       </div>
 
       <div className="rituais-rune-row">Tudo comeca com o sangue. Saber tudo e perder tudo</div>

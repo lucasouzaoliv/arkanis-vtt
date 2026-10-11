@@ -18468,3 +18468,18 @@ label.janela-botao {
 .rituais-dt-rotulo { letter-spacing: 0.1em; }
 .rituais-dt label { display: flex; gap: 4px; align-items: center; white-space: nowrap; }
 .rituais-dt select { background: #1b1a20; color: #fff; border: 1px solid #333; font-size: 11px; }
+
+/* Investigação (11/10): texto formatado fora da edição; barra B I U S no tom do papel. */
+.inv-campo-lido { white-space: pre-wrap; overflow-wrap: anywhere; cursor: text; overflow-y: auto; }
+.inv-campo-lido.vazio { color: rgba(28, 28, 28, 0.4); }
+.inv-campo.destaque .inv-campo-lido.vazio { color: rgba(255, 255, 255, 0.45); }
+.inv-campo .texto-formatado { flex: 1 1 auto; gap: 0; }
+.inv-campo .texto-formatado > textarea { flex: 1 1 auto; }
+.inv-campo .texto-formatado-barra { padding: 4px 0.8em 0; }
+.inv-campo .texto-formatado-barra button { background: transparent; border-color: rgba(28, 28, 28, 0.25); color: var(--tinta); }
+.inv-campo.destaque .texto-formatado-barra button { border-color: rgba(255, 255, 255, 0.3); color: #fff; }
+/* DT em cima do Ocultismo, numa coluna que não encolhe (11/10: espremida, sumia atrás do "IV"). */
+.rituais-direita { flex-shrink: 0; align-self: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.rituais-direita .rituais-dt { flex-direction: row; align-items: baseline; gap: 6px; padding: 0; flex-wrap: wrap; justify-content: center; max-width: 9em; }
+.rituais-direita .rituais-dt strong { font-size: 16px; }
+.rituais-direita .rituais-skill-btn { align-self: stretch; justify-content: center; }

@@ -15,14 +15,24 @@ describe('Campo', () => {
   it('mostra o titulo e o placeholder da referencia', () => {
     render(<Campo titulo="Aparência" valor="" onChange={() => {}} />)
     expect(screen.getByText('Aparência')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Escreva aqui...')).toBeInTheDocument()
+    expect(screen.getByText('Escreva aqui...')).toBeInTheDocument()
   })
 
   it('avisa a cada tecla, pra salvar enquanto a pessoa escreve', async () => {
     const onChange = vi.fn()
     render(<Campo titulo="Objetivo" valor="" onChange={onChange} />)
+    await userEvent.click(screen.getByRole('textbox', { name: 'Objetivo' }))
     await userEvent.type(screen.getByPlaceholderText('Escreva aqui...'), 'oi')
     expect(onChange).toHaveBeenCalledTimes(2)
+  })
+
+  it('fora da edição mostra o texto formatado; clicando abre a barra de formatação', async () => {
+    render(<Campo titulo="Pistas" valor="**sangue** e *medo*" onChange={() => {}} />)
+    expect(screen.getByText('sangue').tagName).toBe('STRONG')
+    expect(screen.getByText('medo').tagName).toBe('EM')
+    await userEvent.click(screen.getByRole('textbox', { name: 'Pistas' }))
+    expect(screen.getByRole('button', { name: 'Negrito' })).toBeInTheDocument()
+    expect(screen.getByDisplayValue('**sangue** e *medo*')).toBeInTheDocument()
   })
 
   it('so o Titulo/Identificador vem invertido', () => {

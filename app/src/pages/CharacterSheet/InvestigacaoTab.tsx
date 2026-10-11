@@ -7,6 +7,7 @@ import clipe from '../../assets/investigacao/clipe.svg'
 import arkanisLogo from '../../assets/icons/arkanis-logo.png'
 import lixeira from '../../assets/combate/lixeira.png'
 import lixeiraAberta from '../../assets/combate/lixeira-aberta.png'
+import { TextareaFormatada, TextoRico } from '../../components/TextoRico'
 import { tocarSom } from '../../lib/sons'
 
 type Page = {
@@ -316,16 +317,34 @@ export function Campo({
   destaque?: boolean
   linhas?: number
 }) {
+  // Formatação (11/10): fora da edição o texto aparece formatado (negrito, itálico, sublinhado,
+  // riscado); clicar abre a caixa com a barra B I U S, e sair dela volta a mostrar formatado.
+  const [editando, setEditando] = useState(false)
   return (
     <div className={`inv-campo${cresce ? ' cresce' : ''}${destaque ? ' destaque' : ''}`}>
       <div className="inv-campo-titulo">{titulo}</div>
-      <textarea
-        className="inv-campo-texto"
-        placeholder="Escreva aqui..."
-        rows={linhas}
-        value={valor}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      {editando ? (
+        <TextareaFormatada
+          autoFocus
+          className="inv-campo-texto"
+          placeholder="Escreva aqui..."
+          rows={linhas}
+          value={valor}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={() => setEditando(false)}
+        />
+      ) : (
+        <div
+          className={`inv-campo-texto inv-campo-lido${valor ? '' : ' vazio'}`}
+          role="textbox"
+          tabIndex={0}
+          aria-label={titulo}
+          onClick={() => setEditando(true)}
+          onFocus={() => setEditando(true)}
+        >
+          {valor ? <TextoRico texto={valor} /> : 'Escreva aqui...'}
+        </div>
+      )}
     </div>
   )
 }
