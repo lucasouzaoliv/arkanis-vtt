@@ -110,6 +110,8 @@ export default function PericiasTable({
 }) {
   const [skillFilter, setSkillFilter] = useState('')
   const [onlyTrained, setOnlyTrained] = useState(false)
+  // Extra mostra o digitado + itens/poderes (pedido 11/10); editando, só o digitado à mão.
+  const [editandoExtra, setEditandoExtra] = useState<string | null>(null)
   const [sortField, setSortField] = useState<SortField>('pericia')
   const [treinoPickerFor, setTreinoPickerFor] = useState<string | null>(null)
   const [atributoPickerFor, setAtributoPickerFor] = useState<string | null>(null)
@@ -139,7 +141,7 @@ export default function PericiasTable({
   rows.sort((a, b) => {
     if (sortField === 'treino') return TRAINING_ORDER.indexOf(b.cs.training) - TRAINING_ORDER.indexOf(a.cs.training)
     if (sortField === 'atributo') return (a.attr ?? '').localeCompare(b.attr ?? '')
-    if (sortField === 'extra') return b.cs.extra_bonus - a.cs.extra_bonus
+    if (sortField === 'extra') return (b.cs.extra_bonus + b.doItem) - (a.cs.extra_bonus + a.doItem)
     if (sortField === 'total') return b.total - a.total
     return a.skill.name.localeCompare(b.skill.name)
   })
@@ -227,7 +229,10 @@ export default function PericiasTable({
               <div className="pericias-cell pericias-cell-extra">
                 <input
                   type="number"
-                  value={cs.extra_bonus}
+                  value={editandoExtra === skill.id ? cs.extra_bonus : cs.extra_bonus + doItem}
+                  title={doItem ? textoDasOrigens([`Digitado: ${cs.extra_bonus}`, ...(origensDoBonus[skill.name] ?? [])]) : undefined}
+                  onFocus={() => setEditandoExtra(skill.id)}
+                  onBlur={() => setEditandoExtra(null)}
                   onChange={(e) => onSetSkillField(skill.id, { extra_bonus: Number(e.target.value) })}
                 />
               </div>
