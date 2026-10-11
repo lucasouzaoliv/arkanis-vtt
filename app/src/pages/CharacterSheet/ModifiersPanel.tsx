@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useVersaoDaFicha } from './fichaAoVivo'
 import removeIcon from '../../assets/pericias/remove-icon.svg'
 
 export type Modifier = {
@@ -41,6 +42,8 @@ export default function ModifiersPanel({
   onChange?: (modifiers: Modifier[]) => void
   onDraftChange?: (draft: { diceBonus: number; valueBonus: number }) => void
 }) {
+  // Recarrega quando a ficha muda em qualquer lugar (Realtime, 11/10).
+  const versao = useVersaoDaFicha()
   const [modifiers, setModifiers] = useState<Modifier[]>([])
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -60,7 +63,7 @@ export default function ModifiersPanel({
     onChange?.(data ?? [])
   }
 
-  useEffect(() => { load() }, [characterId, scope])
+  useEffect(() => { load() }, [characterId, scope, versao])
 
   useEffect(() => { onDraftChange?.({ diceBonus, valueBonus }) }, [diceBonus, valueBonus])
 

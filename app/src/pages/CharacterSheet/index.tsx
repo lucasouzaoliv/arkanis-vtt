@@ -25,6 +25,7 @@ import d20Icon from '../../assets/icons/d20-paranormal.svg'
 import changeIcon from '../../assets/icons/change-icon.svg'
 import settingsIcon from '../../assets/icons/settings-icon.svg'
 import historyIcon from '../../assets/icons/history-icon.svg'
+import { FichaAoVivo } from './fichaAoVivo'
 import arkanisLogo from '../../assets/icons/arkanis-logo.png'
 
 const ELEMENT_BACKGROUNDS: Record<string, string> = {
@@ -163,6 +164,7 @@ export default function CharacterSheet() {
   const bgClass = elemento && ELEMENT_BACKGROUNDS[elemento] ? `bg-${elemento}` : 'bg-padrao'
 
   return (
+    <FichaAoVivo characterId={character.id} onPersonagemMudou={() => setRefreshKey((k) => k + 1)}>
     <main className={`sheet-root${elemento ? ' com-afinidade' : ''}`}>
       {elemento === 'conhecimento' ? (
         // Conhecimento: o ouro derretido com os veios em movimento, no lugar da imagem.
@@ -256,5 +258,6 @@ export default function CharacterSheet() {
       )}
       {tab === 'Regras Extras' && <RegrasExtrasTab elemento={elemento} />}
     </main>
+    </FichaAoVivo>
   )
 }

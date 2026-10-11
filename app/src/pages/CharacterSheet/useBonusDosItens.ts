@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useVersaoDaFicha } from './fichaAoVivo'
 import { efeitosValendo, type AlvoDeBonus, modsComEfeitosDoItem } from './itemMods'
 
 // Bônus de atributo/PV/PE dos itens equipados (descrição, modificação e maldição), igual à aba
@@ -7,6 +8,7 @@ import { efeitosValendo, type AlvoDeBonus, modsComEfeitosDoItem } from './itemMo
 // conta fora da aba Agente (Combate, Rituais).
 export function useBonusDosItens(characterId: string, recarregar?: unknown): Partial<Record<AlvoDeBonus, number>> {
   const [bonus, setBonus] = useState<Partial<Record<AlvoDeBonus, number>>>({})
+  const versao = useVersaoDaFicha()
   useEffect(() => {
     let cancelado = false
     supabase
@@ -25,6 +27,6 @@ export function useBonusDosItens(characterId: string, recarregar?: unknown): Par
         setBonus(porAlvo)
       })
     return () => { cancelado = true }
-  }, [characterId, recarregar])
+  }, [characterId, recarregar, versao])
   return bonus
 }

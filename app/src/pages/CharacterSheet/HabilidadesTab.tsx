@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import type { CharacterRecord } from './index'
 import AbilityPickerModal, { textoDoAliado, type AbilityPickResult } from './AbilityPickerModal'
 import { TextoRico } from '../../components/TextoRico'
+import { useVersaoDaFicha } from './fichaAoVivo'
 import AbilityEditModal, { type AbilityEditDraft } from './AbilityEditModal'
 
 type AbilityEntry = {
@@ -19,6 +20,8 @@ type AbilityEntry = {
 }
 
 export default function HabilidadesTab({ character }: { character: CharacterRecord }) {
+  // Recarrega quando a ficha muda em qualquer lugar (Realtime, 11/10).
+  const versao = useVersaoDaFicha()
   const [current, setCurrent] = useState<AbilityEntry[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -28,7 +31,7 @@ export default function HabilidadesTab({ character }: { character: CharacterReco
 
   useEffect(() => {
     supabase.from('character_temp_bonuses').select('id, source, attribute_group, dice, remaining').eq('character_id', character.id).gt('remaining', 0).then(({ data }) => setTempBonuses(data ?? []))
-  }, [character.id])
+  }, [character.id, versao])
 
   async function loadCurrent() {
     const { data } = await supabase
@@ -54,7 +57,7 @@ export default function HabilidadesTab({ character }: { character: CharacterReco
     setCurrent(entries)
   }
 
-  useEffect(() => { loadCurrent() }, [character.id])
+  useEffect(() => { loadCurrent() }, [character.id, versao])
 
   async function removeAbility(id: string) {
     await supabase.from('character_abilities').delete().eq('id', id)

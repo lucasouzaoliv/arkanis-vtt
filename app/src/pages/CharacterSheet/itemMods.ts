@@ -553,14 +553,18 @@ export function efeitosDoItem(
   mods: AppliedModifier[] | undefined,
 ): EfeitoDeItem[] {
   const lista: EfeitoDeItem[] = []
+  // "Aprimorado: bônus em perícia sobe pra +5" também vale pro bônus escrito na descrição do livro
+  // (Câmera Filmadora "+2 Investigação/Percepção" vira +5), bug 11/10.
+  const sobe = bonusDePericiaQueSobe(mods)
 
   bonusDePericiaDaDescricao(descricao).forEach((b, i) => {
+    const valor = sobe && b.valor > 0 && b.valor < sobe ? sobe : b.valor
     lista.push({
       chave: `desc-pericia-${i}`,
-      rotulo: `${b.valor > 0 ? '+' : ''}${b.valor} ${b.pericias.join(' / ')}`,
+      rotulo: `${valor > 0 ? '+' : ''}${valor} ${b.pericias.join(' / ')}`,
       condicao: b.condicao,
       pericias: b.pericias,
-      valor: b.valor,
+      valor,
     })
   })
 

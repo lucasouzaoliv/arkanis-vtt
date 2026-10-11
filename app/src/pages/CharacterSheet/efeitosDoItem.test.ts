@@ -36,3 +36,11 @@ describe('Aprimorado ("bônus em perícia sobe pra +5")', () => {
     expect(v.filter((e) => e.pericias).map((e) => e.valor)).toEqual([2])
   })
 })
+
+describe('Aprimorado no bônus escrito na descrição', () => {
+  it('Câmera Filmadora: "+2 Investigação/Percepção" vira +5 nas duas', () => {
+    const aprimorado = { kind: 'modificacao' as const, name: 'Aprimorado', effect: 'Bônus em perícia sobe pra +5', elemento: null }
+    const v = efeitosValendo('+2 Investigação/Percepção; lanterna 9m ou visão no escuro.', [aprimorado], [])
+    expect(v.filter((e) => e.pericias).map((e) => [e.pericias, e.valor])).toEqual([[['Investigação', 'Percepção'], 5]])
+  })
+})

@@ -27,6 +27,7 @@ import { useClasseDaFicha } from './useClasseDaFicha'
 import { useBonusDosItens } from './useBonusDosItens'
 
 const NOME_DO_ATRIBUTO: Record<string, string> = { forca: 'Força', agilidade: 'Agilidade', intelecto: 'Intelecto', vigor: 'Vigor', presenca: 'Presença' }
+import { useVersaoDaFicha } from './fichaAoVivo'
 import { dentroDaMesa, tocarSomDeArma } from '../../lib/sons'
 
 type Attack = {
@@ -72,6 +73,8 @@ type InventoryAmmoInfo = {
 type Skill = { id: string; name: string }
 
 export default function CombateTab({ character, onUpdated, editMode }: { character: CharacterRecord; onUpdated: () => void; editMode: boolean }) {
+  // Recarrega quando a ficha muda em qualquer lugar (Realtime, 11/10).
+  const versao = useVersaoDaFicha()
   const { session } = useAuth()
   const [attacks, setAttacks] = useState<Attack[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
@@ -202,7 +205,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
       })
   }
 
-  useEffect(() => { loadAttacks(); loadInventoryAmmo() }, [character.id])
+  useEffect(() => { loadAttacks(); loadInventoryAmmo() }, [character.id, versao])
 
   // Um aliado pode encantar a sua arma a qualquer hora: ao voltar pra ficha, ela relê o inventário.
   useEffect(() => {

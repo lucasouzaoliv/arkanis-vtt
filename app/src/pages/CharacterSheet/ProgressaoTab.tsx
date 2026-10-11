@@ -8,6 +8,7 @@ import {
   proximoNex, type Ganho,
 } from './progressao'
 import { usePoderes } from './usePoderes'
+import { useVersaoDaFicha } from './fichaAoVivo'
 import type { CharacterRecord } from './index'
 
 /*
@@ -51,6 +52,8 @@ const ROTULO_ESCOLHA: Record<Escolha['kind'], string> = {
 }
 
 export default function ProgressaoTab({ character, onUpdated }: { character: CharacterRecord; onUpdated: () => void }) {
+  // Recarrega quando a ficha muda em qualquer lugar (Realtime, 11/10).
+  const versao = useVersaoDaFicha()
   const [classRow, setClassRow] = useState<any>(null)
   const [tabela, setTabela] = useState<ClassProgression[]>([])
   const [poderes, setPoderes] = useState<ClassPower[]>([])
@@ -73,13 +76,15 @@ export default function ProgressaoTab({ character, onUpdated }: { character: Cha
   useEffect(() => {
     supabase.from('characters').select('progressao_lembrete').eq('id', character.id).single()
       .then(({ data }) => setLembrete(data?.progressao_lembrete ?? ''))
-    carregarPlano()
     supabase.from('skills').select('id, name').order('sort_order').then(({ data }) => setPericias(data ?? []))
     supabase.from('paranormal_powers').select('id, name, description, prerequisites').order('name')
       .then(({ data }) => setParanormais(data ?? []))
     supabase.from('general_powers').select('id, name, description, prerequisites').order('name')
       .then(({ data }) => setGerais(data ?? []))
   }, [character.id])
+
+  // Só o plano é relido quando a ficha muda em outro lugar (o lembrete não, pra não apagar o que se digita).
+  useEffect(() => { carregarPlano() }, [character.id, versao])
 
   useEffect(() => {
     if (!character.class_id) { setCarregou(true); return }

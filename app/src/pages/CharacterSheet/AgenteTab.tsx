@@ -47,6 +47,7 @@ import { bonusDosPoderes, origemDoItem, temProtecaoLeve } from './defesa'
 import { usePoderes } from './usePoderes'
 import { lerCondicoesPersonalizadas, resumoDosEfeitos, type CondicaoPersonalizada } from './efeitosEscolhidos'
 import { TextoRico } from '../../components/TextoRico'
+import { useVersaoDaFicha } from './fichaAoVivo'
 import { tocarSom } from '../../lib/sons'
 
 function pvIconFor(pct: number): string {
@@ -109,6 +110,8 @@ export default function AgenteTab({
   elementoNome: string | null
   onNameChange: (name: string) => void
 }) {
+  // Recarrega quando a ficha muda em qualquer lugar (Realtime, 11/10).
+  const versao = useVersaoDaFicha()
   const { session } = useAuth()
   const classRow = useClasseDaFicha(character)
   const [skills, setSkills] = useState<SkillRow[]>([])
@@ -254,7 +257,7 @@ export default function AgenteTab({
         setOrigensPericia(origemP)
         setOrigensFicha(origemF)
       })
-  }, [character.id, rightTab, poderes])
+  }, [character.id, rightTab, poderes, versao])
 
   useEffect(() => {
     supabase.from('skills').select('id, name, default_attribute, description, carga_penalty').order('sort_order').then(({ data }) => setSkills(data ?? []))
@@ -267,7 +270,7 @@ export default function AgenteTab({
         for (const row of data ?? []) map[row.skill_id] = row
         setCharSkills(map)
       })
-  }, [character.id])
+  }, [character.id, versao])
 
   const derived = useMemo(() => {
     if (!classRow) return { maxPv: 0, maxPe: 0, maxSanity: 0, maxPd: 0 }

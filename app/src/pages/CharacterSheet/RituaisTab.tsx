@@ -25,6 +25,7 @@ import conhecimentoIcon from '../../assets/rituais/conhecimento-simbolo.png'
 import energiaIcon from '../../assets/rituais/energia-simbolo.png'
 import medoIcon from '../../assets/rituais/medo-simbolo.png'
 import { lerCondicoesPersonalizadas } from './efeitosEscolhidos'
+import { useVersaoDaFicha } from './fichaAoVivo'
 import { somDoRitual, tocarSom } from '../../lib/sons'
 
 const ELEMENT_ICON: Record<string, string> = {
@@ -88,6 +89,8 @@ const ELEMENTOS = ['sangue', 'morte', 'conhecimento', 'energia', 'medo'] as cons
 const CIRCULOS = [1, 2, 3, 4]
 
 export default function RituaisTab({ character, onGastar }: { character: CharacterRecord; onGastar: (campo: 'current_pe' | 'current_pd', valor: number) => Promise<void> }) {
+  // Recarrega quando a ficha muda em qualquer lugar (Realtime, 11/10).
+  const versao = useVersaoDaFicha()
   // DT e custo dependem dos poderes, da Presença (com itens) e do elemento escolhido (11/10).
   const poderes = usePoderes(character.id)
   const atributos = atributosComBonus(character.attributes, useBonusDosItens(character.id))
@@ -163,7 +166,7 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
     setKnown((data ?? []) as unknown as CharacterRitual[])
   }
 
-  useEffect(() => { loadKnown() }, [character.id])
+  useEffect(() => { loadKnown() }, [character.id, versao])
 
   function toggle<T>(list: T[], value: T): T[] {
     return list.includes(value) ? list.filter((v) => v !== value) : [...list, value]

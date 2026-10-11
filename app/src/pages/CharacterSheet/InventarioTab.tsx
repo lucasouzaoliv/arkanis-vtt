@@ -12,6 +12,7 @@ import { useAlvosDaMesa } from '../../lib/miraDaMesa'
 import { postarCura } from '../Mesa/acoesDeMira'
 import { curaDoTexto, textoDosAlvos } from '../Mesa/mira'
 import { textoDoEncanto, type Encanto } from './encantos'
+import { useVersaoDaFicha } from './fichaAoVivo'
 import { RollCard } from './RollResult'
 
 // O <select> nativo abre a lista branca do sistema e sai roxo; este segue a estetica do
@@ -70,6 +71,8 @@ type InventoryItem = {
 }
 
 export default function InventarioTab({ character, editMode }: { character: CharacterRecord; editMode: boolean }) {
+  // Recarrega quando a ficha muda em qualquer lugar (Realtime, 11/10).
+  const versao = useVersaoDaFicha()
   const [items, setItems] = useState<InventoryItem[]>([])
   const [expanded, setExpanded] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
@@ -90,7 +93,7 @@ export default function InventarioTab({ character, editMode }: { character: Char
     setItems((data ?? []) as unknown as InventoryItem[])
   }
 
-  useEffect(() => { loadInventory() }, [character.id])
+  useEffect(() => { loadInventory() }, [character.id, versao])
 
   async function addFromPicker(result: EquipmentPickResult) {
     if (result.kind === 'catalog') {

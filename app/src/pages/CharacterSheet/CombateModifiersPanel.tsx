@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import removeIcon from '../../assets/pericias/remove-icon.svg'
+import { useVersaoDaFicha } from './fichaAoVivo'
 import type { Modifier } from './ModifiersPanel'
 
 type Scope = 'ataque' | 'dano'
@@ -27,6 +28,8 @@ export default function CombateModifiersPanel({
   onAttackChange: (mods: Modifier[]) => void
   onDamageChange: (mods: Modifier[]) => void
 }) {
+  // Recarrega quando a ficha muda em qualquer lugar (Realtime, 11/10).
+  const versao = useVersaoDaFicha()
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<Scope>('ataque')
   const [attackMods, setAttackMods] = useState<Modifier[]>([])
@@ -50,7 +53,7 @@ export default function CombateModifiersPanel({
     onDamageChange(damageData ?? [])
   }
 
-  useEffect(() => { loadScoped() }, [characterId])
+  useEffect(() => { loadScoped() }, [characterId, versao])
 
   async function addModifier() {
     if (!name) return
