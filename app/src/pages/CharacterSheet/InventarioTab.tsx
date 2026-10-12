@@ -6,6 +6,7 @@ import InventoryItemCard from './InventoryItemCard'
 import EquipmentPickerModal, { type EquipmentPickResult } from './EquipmentPickerModal'
 import { bonusDeCarga, categoriaComMods, espacoComModificadores, numerosDoAtaque, statsComModificadores, modsComEfeitosDoItem } from './itemMods'
 import ItemEditModal, { type ItemToEdit } from './ItemEditModal'
+import { testeDoItem } from './testeDoItem'
 import ItemModifiersModal from './ItemModifiersModal'
 import { efeitosLigaveis, type AppliedModifier } from './itemMods'
 import { useAlvosDaMesa } from '../../lib/miraDaMesa'
@@ -219,10 +220,14 @@ export default function InventarioTab({ character, editMode }: { character: Char
       ...(linkedAmmo?.applied_modifiers ?? []).map((m) => ({ ...m, origem: 'Munição' as const })),
     ]
 
+    // Perícia e atributos escolhidos no item (pedido 12/10); sem escolha, Luta/Força ou Pontaria/Agilidade.
+    const teste = await testeDoItem(stats, isMelee)
     await supabase.from('character_attacks').insert({
       character_id: character.id,
       name: item.name,
-      attribute: isMelee ? 'forca' : 'agilidade',
+      skill_id: teste.skill_id,
+      attribute: teste.attribute,
+      damage_attribute: teste.damage_attribute,
       d20_bonus: numeros.d20Bonus,
       threat_margin: numeros.threatMargin,
       multiplier: numeros.multiplier,
@@ -235,6 +240,7 @@ export default function InventarioTab({ character, editMode }: { character: Char
         municao: linkedAmmo?.equipment_items?.name ?? linkedAmmo?.custom_item?.name ?? null,
         modificadores,
         damage_bonus_from_mods: numeros.damageBonusFromMods,
+        sem_atributo_no_dano: teste.sem_atributo_no_dano,
       },
       from_inventory_item_id: inv.id,
     })

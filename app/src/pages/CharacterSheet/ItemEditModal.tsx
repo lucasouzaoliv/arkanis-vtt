@@ -1,5 +1,5 @@
 import { recortarImagem } from '../../components/RecortarImagem'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import mysteryIcon from '../../assets/combate/op-icon-misterio-custom.png'
@@ -11,6 +11,7 @@ import EditorDeEfeitos from './EditorDeEfeitos'
 import type { EfeitoEscolhido } from './efeitosEscolhidos'
 import ItemModifiersModal, { type AppliedModifier } from './ItemModifiersModal'
 import CampoTipoDeDano from './CampoTipoDeDano'
+import { ATRIBUTO_DO_ATAQUE_OPTIONS, ATRIBUTO_DO_DANO_OPTIONS, atualizarAtaquesDoItem } from './testeDoItem'
 
 type ItemType = 'arma' | 'municao' | 'protecao' | 'geral' | 'paranormal'
 
@@ -160,6 +161,15 @@ export default function ItemEditModal({
   // Bônus do próprio item (Vestimenta/Utensílio: +2 numa perícia escolhida…), pedido 11/10.
   const [efeitosDoItem, setEfeitosDoItem] = useState<EfeitoEscolhido[]>(() => (Array.isArray(s.efeitos) ? (s.efeitos as EfeitoEscolhido[]) : []))
   const [tipoDoItem, setTipoDoItem] = useState<ItemType>(item.type)
+  // Teste de ataque escolhido no próprio item (pedido 12/10): vazio = automático (Luta/Força no
+  // corpo a corpo, Pontaria/Agilidade no resto), como era antes.
+  const [periciaAtaque, setPericiaAtaque] = useState(String(s.pericia_ataque ?? ''))
+  const [atributoAtaque, setAtributoAtaque] = useState(String(s.atributo_ataque ?? ''))
+  const [atributoDano, setAtributoDano] = useState(String(s.atributo_dano ?? ''))
+  const [pericias, setPericias] = useState<{ id: string; name: string }[]>([])
+  useEffect(() => {
+    supabase.from('skills').select('id, name').order('sort_order').then(({ data }) => setPericias(data ?? []))
+  }, [])
 
   async function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
     const escolhido = e.target.files?.[0]
@@ -203,6 +213,9 @@ export default function ItemEditModal({
       tipo_dano: tipoDano || null,
       dano_alternativo: danoAlternativo || null,
       danos_extras: danosExtras.filter((d) => d.formula.trim()),
+      pericia_ataque: periciaAtaque || null,
+      atributo_ataque: atributoAtaque || null,
+      atributo_dano: atributoDano || null,
       tipo_municao: tipoMunicao || null,
       capacidade: Number(capacidade) || 0,
     }
@@ -227,6 +240,8 @@ export default function ItemEditModal({
       category_override: null,
       quantity: Math.max(0, Number(unidades) || 0),
     }).eq('id', item.id)
+    // O ataque já enviado pro combate acompanha a escolha feita aqui.
+    if (tipoDoItem === 'arma') await atualizarAtaquesDoItem(item.id, { pericia: periciaAtaque, atributo: atributoAtaque, atributoDano })
 
     onSaved()
     onClose()
@@ -296,6 +311,17 @@ export default function ItemEditModal({
               <TextField label="Multiplicador" value={multiplicador} onChange={setMultiplicador} placeholder="3" />
               <TextField label="Dano Alternativo" value={danoAlternativo} onChange={setDanoAlternativo} placeholder="2d8" />
             </div>
+
+            {tipoDoItem === 'arma' && (
+              <>
+                <div className="attack-section-title"><span>TESTE DE ATAQUE</span></div>
+                <div className="attack-field-row">
+                  <SelectField label="Perícia" value={periciaAtaque} options={[{ value: '', label: 'Automática' }, ...pericias.map((p) => ({ value: p.id, label: p.name }))]} onChange={setPericiaAtaque} />
+                  <SelectField label="Atributo" value={atributoAtaque} options={ATRIBUTO_DO_ATAQUE_OPTIONS} onChange={setAtributoAtaque} />
+                  <SelectField label="Atributo Dano" value={atributoDano} options={ATRIBUTO_DO_DANO_OPTIONS} onChange={setAtributoDano} />
+                </div>
+              </>
+            )}
 
             <div className="attack-section-title"><span>MUNIÇÃO</span></div>
             <div className="attack-field-row">
