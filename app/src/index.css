@@ -18606,3 +18606,26 @@ label.janela-botao {
 .attack-arrastavel.sobre-baixo {
   border-bottom-color: rgba(255, 255, 255, 0.8);
 }
+
+/* Habilidades como no livro (12/10): legenda em caixinha, elemento na cor dele, afinidade. */
+.ability-legenda {
+  display: flex;
+  gap: 0.4em;
+  margin: 0 0 0.5em;
+  font-family: var(--raleway);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ability-legenda > span {
+  padding: 0.1em 0.45em;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+}
+.ability-legenda > .ability-legenda-elemento {
+  background: rgba(255, 255, 255, 0.06);
+}
+.ability-afinidade {
+  margin-top: 0.5em;
+}

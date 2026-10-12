@@ -5,6 +5,7 @@ import AbilityPickerModal, { textoDoAliado, type AbilityPickResult } from './Abi
 import { TextoRico } from '../../components/TextoRico'
 import { useVersaoDaFicha } from './fichaAoVivo'
 import AbilityEditModal, { type AbilityEditDraft } from './AbilityEditModal'
+import { corDoElemento } from './danoDaArma'
 
 type AbilityEntry = {
   id: string
@@ -17,6 +18,25 @@ type AbilityEntry = {
   imageUrl?: string | null
   /** Poder do livro com texto editado só nesta ficha: dá pra voltar ao original. */
   editadoDoLivro?: boolean
+  // Como no livro (pedido 12/10): legenda ("Poder Geral", "Poder Paranormal" + elemento),
+  // pré-requisito e afinidade, que antes não apareciam na ficha.
+  legenda?: string
+  elemento?: string | null
+  prerequisito?: string | null
+  afinidade?: string | null
+}
+
+const ROTULO_DO_ELEMENTO: Record<string, string> = { sangue: 'Sangue', morte: 'Morte', conhecimento: 'Conhecimento', energia: 'Energia', medo: 'Medo' }
+
+// O que vem do livro, pra legenda/pré-requisito/afinidade (vale também quando o texto foi editado).
+function doLivro(row: any): Pick<AbilityEntry, 'legenda' | 'elemento' | 'prerequisito' | 'afinidade'> {
+  if (row.class_powers) return { legenda: row.class_powers.classes?.name ? `Poder de ${row.class_powers.classes.name}` : 'Poder de Classe', prerequisito: row.class_powers.prerequisites }
+  if (row.paranormal_powers) return { legenda: 'Poder Paranormal', elemento: row.paranormal_powers.elemento, prerequisito: row.paranormal_powers.prerequisites, afinidade: row.paranormal_powers.affinity_description }
+  if (row.general_powers) return { legenda: 'Poder Geral', prerequisito: row.general_powers.prerequisites }
+  if (row.origins) return { legenda: 'Poder de Origem' }
+  if (row.class_track_tiers) return { legenda: 'Habilidade de Trilha' }
+  if (row.allies) return { legenda: 'Aliado' }
+  return {}
 }
 
 export default function HabilidadesTab({ character }: { character: CharacterRecord }) {
@@ -36,25 +56,27 @@ export default function HabilidadesTab({ character }: { character: CharacterReco
   async function loadCurrent() {
     const { data } = await supabase
       .from('character_abilities')
-      .select('id, class_power_id, paranormal_power_id, general_power_id, origin_power_of, class_track_tier_id, ally_id, custom_ability, allies(name, descricao, bonus, habilidade_nome, habilidade, image_url), class_powers(name, description), paranormal_powers(name, description), general_powers(name, description), origins(power_name, power_description), class_track_tiers(name, description)')
+      .select('id, class_power_id, paranormal_power_id, general_power_id, origin_power_of, class_track_tier_id, ally_id, custom_ability, allies(name, descricao, bonus, habilidade_nome, habilidade, image_url), class_powers(name, description, prerequisites, classes(name)), paranormal_powers(name, description, prerequisites, affinity_description, elemento), general_powers(name, description, prerequisites), origins(power_name, power_description), class_track_tiers(name, description)')
       .eq('character_id', character.id)
 
-    const entries: AbilityEntry[] = (data ?? []).map((row: any) => {
-      // Poder do livro (classe, paranormal, geral, origem, trilha) também é editável (pedido 11/10):
-      // o texto editado fica em custom_ability desta ficha e o vínculo com o livro continua.
-      const doLivro = !!(row.class_powers || row.paranormal_powers || row.general_powers || row.origins || row.class_track_tiers)
-      if (row.custom_ability) {
-        return { id: row.id, name: row.custom_ability.name, description: row.custom_ability.description, editable: true, hasElement: !!row.custom_ability.hasElement, element: row.custom_ability.element ?? null, editadoDoLivro: doLivro }
-      }
-      if (row.class_powers) return { id: row.id, name: row.class_powers.name, description: row.class_powers.description, editable: true, hasElement: false, element: null }
-      if (row.paranormal_powers) return { id: row.id, name: row.paranormal_powers.name, description: row.paranormal_powers.description, editable: true, hasElement: false, element: null }
-      if (row.general_powers) return { id: row.id, name: row.general_powers.name, description: row.general_powers.description, editable: true, hasElement: false, element: null }
-      if (row.origins) return { id: row.id, name: row.origins.power_name, description: row.origins.power_description, editable: true, hasElement: false, element: null }
-      if (row.allies) return { id: row.id, name: row.allies.name, description: textoDoAliado(row.allies), editable: false, hasElement: false, element: null, imageUrl: row.allies.image_url }
-      if (row.class_track_tiers) return { id: row.id, name: row.class_track_tiers.name, description: row.class_track_tiers.description, editable: true, hasElement: false, element: null }
-      return { id: row.id, name: '(desconhecida)', description: '', editable: false, hasElement: false, element: null }
-    })
+    const entries: AbilityEntry[] = (data ?? []).map((row: any) => ({ ...entradaDaLinha(row), ...doLivro(row) }))
     setCurrent(entries)
+  }
+
+  function entradaDaLinha(row: any): AbilityEntry {
+    // Poder do livro (classe, paranormal, geral, origem, trilha) também é editável (pedido 11/10):
+    // o texto editado fica em custom_ability desta ficha e o vínculo com o livro continua.
+    const ehDoLivro = !!(row.class_powers || row.paranormal_powers || row.general_powers || row.origins || row.class_track_tiers)
+    if (row.custom_ability) {
+      return { id: row.id, name: row.custom_ability.name, description: row.custom_ability.description, editable: true, hasElement: !!row.custom_ability.hasElement, element: row.custom_ability.element ?? null, editadoDoLivro: ehDoLivro }
+    }
+    if (row.class_powers) return { id: row.id, name: row.class_powers.name, description: row.class_powers.description, editable: true, hasElement: false, element: null }
+    if (row.paranormal_powers) return { id: row.id, name: row.paranormal_powers.name, description: row.paranormal_powers.description, editable: true, hasElement: false, element: null }
+    if (row.general_powers) return { id: row.id, name: row.general_powers.name, description: row.general_powers.description, editable: true, hasElement: false, element: null }
+    if (row.origins) return { id: row.id, name: row.origins.power_name, description: row.origins.power_description, editable: true, hasElement: false, element: null }
+    if (row.allies) return { id: row.id, name: row.allies.name, description: textoDoAliado(row.allies), editable: false, hasElement: false, element: null, imageUrl: row.allies.image_url }
+    if (row.class_track_tiers) return { id: row.id, name: row.class_track_tiers.name, description: row.class_track_tiers.description, editable: true, hasElement: false, element: null }
+    return { id: row.id, name: '(desconhecida)', description: '', editable: false, hasElement: false, element: null }
   }
 
   useEffect(() => { loadCurrent() }, [character.id, versao])
@@ -127,7 +149,21 @@ export default function HabilidadesTab({ character }: { character: CharacterReco
           </button>
           {expandedId === a.id && (
             <div className="ability-body">
-              <p className="ability-description"><TextoRico texto={a.description} /></p>
+              {a.legenda && (
+                <p className="ability-legenda">
+                  <span>{a.legenda}</span>
+                  {a.elemento && <span className="ability-legenda-elemento" style={{ color: corDoElemento(a.elemento) ?? undefined }}>{ROTULO_DO_ELEMENTO[a.elemento] ?? a.elemento}</span>}
+                </p>
+              )}
+              <p className="ability-description">
+                <TextoRico texto={a.description} />
+                {a.prerequisito && <> <em>Pré-requisito:</em> {a.prerequisito}.</>}
+              </p>
+              {a.afinidade && (
+                <p className="ability-description ability-afinidade">
+                  <strong style={{ color: corDoElemento(a.elemento) ?? undefined }}>Afinidade.</strong> <TextoRico texto={a.afinidade} />
+                </p>
+              )}
               <div className="ability-actions">
                 <button type="button" className="ability-action-btn" onClick={() => removeAbility(a.id)}>Remover</button>
                 {a.editable && <button type="button" className="ability-action-btn" onClick={() => setEditing(a)}>Editar</button>}
