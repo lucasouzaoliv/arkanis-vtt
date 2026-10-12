@@ -51,6 +51,11 @@ describe('bônus "uma OU outra" (Câmera: Investigação/Percepção)', () => {
     const v = efeitosValendo(desc, [aprimorado], ['desc-pericia-0-Investigação'])
     expect(v.filter((e) => e.pericias).map((e) => [e.pericias, e.valor])).toEqual([[['Investigação'], 5]])
   })
+  it('"as duas juntas" com Aprimorado dá +5 nas duas (pedido 12/10)', () => {
+    const aprimorado = { kind: 'modificacao' as const, name: 'Aprimorado', effect: 'Bônus em perícia sobe pra +5', elemento: null }
+    const v = efeitosValendo(desc, [aprimorado], ['desc-pericia-0-ambas'])
+    expect(v.filter((e) => e.pericias).map((e) => [e.pericias, e.valor])).toEqual([[['Investigação', 'Percepção'], 5]])
+  })
   it('"e" continua valendo nas duas', () => {
     const v = efeitosValendo('+2 Religião e Vontade.', [], [])
     expect(v.filter((e) => e.pericias).map((e) => e.pericias)).toEqual([['Religião', 'Vontade']])

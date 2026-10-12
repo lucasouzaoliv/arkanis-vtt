@@ -8,7 +8,8 @@ import { defesaDeCondicoes } from './condicoes'
 
 export const TESTES_DE_RESISTENCIA = ['Fortitude', 'Reflexos', 'Vontade']
 
-type Passivo = { defesa?: number; pericias?: Record<string, number>; soComProtecaoLeve?: boolean; soMachucado?: boolean }
+// afinidade: o que muda quando a ficha tem afinidade com o elemento do poder (substitui o valor da perícia).
+type Passivo = { defesa?: number; pericias?: Record<string, number>; soComProtecaoLeve?: boolean; soMachucado?: boolean; afinidade?: { elemento: string; pericias: Record<string, number> } }
 
 const RESISTENCIA_2 = { Fortitude: 2, Reflexos: 2, Vontade: 2 }
 
@@ -25,6 +26,12 @@ const PODERES_PASSIVOS: Record<string, Passivo> = {
   'luta ou fuga': { pericias: { Vontade: 2 } },
   // Tropa de Choque NEX 99%: machucado (metade dos PV ou menos), +5 Defesa (a resistência a dano 5 fica na mão).
   'inquebrável': { defesa: 5, soMachucado: true },
+  // Poderes com bônus fixo em perícia que não entravam sozinhos (bug 12/10, Visão do Oculto).
+  'visão do oculto': { pericias: { Percepção: 5 } },
+  'sensitivo': { pericias: { Diplomacia: 5, Intimidação: 5, Intuição: 5 } },
+  'espreitar da besta': { pericias: { Furtividade: 5 }, afinidade: { elemento: 'sangue', pericias: { Furtividade: 10 } } },
+  'muito sorrateiro': { pericias: { Furtividade: 3 } },
+  'sangue de ferro': { afinidade: { elemento: 'sangue', pericias: { Fortitude: 5 } } },
 }
 
 export type BonusDosPoderes = {
@@ -35,7 +42,7 @@ export type BonusDosPoderes = {
   origens: Record<string, string[]>
 }
 
-export function bonusDosPoderes(nomes: (string | null | undefined)[], ctx: { protecaoLeve?: boolean; machucado?: boolean } = {}): BonusDosPoderes {
+export function bonusDosPoderes(nomes: (string | null | undefined)[], ctx: { protecaoLeve?: boolean; machucado?: boolean; afinidade?: string | null } = {}): BonusDosPoderes {
   const r: BonusDosPoderes = { defesa: 0, pericias: {}, motivos: [], origens: {} }
   // O mesmo poder escolhido duas vezes (registro repetido) não soma de novo.
   for (const nome of new Set(nomes.map((n) => String(n ?? '').trim()))) {
@@ -45,9 +52,11 @@ export function bonusDosPoderes(nomes: (string | null | undefined)[], ctx: { pro
       r.defesa += p.defesa
       r.motivos.push(`Poder ${nome}: +${p.defesa}`)
     }
-    for (const [pericia, v] of Object.entries(p.pericias ?? {})) {
+    const comAfinidade = !!p.afinidade && !!ctx.afinidade && p.afinidade.elemento === ctx.afinidade.toLowerCase()
+    const pericias = comAfinidade ? { ...p.pericias, ...p.afinidade!.pericias } : p.pericias ?? {}
+    for (const [pericia, v] of Object.entries(pericias)) {
       r.pericias[pericia] = (r.pericias[pericia] ?? 0) + v
-      ;(r.origens[pericia] ??= []).push(`Poder ${nome}: ${v > 0 ? '+' : ''}${v}`)
+      ;(r.origens[pericia] ??= []).push(`Poder ${nome}${comAfinidade && p.afinidade!.pericias[pericia] ? ' (afinidade)' : ''}: ${v > 0 ? '+' : ''}${v}`)
     }
   }
   return r

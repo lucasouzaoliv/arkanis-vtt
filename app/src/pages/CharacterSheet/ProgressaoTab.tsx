@@ -9,6 +9,7 @@ import {
 } from './progressao'
 import { usePoderes } from './usePoderes'
 import { useVersaoDaFicha } from './fichaAoVivo'
+import { vezesQueTranscendeu } from './transcender'
 import type { CharacterRecord } from './index'
 
 /*
@@ -258,11 +259,7 @@ export default function ProgressaoTab({ character, onUpdated }: { character: Cha
   // Transcender troca a Sanidade daquele NEX por um poder paranormal.
   const sanidadePerdida = (nex: number) => {
     if (!classRow) return 0
-    let vezes = 0
-    for (const [n, linha] of Object.entries(plano)) {
-      if (Number(n) <= nex) vezes += linha.picks.filter((e) => e.kind === 'poder_classe' && e.label === 'Transcender').length
-    }
-    return vezes * (classRow.sanity_per_nex ?? 0)
+    return vezesQueTranscendeu(Object.values(plano), nex) * (classRow.sanity_per_nex ?? 0)
   }
 
   const statsEm = (nex: number) => {

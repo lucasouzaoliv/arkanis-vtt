@@ -574,6 +574,8 @@ export function efeitosDoItem(
       for (const p of b.pericias) {
         lista.push({ chave: `desc-pericia-${i}-${p}`, rotulo: `${valor > 0 ? '+' : ''}${valor} ${p}`, condicao: escolha, pericias: [p], valor, grupo: `desc-pericia-${i}` })
       }
+      // E a opção de usar nas duas ao mesmo tempo (pedido 12/10), também exclusiva no grupo.
+      lista.push({ chave: `desc-pericia-${i}-ambas`, rotulo: `${valor > 0 ? '+' : ''}${valor} ${b.pericias.join(' e ')}`, condicao: `Nas ${b.pericias.length === 2 ? 'duas' : 'todas'} juntas${b.condicao ? ` · ${b.condicao}` : ''}`, pericias: b.pericias, valor, grupo: `desc-pericia-${i}` })
       return
     }
     lista.push({

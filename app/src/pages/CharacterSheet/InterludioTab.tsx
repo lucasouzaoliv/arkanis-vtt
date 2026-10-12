@@ -9,6 +9,7 @@ import { elementoPorChave } from './elementosParanormais'
 import { useClasseDaFicha } from './useClasseDaFicha'
 import { ALTURA_CENA, LARGURA_CENA, OBJETOS, centroDe } from './interludioCena'
 import { usePoderes } from './usePoderes'
+import { useTranscendencias } from './transcender'
 import esconderijo from '../../assets/interludio/esconderijo.webp'
 
 type ActionKey = 'alimentar' | 'dormir' | 'exercitar' | 'ler' | 'manutencao' | 'relaxar' | 'revisar_caso' | 'resolver_problema'
@@ -100,6 +101,7 @@ export default function InterludioTab({ character, onUpdated }: { character: Cha
   const poderes = usePoderes(character.id)
   const limitePE = limiteDePE(character.nex_percent, poderes)
   const classe = useClasseDaFicha(character)
+  const transcendeu = useTranscendencias(character.id, character.nex_percent)
 
   async function confirmar() {
     const patches: Record<string, number | string | null> = {}
@@ -108,7 +110,7 @@ export default function InterludioTab({ character, onUpdated }: { character: Cha
     // O descanso para no maximo que a ficha mostra (com os ajustes a mao de maximo).
     const formula = classe ? computeDerivedStats(classe, character.attributes, character.nex_percent, poderes) : null
     const maxPv = character.max_pv_override ?? formula?.maxPv ?? null
-    const maxSanity = character.max_sanity_override ?? formula?.maxSanity ?? null
+    const maxSanity = character.max_sanity_override ?? (formula ? formula.maxSanity - transcendeu * (classe?.sanity_per_nex ?? 0) : null)
     const maxPe = character.max_pe_override ?? formula?.maxPe ?? null
     const maxPd = formula?.maxPd ?? null
 

@@ -48,6 +48,7 @@ import { usePoderes } from './usePoderes'
 import { lerCondicoesPersonalizadas, resumoDosEfeitos, type CondicaoPersonalizada } from './efeitosEscolhidos'
 import { TextoRico } from '../../components/TextoRico'
 import { useVersaoDaFicha } from './fichaAoVivo'
+import { useTranscendencias } from './transcender'
 import { tocarSom } from '../../lib/sons'
 
 function pvIconFor(pct: number): string {
@@ -249,7 +250,7 @@ export default function AgenteTab({
         }
         // Poderes com bônus fixo (Reflexos Defensivos: +2 nos testes de resistência), bug 08/10.
         const protecaoLeve = temProtecaoLeve((data ?? []).map((i: any) => ({ tipo: i.equipment_items?.type ?? i.custom_item?.type, nome: i.equipment_items?.name ?? i.custom_item?.name })))
-        const dosPoderes = bonusDosPoderes(poderes, { protecaoLeve })
+        const dosPoderes = bonusDosPoderes(poderes, { protecaoLeve, afinidade: character.afinidade_elemento })
         for (const [pericia, v] of Object.entries(dosPoderes.pericias)) porPericia[pericia] = (porPericia[pericia] ?? 0) + v
         for (const [pericia, lista] of Object.entries(dosPoderes.origens)) (origemP[pericia] ??= []).push(...lista)
         setBonusDeItens(porPericia)
@@ -257,7 +258,7 @@ export default function AgenteTab({
         setOrigensPericia(origemP)
         setOrigensFicha(origemF)
       })
-  }, [character.id, rightTab, poderes, versao])
+  }, [character.id, rightTab, poderes, versao, character.afinidade_elemento])
 
   useEffect(() => {
     supabase.from('skills').select('id, name, default_attribute, description, carga_penalty').order('sort_order').then(({ data }) => setSkills(data ?? []))
@@ -272,10 +273,13 @@ export default function AgenteTab({
       })
   }, [character.id, versao])
 
+  // Transcender: a Sanidade daquele NEX não vem (bug 12/10).
+  const transcendeu = useTranscendencias(character.id, character.nex_percent)
   const derived = useMemo(() => {
     if (!classRow) return { maxPv: 0, maxPe: 0, maxSanity: 0, maxPd: 0 }
-    return computeDerivedStats(classRow, atributos, character.nex_percent, poderes)
-  }, [classRow, atributos, character.nex_percent, poderes])
+    const s = computeDerivedStats(classRow, atributos, character.nex_percent, poderes)
+    return { ...s, maxSanity: s.maxSanity - transcendeu * (classRow.sanity_per_nex ?? 0) }
+  }, [classRow, atributos, character.nex_percent, poderes, transcendeu])
 
   async function updateAttribute(key: keyof typeof character.attributes, value: number) {
     const attributes = { ...character.attributes, [key]: value }
