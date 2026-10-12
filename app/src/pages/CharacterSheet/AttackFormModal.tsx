@@ -28,6 +28,7 @@ type AttackDraft = {
   alcance: string
   tipoMunicao: string
   descricao: string
+  custoPE: number
 }
 
 type AltAttackDraft = AttackDraft & { id: string }
@@ -69,7 +70,7 @@ const ALCANCE_OPTIONS = [
 function emptyDraft(): AttackDraft {
   return {
     name: '', skillId: '', attribute: 'forca', d20Bonus: 0, attackBonus: '', threatMargin: 20, multiplier: 2,
-    damageAttribute: 'forca', damage: [{ formula: '', tipo: '' }], tipo: '', empunhadura: '', alcance: '', tipoMunicao: '', descricao: '',
+    damageAttribute: 'forca', damage: [{ formula: '', tipo: '' }], tipo: '', empunhadura: '', alcance: '', tipoMunicao: '', descricao: '', custoPE: 0,
   }
 }
 
@@ -318,6 +319,7 @@ function draftFromAttack(a: AttackToEdit): AttackDraft {
     alcance: String(info.alcance ?? ''),
     tipoMunicao: String(info.tipo_municao ?? ''),
     descricao: a.description ?? '',
+    custoPE: Number(info.custo_pe) || 0,
   }
 }
 
@@ -395,6 +397,7 @@ export default function AttackFormModal({
       general_info: {
         tipo: draft.tipo || null, empunhadura: draft.empunhadura || null, alcance: draft.alcance || null, tipo_municao: draft.tipoMunicao || null,
         sem_atributo_no_dano: draft.damageAttribute === 'nenhum',
+        custo_pe: draft.custoPE > 0 ? draft.custoPE : null,
         // Veio da arma: guarda o que mudou em relação a ela (a arma é recalculada a cada abertura).
         ...(editing?.daArma ? { ajustes: ajustesDaEdicao(editing.daArma, { d20_bonus: draft.d20Bonus, threat_margin: draft.threatMargin, multiplier: draft.multiplier, damage: draft.damage.filter((d) => d.formula) }) } : {}),
       },
@@ -443,6 +446,14 @@ export default function AttackFormModal({
             <>
               <div className="attack-section-title"><span>ATAQUE</span></div>
               <AttackFields draft={draft} onChange={patchDraft} skills={skills} />
+
+              <div className="attack-field-row">
+                <div className="attack-field">
+                  <span className="attack-field-label">Custo de PE</span>
+                  <input className="attack-input" type="number" min={0} placeholder="0" value={draft.custoPE || ''} onChange={(e) => patchDraft({ custoPE: Math.max(0, Number(e.target.value) || 0) })} />
+                </div>
+                <p className="attack-custo-dica">Desconta sozinho da ficha quando você rola o ataque.</p>
+              </div>
 
               <div className="attack-section-title"><span>DESCRIÇÃO</span></div>
               <TextareaFormatada className="attack-textarea" placeholder={editing?.daArma ? 'Vazio usa a descrição da arma' : 'Descrição aqui'} value={draft.descricao} onChange={(e) => patchDraft({ descricao: e.target.value })} />

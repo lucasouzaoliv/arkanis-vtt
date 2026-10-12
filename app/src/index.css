@@ -18543,3 +18543,66 @@ label.janela-botao {
   background: #1b1d24;
   color: #fff;
 }
+
+/* Card de ataque (12/10): o nome aparece inteiro (quebra linha em vez de cortar com "..."),
+   o dano também quebra linha na caixa, a foto do ataque aparece e o custo de PE fica do lado. */
+.attack-card-title .inv-item-name {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  line-height: 1.2;
+}
+.attack-card-title {
+  min-width: 90px;
+}
+.attack-card-box-value {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+.attack-card-icon.attack-card-foto {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.attack-card-custo {
+  display: inline-block;
+  margin-left: 0.5em;
+  padding: 0 0.4em;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-family: var(--poppins);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+}
+.attack-custo-dica {
+  align-self: end;
+  margin: 0 0 0.6em;
+  font-family: var(--poppins);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Arrastar ataques pra reorganizar (12/10). */
+.attack-arrastavel {
+  cursor: grab;
+  border-top: 2px solid transparent;
+  transition: opacity 0.15s;
+}
+.attack-arrastavel.arrastando {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+.attack-arrastavel.sobre {
+  border-top-color: rgba(255, 255, 255, 0.8);
+}
+.attack-arrastavel {
+  border-bottom: 2px solid transparent;
+}
+.attack-arrastavel.sobre-baixo {
+  border-bottom-color: rgba(255, 255, 255, 0.8);
+}

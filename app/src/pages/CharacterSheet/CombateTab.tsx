@@ -25,7 +25,8 @@ import mysteryIcon from '../../assets/combate/op-icon-misterio-custom.png'
 import { lerCondicoesPersonalizadas } from './efeitosEscolhidos'
 import { useClasseDaFicha } from './useClasseDaFicha'
 import { useBonusDosItens } from './useBonusDosItens'
-import { aplicarAjustes, type AjustesDoAtaque } from './ajustesDoAtaque'
+import { aplicarAjustes, moverNaLista, type AjustesDoAtaque } from './ajustesDoAtaque'
+import { notaDoGasto, recursoDoRitual } from './ritualCusto'
 
 const NOME_DO_ATRIBUTO: Record<string, string> = { forca: 'Força', agilidade: 'Agilidade', intelecto: 'Intelecto', vigor: 'Vigor', presenca: 'Presença' }
 import { useVersaoDaFicha } from './fichaAoVivo'
@@ -52,6 +53,8 @@ type Attack = {
     ajustes?: AjustesDoAtaque
     // "Nenhum" no Atributo Dano: não soma Força/Agilidade no dano (12/10).
     sem_atributo_no_dano?: boolean
+    // Custo de PE do ataque (pedido 12/10): descontado ao rolar o teste.
+    custo_pe?: number | null
   } | null
   description: string | null
   from_inventory_item_id: string | null
@@ -71,6 +74,7 @@ type InventoryAmmoInfo = {
   quantity: number
   name: string
   description: string | null
+  image_url: string | null
   stats: Record<string, unknown>
   applied_modifiers: AppliedModifier[]
   // Amaldiçoar Arma, Arma Atroz… conjurados nesta arma/munição (por você ou por um aliado).
@@ -79,7 +83,7 @@ type InventoryAmmoInfo = {
 
 type Skill = { id: string; name: string }
 
-export default function CombateTab({ character, onUpdated, editMode }: { character: CharacterRecord; onUpdated: () => void; editMode: boolean }) {
+export default function CombateTab({ character, onUpdated, editMode, onGastar }: { character: CharacterRecord; onUpdated: () => void; editMode: boolean; onGastar?: (campo: 'current_pe' | 'current_pd', valor: number) => Promise<void> }) {
   // Recarrega quando a ficha muda em qualquer lugar (Realtime, 11/10).
   const versao = useVersaoDaFicha()
   const { session } = useAuth()
@@ -121,6 +125,19 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
   const [expandedAttack, setExpandedAttack] = useState<string | null>(null)
   const [editingAttack, setEditingAttack] = useState<AttackToEdit | null>(null)
   const [attackSearch, setAttackSearch] = useState('')
+  // Arrastar o card pra reorganizar a lista (pedido 12/10).
+  const [arrastando, setArrastando] = useState<string | null>(null)
+  const [sobre, setSobre] = useState<string | null>(null)
+
+  async function soltarAtaque(alvoId: string) {
+    const de = arrastando
+    setArrastando(null)
+    setSobre(null)
+    if (!de || de === alvoId) return
+    const ids = moverNaLista(attacks.map((a) => a.id), de, alvoId)
+    setAttacks((lista) => ids.map((id) => lista.find((a) => a.id === id)!).filter(Boolean))
+    await Promise.all(ids.map((id, i) => supabase.from('character_attacks').update({ sort_order: i }).eq('id', id)))
+  }
   const [pendingAttack, setPendingAttack] = useState<{ attackId: string; isCrit: boolean } | null>(null)
   // Alvos marcados com a mira na mesa (12.9): com eles, o ataque vira ação no chat.
   const alvos = useAlvosDaMesa(character.campaign_id)
@@ -132,13 +149,15 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
       .from('character_attacks')
       .select('id, name, skill_id, attribute, d20_bonus, attack_bonus, threat_margin, multiplier, damage_attribute, damage, general_info, modifiers, alternative_attacks, image_url, description, from_inventory_item_id')
       .eq('character_id', character.id)
+      // A ordem que a pessoa arrastou (12/10); os sem posição ficam no fim.
+      .order('sort_order', { ascending: true, nullsFirst: false })
     setAttacks((data ?? []) as unknown as Attack[])
   }
 
   async function loadInventoryAmmo() {
     const { data } = await supabase
       .from('character_inventory')
-      .select('id, linked_ammo_id, ammo_current, ammo_total, ammo_label, quantity, applied_modifiers, encantos, custom_item, equipment_items(name, stats, description)')
+      .select('id, linked_ammo_id, ammo_current, ammo_total, ammo_label, quantity, applied_modifiers, encantos, custom_item, equipment_items(name, stats, description, image_url)')
       .eq('character_id', character.id)
     setInventoryAmmo(
       (data ?? []).map((row: any) => ({
@@ -153,6 +172,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
         quantity: row.quantity,
         name: row.equipment_items?.name ?? row.custom_item?.name ?? 'Item',
         description: row.custom_item?.description ?? row.equipment_items?.description ?? null,
+        image_url: row.custom_item?.image_url ?? row.equipment_items?.image_url ?? null,
       })),
     )
   }
@@ -295,6 +315,10 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
     return { ...(a as unknown as AttackToEdit), ...aplicarAjustes(daArma, a.general_info?.ajustes), daArma }
   }
 
+  function fotoDaArma(a: Attack): string | null {
+    return a.from_inventory_item_id ? inventoryAmmo.find((i) => i.id === a.from_inventory_item_id)?.image_url ?? null : null
+  }
+
   function ammoForAttack(attack: Attack): InventoryAmmoInfo | null {
     if (!character.optional_rules.contagem_municao || !attack.from_inventory_item_id) return null
     const sourceInv = inventoryAmmo.find((i) => i.id === attack.from_inventory_item_id)
@@ -329,6 +353,17 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
     if (ammoInv && (ammoInv.ammo_current ?? 0) <= 0) {
       window.alert(`Sem ${ammoInv.ammo_label ?? 'munição'} — recarregue no Inventário antes de atacar.`)
       return
+    }
+    // Ataque com custo de PE (pedido 12/10): desconta ao rolar, como o ritual. Sem PE, pergunta antes.
+    const custo = Math.max(0, Number(attack.general_info?.custo_pe) || 0)
+    let notaPE: string | null = null
+    if (custo > 0 && onGastar) {
+      const recurso = recursoDoRitual(character.optional_rules)
+      const antes = (character as unknown as Record<string, number | null>)[recurso.campo] ?? 0
+      if (antes < custo && !window.confirm(`Você tem ${antes} ${recurso.sigla} e o ataque custa ${custo}. Atacar mesmo assim?`)) return
+      const depois = Math.max(0, antes - custo)
+      void onGastar(recurso.campo, depois)
+      notaPE = notaDoGasto(custo, recurso.sigla, antes, depois)
     }
 
     const activeAttackMods = attackMods.filter((m) => m.is_active)
@@ -369,7 +404,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
           corpo,
         },
       }).then((erro) => {
-        setAvisoMira(erro ?? `Ataque contra ${textoDosAlvos(alvos)} enviado pro chat.`)
+        setAvisoMira(erro ?? `Ataque contra ${textoDosAlvos(alvos)} enviado pro chat.${notaPE ? ` ${notaPE}.` : ''}`)
         setTimeout(() => setAvisoMira(null), 3500)
       })
       if (ammoInv) consumeAmmo(ammoInv)
@@ -400,7 +435,12 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
         total: kept + bonus,
         detail: `d20 mantido: ${kept} (rolados: ${rolls.join(', ')}) + bônus ${bonus}`,
         dice: rolls.map((v) => ({ sides: 20, value: v, discarded: v !== kept })), bonus,
+        nota: notaPE,
       })
+    }
+    if (notaPE) {
+      setAvisoMira(`${attack.name}: ${notaPE}.`)
+      setTimeout(() => setAvisoMira(null), 3500)
     }
   }
 
@@ -695,8 +735,18 @@ Presença Poderosa: +${character.attributes.presenca ?? 0} só pra conjurar ritu
       {attacksAtualizados.filter((a) => a.name.toLowerCase().includes(attackSearch.toLowerCase())).map((a) => {
         const ammoInv = ammoForAttack(a)
         return (
-          <AttackCard
+          <div
             key={a.id}
+            className={`attack-arrastavel${arrastando === a.id ? ' arrastando' : ''}${sobre === a.id && arrastando && arrastando !== a.id ? (attacks.findIndex((x) => x.id === arrastando) < attacks.findIndex((x) => x.id === a.id) ? ' sobre-baixo' : ' sobre') : ''}`}
+            draggable
+            onDragStart={(e) => { setArrastando(a.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', a.id) }}
+            onDragOver={(e) => { if (!arrastando) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (sobre !== a.id) setSobre(a.id) }}
+            onDragLeave={() => { if (sobre === a.id) setSobre(null) }}
+            onDrop={(e) => { e.preventDefault(); void soltarAtaque(a.id) }}
+            onDragEnd={() => { setArrastando(null); setSobre(null) }}
+            title="Arraste pra mudar a ordem"
+          >
+          <AttackCard
             name={a.name}
             ataque={`${attrValue(atributos, a.attribute)}d20${a.d20_bonus ? `+${a.d20_bonus}` : ''}`}
             dano={(() => {
@@ -718,12 +768,15 @@ Presença Poderosa: +${character.attributes.presenca ?? 0} só pra conjurar ritu
             onToggle={() => setExpandedAttack((atual) => (atual === a.id ? null : a.id))}
             onRemove={() => removeAttack(a.id)}
             descricao={a.description}
+            imagem={a.image_url ?? fotoDaArma(a)}
+            custoPE={a.general_info?.custo_pe ? `${a.general_info.custo_pe} ${recursoDoRitual(character.optional_rules).sigla}` : null}
             onEdit={() => setEditingAttack(paraEditar(a.id))}
             onRollAtaque={() => rollAttackTest(a)}
             onRollDano={(critico) => rollDamage(a, critico)}
             danoArmado={pendingAttack?.attackId === a.id}
             ehCritico={pendingAttack?.attackId === a.id && pendingAttack.isCrit}
           />
+          </div>
         )
       })}
     </div>

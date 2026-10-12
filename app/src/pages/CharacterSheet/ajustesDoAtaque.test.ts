@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aplicarAjustes, ajustesDaEdicao } from './ajustesDoAtaque'
+import { aplicarAjustes, ajustesDaEdicao, moverNaLista } from './ajustesDoAtaque'
 import { numerosDoAtaque } from './itemMods'
 import { rotuloDoTipoDeDano } from '../../lib/tiposDeDano'
 
@@ -46,5 +46,13 @@ describe('rotuloDoTipoDeDano', () => {
     expect(rotuloDoTipoDeDano('conhecimento')).toBe('Conhecimento')
     expect(rotuloDoTipoDeDano('Dum Dum')).toBeNull()
     expect(rotuloDoTipoDeDano('')).toBeNull()
+  })
+})
+
+describe('moverNaLista (arrastar ataques)', () => {
+  it('pra baixo e pra cima', () => {
+    expect(moverNaLista(['a', 'b', 'c', 'd'], 'a', 'c')).toEqual(['b', 'c', 'a', 'd'])
+    expect(moverNaLista(['a', 'b', 'c', 'd'], 'd', 'b')).toEqual(['a', 'd', 'b', 'c'])
+    expect(moverNaLista(['a', 'b'], 'a', 'a')).toEqual(['a', 'b'])
   })
 })

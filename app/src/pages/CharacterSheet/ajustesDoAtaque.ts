@@ -52,3 +52,13 @@ export function ajustesDaEdicao(
   if (salvo.multiplier !== daArma.multiplier) ajustes.multiplicador = salvo.multiplier - daArma.multiplier
   return ajustes
 }
+
+// Arrastar um ataque pra cima ou pra baixo (pedido 12/10): ele vai pro lugar do que recebeu.
+export function moverNaLista(ids: string[], de: string, para: string): string[] {
+  const i = ids.indexOf(de)
+  const j = ids.indexOf(para)
+  if (i < 0 || j < 0 || i === j) return ids
+  const nova = ids.filter((id) => id !== de)
+  nova.splice(j, 0, de)
+  return nova
+}

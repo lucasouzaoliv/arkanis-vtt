@@ -49,6 +49,8 @@ export default function AttackCard({
   critico,
   info,
   descricao,
+  imagem,
+  custoPE,
   municaoRestante,
   expanded,
   onToggle,
@@ -67,6 +69,10 @@ export default function AttackCard({
   critico: string
   info: AttackGeneralInfo
   descricao?: string | null
+  /** Foto escolhida no ataque (ou a da arma); antes o card sempre mostrava o ícone padrão. */
+  imagem?: string | null
+  /** "2 PE": o ataque desconta isso ao rolar (pedido 12/10). */
+  custoPE?: string | null
   /** "12/15 Balas", quando a arma tem munição vinculada no inventário. */
   municaoRestante?: string | null
   expanded: boolean
@@ -85,8 +91,11 @@ export default function AttackCard({
     <div className={`inv-item-card attack-card${expanded ? ' expanded' : ''}`}>
       <div className="attack-card-head">
         <button type="button" className="attack-card-title" onClick={onToggle}>
-          <img className="attack-card-icon" src={mysteryIcon} alt="" />
-          <span className="inv-item-name">{name}</span>
+          <img className={`attack-card-icon${imagem ? ' attack-card-foto' : ''}`} src={imagem || mysteryIcon} alt="" />
+          <span className="inv-item-name">
+            {name}
+            {custoPE && <span className="attack-card-custo">{custoPE}</span>}
+          </span>
         </button>
 
         {/* As proprias caixas sao os botoes de rolagem: nao existe botao solto embaixo. */}
