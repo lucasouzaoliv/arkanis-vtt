@@ -10,6 +10,7 @@ import { TextareaFormatada } from '../../components/TextoRico'
 import EditorDeEfeitos from './EditorDeEfeitos'
 import type { EfeitoEscolhido } from './efeitosEscolhidos'
 import ItemModifiersModal, { type AppliedModifier } from './ItemModifiersModal'
+import CampoTipoDeDano from './CampoTipoDeDano'
 
 type ItemType = 'arma' | 'municao' | 'protecao' | 'geral' | 'paranormal'
 
@@ -142,6 +143,8 @@ export default function ItemEditModal({
   const [critico, setCritico] = useState(String(partesDoCritico(s.critico).margem ?? ''))
   const [multiplicador, setMultiplicador] = useState(String(partesDoCritico(s.critico).multiplicador ?? ''))
   const [danoAlternativo, setDanoAlternativo] = useState(String(s.dano_alternativo ?? ''))
+  // Dano a mais da arma (Punhal: 1d4 Perfuração + 1d6 Conhecimento), pedido 12/10.
+  const [danosExtras, setDanosExtras] = useState<{ formula: string; tipo: string }[]>(() => (Array.isArray(s.danos_extras) ? (s.danos_extras as { formula: string; tipo: string }[]) : []))
 
   const [tipoMunicao, setTipoMunicao] = useState(String(s.tipo_municao ?? ''))
   const [capacidade, setCapacidade] = useState(String(s.capacidade ?? '0'))
@@ -199,6 +202,7 @@ export default function ItemEditModal({
       dano: dano || null,
       tipo_dano: tipoDano || null,
       dano_alternativo: danoAlternativo || null,
+      danos_extras: danosExtras.filter((d) => d.formula.trim()),
       tipo_municao: tipoMunicao || null,
       capacidade: Number(capacidade) || 0,
     }
@@ -272,11 +276,21 @@ export default function ItemEditModal({
               <SelectField label="É amaldiçoado?" value={amaldicoado} options={SIM_NAO} onChange={setAmaldicoado} />
             </div>
 
-            <div className="attack-section-title"><span>DANO</span></div>
+            <div className="attack-section-title attack-section-title-inline">
+              <span>DANO</span>
+              <button type="button" className="attack-add-row-btn" onClick={() => setDanosExtras((d) => [...d, { formula: '', tipo: '' }])} aria-label="Adicionar outro dano">+</button>
+            </div>
             <div className="attack-field-row">
               <TextField label="Dano" value={dano} onChange={setDano} placeholder="2d8" />
-              <TextField label="Tipo de Dano" value={tipoDano} onChange={setTipoDano} placeholder="Perfuração" />
+              <CampoTipoDeDano value={tipoDano} onChange={setTipoDano} />
             </div>
+            {danosExtras.map((d, i) => (
+              <div className="attack-field-row attack-damage-row" key={i}>
+                <TextField label="Dano a mais" value={d.formula} onChange={(v) => setDanosExtras((l) => l.map((x, j) => (j === i ? { ...x, formula: v } : x)))} placeholder="1d6" />
+                <CampoTipoDeDano value={d.tipo} onChange={(v) => setDanosExtras((l) => l.map((x, j) => (j === i ? { ...x, tipo: v } : x)))} />
+                <button type="button" className="attack-damage-remove" onClick={() => setDanosExtras((l) => l.filter((_, j) => j !== i))} aria-label="Remover dano">×</button>
+              </div>
+            ))}
             <div className="attack-field-row">
               <TextField label="Crítico" value={critico} onChange={setCritico} placeholder="19" />
               <TextField label="Multiplicador" value={multiplicador} onChange={setMultiplicador} placeholder="3" />

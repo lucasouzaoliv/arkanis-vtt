@@ -118,7 +118,7 @@ export function normalizar(t: string): string {
 }
 
 // Tipos de dano escritos de vários jeitos ("P", "perfuração", "Balístico") viram uma chave só.
-const SIGLAS: Record<string, string> = { c: 'corte', p: 'perfuracao', b: 'balistico', i: 'impacto', f: 'fogo', e: 'eletricidade', q: 'quimico', m: 'mental' }
+const SIGLAS: Record<string, string> = { c: 'corte', p: 'perfuracao', b: 'balistico', i: 'impacto', f: 'fogo', e: 'eletricidade', q: 'quimico', m: 'mental', contundente: 'impacto', cortante: 'corte', perfurante: 'perfuracao', eletrico: 'eletricidade', acido: 'quimico' }
 
 export function tipoDeDano(t: string | null | undefined): string {
   const n = normalizar(t ?? '').replace(/[.()]/g, '')

@@ -4,6 +4,7 @@ import { attrValue, rollAttributeTest, trainingBonus, type Attributes, type Trai
 import { PERICIAS } from '../pages/CharacterSheet/itemMods'
 import { penalidadeDeCondicoes } from '../pages/CharacterSheet/condicoes'
 import type { EntradaCompendio, Sistema } from './tipos'
+import { TIPOS_DE_DANO } from '../lib/tiposDeDano'
 
 export const ATRIBUTOS_OP = [
   { id: 'agilidade', rotulo: 'Agilidade' },
@@ -28,11 +29,7 @@ export const ordemParanormal: Sistema = {
     { id: 'extremo', rotulo: 'Extremo (90 m)', metros: 90 },
     { id: 'ilimitado', rotulo: 'Ilimitado', metros: null },
   ],
-  tiposDeDano: [
-    ['corte', 'Corte'], ['impacto', 'Impacto'], ['perfuracao', 'Perfuração'], ['balistico', 'Balístico'], ['fogo', 'Fogo'], ['frio', 'Frio'],
-    ['quimico', 'Químico'], ['eletricidade', 'Eletricidade'], ['mental', 'Mental'], ['sangue', 'Sangue'], ['morte', 'Morte'],
-    ['conhecimento', 'Conhecimento'], ['energia', 'Energia'], ['medo', 'Medo'],
-  ].map(([id, rotulo]) => ({ id, rotulo })),
+  tiposDeDano: TIPOS_DE_DANO,
   recursos: [
     { id: 'pv', rotulo: 'PV' },
     { id: 'san', rotulo: 'Sanidade' },

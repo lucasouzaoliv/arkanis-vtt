@@ -46,7 +46,9 @@ export function resumo(item: InventoryCardItem): { label: string; value: string 
   const linha: { label: string; value: string }[] = []
 
   if (item.type === 'arma') {
-    linha.push({ label: 'Dano', value: String(stats.dano ?? '—') })
+    // Dano a mais do item (1d4 + 1d6 Conhecimento), pedido 12/10.
+    const extras = (Array.isArray(stats.danos_extras) ? (stats.danos_extras as { formula?: string; tipo?: string }[]) : []).filter((d) => d?.formula)
+    linha.push({ label: 'Dano', value: [String(stats.dano ?? '—'), ...extras.map((d) => `${d.formula}${d.tipo ? ` ${d.tipo}` : ''}`)].join(' + ') })
     linha.push({ label: 'Crítico', value: String(stats.critico ?? '—') })
     linha.push({ label: 'Alcance', value: rotulo(ALCANCE_LABEL, stats.alcance) ?? '—' })
   }

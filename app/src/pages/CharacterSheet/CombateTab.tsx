@@ -25,6 +25,7 @@ import mysteryIcon from '../../assets/combate/op-icon-misterio-custom.png'
 import { lerCondicoesPersonalizadas } from './efeitosEscolhidos'
 import { useClasseDaFicha } from './useClasseDaFicha'
 import { useBonusDosItens } from './useBonusDosItens'
+import { aplicarAjustes, type AjustesDoAtaque } from './ajustesDoAtaque'
 
 const NOME_DO_ATRIBUTO: Record<string, string> = { forca: 'Força', agilidade: 'Agilidade', intelecto: 'Intelecto', vigor: 'Vigor', presenca: 'Presença' }
 import { useVersaoDaFicha } from './fichaAoVivo'
@@ -47,7 +48,12 @@ type Attack = {
     municao?: string | null
     modificadores?: { kind: 'modificacao' | 'maldicao'; name: string; effect: string; elemento: string | null; origem: 'Arma' | 'Munição' }[]
     damage_bonus_from_mods?: number
+    // Edição de ataque vindo da arma (12/10): aplicada por cima dos números do item.
+    ajustes?: AjustesDoAtaque
+    // "Nenhum" no Atributo Dano: não soma Força/Agilidade no dano (12/10).
+    sem_atributo_no_dano?: boolean
   } | null
+  description: string | null
   from_inventory_item_id: string | null
   attack_bonus: string | null
   damage_attribute: AttributeKey | null
@@ -64,6 +70,7 @@ type InventoryAmmoInfo = {
   ammo_label: string | null
   quantity: number
   name: string
+  description: string | null
   stats: Record<string, unknown>
   applied_modifiers: AppliedModifier[]
   // Amaldiçoar Arma, Arma Atroz… conjurados nesta arma/munição (por você ou por um aliado).
@@ -123,7 +130,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
   async function loadAttacks() {
     const { data } = await supabase
       .from('character_attacks')
-      .select('id, name, skill_id, attribute, d20_bonus, attack_bonus, threat_margin, multiplier, damage_attribute, damage, general_info, modifiers, alternative_attacks, image_url, from_inventory_item_id')
+      .select('id, name, skill_id, attribute, d20_bonus, attack_bonus, threat_margin, multiplier, damage_attribute, damage, general_info, modifiers, alternative_attacks, image_url, description, from_inventory_item_id')
       .eq('character_id', character.id)
     setAttacks((data ?? []) as unknown as Attack[])
   }
@@ -131,7 +138,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
   async function loadInventoryAmmo() {
     const { data } = await supabase
       .from('character_inventory')
-      .select('id, linked_ammo_id, ammo_current, ammo_total, ammo_label, quantity, applied_modifiers, encantos, custom_item, equipment_items(name, stats)')
+      .select('id, linked_ammo_id, ammo_current, ammo_total, ammo_label, quantity, applied_modifiers, encantos, custom_item, equipment_items(name, stats, description)')
       .eq('character_id', character.id)
     setInventoryAmmo(
       (data ?? []).map((row: any) => ({
@@ -145,6 +152,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
         encantos: row.encantos ?? [],
         quantity: row.quantity,
         name: row.equipment_items?.name ?? row.custom_item?.name ?? 'Item',
+        description: row.custom_item?.description ?? row.equipment_items?.description ?? null,
       })),
     )
   }
@@ -255,12 +263,12 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
     const municao = origem.linked_ammo_id ? inventoryAmmo.find((i) => i.id === origem.linked_ammo_id) : null
     const numeros = numerosDoAtaque(origem.stats, [...modsComEfeitosDoItem(origem.stats, origem.applied_modifiers), ...(municao?.applied_modifiers ?? [])])
     const encantos = [...origem.encantos, ...(municao?.encantos ?? [])]
+    const daArma = { d20_bonus: numeros.d20Bonus, threat_margin: numeros.threatMargin, multiplier: numeros.multiplier, damage: numeros.damage }
+    const comAjustes = aplicarAjustes(daArma, a.general_info?.ajustes)
     return numerosComEncantos({
       ...a,
-      d20_bonus: numeros.d20Bonus,
-      threat_margin: numeros.threatMargin,
-      multiplier: numeros.multiplier,
-      damage: numeros.damage,
+      ...comAjustes,
+      description: a.description || origem.description,
       general_info: {
         ...a.general_info,
         alcance: numeros.alcance || a.general_info?.alcance,
@@ -274,6 +282,18 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
       modifiers: [...origem.applied_modifiers, ...(municao?.applied_modifiers ?? [])],
     }, encantos)
   })
+
+  // O modal abre com o ataque guardado (sem o encanto, que vem do ritual e não da edição) e, se
+  // veio da arma, com os números da arma + ajustes; daArma é a base pra calcular o que mudou.
+  function paraEditar(id: string): AttackToEdit {
+    const a = attacks.find((x) => x.id === id)!
+    const origem = a.from_inventory_item_id ? inventoryAmmo.find((i) => i.id === a.from_inventory_item_id) : null
+    if (!origem) return a as unknown as AttackToEdit
+    const municao = origem.linked_ammo_id ? inventoryAmmo.find((i) => i.id === origem.linked_ammo_id) : null
+    const numeros = numerosDoAtaque(origem.stats, [...modsComEfeitosDoItem(origem.stats, origem.applied_modifiers), ...(municao?.applied_modifiers ?? [])])
+    const daArma = { d20_bonus: numeros.d20Bonus, threat_margin: numeros.threatMargin, multiplier: numeros.multiplier, damage: numeros.damage }
+    return { ...(a as unknown as AttackToEdit), ...aplicarAjustes(daArma, a.general_info?.ajustes), daArma }
+  }
 
   function ammoForAttack(attack: Attack): InventoryAmmoInfo | null {
     if (!character.optional_rules.contagem_municao || !attack.from_inventory_item_id) return null
@@ -389,7 +409,7 @@ export default function CombateTab({ character, onUpdated, editMode }: { charact
   function atributoNoDano(attack: Attack): number {
     const g = attack.general_info
     const corpoOuArremesso = /corpo|arremess/i.test(g?.tipo ?? '') || /corpo/i.test(g?.alcance ?? '')
-    if (!corpoOuArremesso) return 0
+    if (!corpoOuArremesso || g?.sem_atributo_no_dano) return 0
     return attrValue(atributos, attack.damage_attribute ?? 'forca')
   }
 
@@ -697,7 +717,8 @@ Presença Poderosa: +${character.attributes.presenca ?? 0} só pra conjurar ritu
             expanded={expandedAttack === a.id}
             onToggle={() => setExpandedAttack((atual) => (atual === a.id ? null : a.id))}
             onRemove={() => removeAttack(a.id)}
-            onEdit={() => setEditingAttack(a as unknown as AttackToEdit)}
+            descricao={a.description}
+            onEdit={() => setEditingAttack(paraEditar(a.id))}
             onRollAtaque={() => rollAttackTest(a)}
             onRollDano={(critico) => rollDamage(a, critico)}
             danoArmado={pendingAttack?.attackId === a.id}

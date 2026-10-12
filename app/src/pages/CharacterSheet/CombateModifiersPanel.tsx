@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import removeIcon from '../../assets/pericias/remove-icon.svg'
 import { useVersaoDaFicha } from './fichaAoVivo'
+import { TIPOS_DE_DANO, rotuloDoTipoDeDano } from '../../lib/tiposDeDano'
 import type { Modifier } from './ModifiersPanel'
 
 type Scope = 'ataque' | 'dano'
@@ -112,7 +113,10 @@ export default function CombateModifiersPanel({
               <Counter label="Dano Bônus" value={valueBonus} onChange={setValueBonus} />
               <div className="modpanel-field">
                 <span className="modpanel-counter-label">Tipo de Dano</span>
-                <input value={damageType} onChange={(e) => setDamageType(e.target.value)} />
+                <select value={rotuloDoTipoDeDano(damageType) ?? damageType} onChange={(e) => setDamageType(e.target.value)}>
+                  <option value="">Qualquer</option>
+                  {TIPOS_DE_DANO.map((t) => <option key={t.id} value={t.rotulo}>{t.rotulo}</option>)}
+                </select>
               </div>
             </div>
           )}

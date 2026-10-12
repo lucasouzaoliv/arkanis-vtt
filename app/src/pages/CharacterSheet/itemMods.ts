@@ -377,6 +377,10 @@ export function numerosDoAtaque(
 
   const damage: { formula: string; tipo: string }[] = [
     { formula: String(s.dano ?? ''), tipo: String(s.tipo_dano ?? '') },
+    // Dano a mais escrito no item (1d6 Conhecimento no punhal), pedido 12/10.
+    ...(Array.isArray(s.danos_extras) ? (s.danos_extras as { formula?: string; tipo?: string }[]) : [])
+      .filter((d) => d?.formula)
+      .map((d) => ({ formula: String(d.formula), tipo: String(d.tipo ?? '') })),
   ]
 
   let finalMultiplier = multiplier

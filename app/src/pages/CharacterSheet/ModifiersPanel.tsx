@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useVersaoDaFicha } from './fichaAoVivo'
+import { TIPOS_DE_DANO, rotuloDoTipoDeDano } from '../../lib/tiposDeDano'
 import removeIcon from '../../assets/pericias/remove-icon.svg'
 
 export type Modifier = {
@@ -114,7 +115,10 @@ export default function ModifiersPanel({
           )}
 
           {scope === 'dano' && (
-            <label className="modpanel-field">Tipo de Dano <input value={damageType} onChange={(e) => setDamageType(e.target.value)} /></label>
+            <label className="modpanel-field">Tipo de Dano <select value={rotuloDoTipoDeDano(damageType) ?? damageType} onChange={(e) => setDamageType(e.target.value)}>
+                  <option value="">Qualquer</option>
+                  {TIPOS_DE_DANO.map((t) => <option key={t.id} value={t.rotulo}>{t.rotulo}</option>)}
+                </select></label>
           )}
 
           <div className="modpanel-add-row">

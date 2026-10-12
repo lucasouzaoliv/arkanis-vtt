@@ -1,4 +1,5 @@
 import mysteryIcon from '../../assets/combate/op-icon-misterio-custom.png'
+import { TextoRico } from '../../components/TextoRico'
 
 // Os mesmos rotulos do card de item: o ataque que vem de uma arma do inventario carrega
 // esses codigos, e tem que ler igual nos dois lugares.
@@ -161,7 +162,7 @@ export default function AttackCard({
           {descricao && (
             <>
               <div className="inv-item-divider" />
-              <p className="inv-item-description">{descricao}</p>
+              <p className="inv-item-description"><TextoRico texto={descricao} /></p>
             </>
           )}
 
