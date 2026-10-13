@@ -1,7 +1,7 @@
 // Sonoplastia (pedido da Millie, 06/10; arquivos que ela trouxe, em public/sons). Cada som toca no
 // volume de Efeitos Sonoros da pessoa (Lista de Reprodução → Controles de Volume de Usuário).
 import { efeitosMudos, lerVolumes } from '../pages/Mesa/volumesDoUsuario'
-import { SONS_DE_ARMA, somDaArma } from './somDasArmas'
+import { SONS_DE_ARMA, somDaArma, ehSomDeArma } from './somDasArmas'
 
 export const SONS = {
   dado: 'dado.mp3', // dados caindo
@@ -137,8 +137,9 @@ function tocarArquivo(a: { ctx: AudioContext; saida: AudioNode }, arquivo: strin
 
 // Som da arma no ataque (pelo nome do ataque; nome próprio cai pelo tipo de dano). Os arquivos
 // longos (rajada, lança-chamas) param em ~3 s.
-export function tocarSomDeArma(nome: string | null | undefined, tipoDano?: string | null) {
-  const arma = somDaArma(nome, tipoDano)
+export function tocarSomDeArma(nome: string | null | undefined, tipoDano?: string | null, som?: string | null) {
+  // A ficha já manda o som escolhido (pelo nome do ataque ou da arma de origem).
+  const arma = ehSomDeArma(som) ? som : somDaArma(nome, tipoDano)
   if (!arma) return
   const volume = efeitosMudos() ? 0 : lerVolumes().efeitos
   if (volume <= 0) return

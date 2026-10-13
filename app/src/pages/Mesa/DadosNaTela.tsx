@@ -33,7 +33,7 @@ export default function DadosNaTela({ mensagens, estilos = {} }: { mensagens: Me
   const carregando = useRef<Promise<Caixa | null> | null>(null)
   const vistos = useRef<Set<string> | null>(null)
   // Cada rolagem na fila, com a arma (se for o dado de ataque).
-  const fila = useRef<{ dados: Dado[]; arma: { nome: string; dano: string | null } | null; estilo: EstiloDados; teste?: boolean }[]>([])
+  const fila = useRef<{ dados: Dado[]; arma: { nome: string; dano: string | null; som?: string | null } | null; estilo: EstiloDados; teste?: boolean }[]>([])
   // A cor/material de cada tipo de dado da rolagem da vez (a fábrica lê na hora de criar o dado).
   const conjuntos = useRef<Record<string, unknown>>({})
   const prefs = useRef<PreferenciasDados>(lerPreferenciasDados())
@@ -117,7 +117,7 @@ export default function DadosNaTela({ mensagens, estilos = {} }: { mensagens: Me
     // Dados 3D desligados (Configurações): só o som.
     if (!prefs.current.mostrar && !teste) {
       if (dados.length) tocarSom('dado')
-      if (arma) tocarSomDeArma(arma.nome, arma.dano)
+      if (arma) tocarSomDeArma(arma.nome, arma.dano, arma.som)
       proxima()
       return
     }
@@ -171,7 +171,7 @@ export default function DadosNaTela({ mensagens, estilos = {} }: { mensagens: Me
     const notacao = notacaoUnica(dados)
     if (notacao) {
       tocarSom('dado')
-      if (arma) tocarSomDeArma(arma.nome, arma.dano)
+      if (arma) tocarSomDeArma(arma.nome, arma.dano, arma.som)
       // Se algo travar, não prende a fila pra sempre.
       await Promise.race([c.roll(notacao).catch(() => null), new Promise((r) => setTimeout(r, 9000))])
     }
@@ -202,9 +202,9 @@ export default function DadosNaTela({ mensagens, estilos = {} }: { mensagens: Me
       if (!m.acao && m.rolagem && /iniciativa/i.test(m.rolagem.label)) continue
       // Dado de ataque: o da mira (botão Ataque) ou a rolagem "Ataque: [arma]" da ficha.
       const acao = m.acao?.tipo === 'ataque' ? m.acao : null
-      const doAtaque = acao && chaves.includes(`${m.id}:ataque`) ? { nome: acao.ataque.nome, dano: acao.ataque.partes[0]?.tipo ?? null } : null
+      const doAtaque = acao && chaves.includes(`${m.id}:ataque`) ? { nome: acao.ataque.nome, dano: acao.ataque.partes[0]?.tipo ?? null, som: acao.ataque.som ?? null } : null
       const daFicha = chaves.includes(`${m.id}:rolagem`) && m.rolagem ? armaDoRotulo(m.rolagem.label) : null
-      fila.current.push({ dados, arma: doAtaque ?? (daFicha ? { nome: daFicha, dano: null } : null), estilo: estiloCompleto(estilosRef.current[m.user_id]) })
+      fila.current.push({ dados, arma: doAtaque ?? (daFicha ? { nome: daFicha, dano: null, som: m.rolagem?.som ?? null } : null), estilo: estiloCompleto(estilosRef.current[m.user_id]) })
     }
     proxima()
     // eslint-disable-next-line react-hooks/exhaustive-deps

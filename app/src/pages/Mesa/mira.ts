@@ -21,6 +21,7 @@ export type AtaqueDaAcao = {
   partes: ParteDano[]
   bonus_dano: number // somado uma vez, fora do crítico
   corpo?: boolean // corpo a corpo (dá pra contra-atacar quando erra)
+  som?: string | null // som de arma escolhido pela ficha (13/10)
 }
 
 export type RolagemAtaque = { rolls: number[]; kept: number; bonus: number; total: number; critico: boolean; acertos: Record<string, boolean> }

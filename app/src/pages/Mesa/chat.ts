@@ -26,6 +26,7 @@ export type Rolagem = {
   partes?: ParteRolada[] | null
   // Ritual conjurado: textura do elemento e símbolo no cartão (11/10).
   ritual?: { nome?: string | null; elemento?: string | null; imagem?: string | null } | null
+  som?: string | null
   // Rolagem digitada (/r): a fórmula como a pessoa pediu (2d20kh1 + 1d6 - 3).
   formula?: string
 }

@@ -4,6 +4,8 @@
 export const SONS_DE_ARMA = {
   katana: 'armas/katana.mp3',
   espada: 'armas/espada.mp3',
+  // Adagas, facas e punhais (áudio do Kevin, 13/10).
+  faca: 'armas/faca.mp3',
   machado: 'armas/machado.mp3',
   arco: 'armas/arco.mp3',
   pistola: 'armas/pistola.mp3',
@@ -36,7 +38,8 @@ const POR_NOME: [RegExp, SomDeArma | null][] = [
   [/arco|besta|balestra|estilingue/, 'arco'],
   [/katana|montante/, 'katana'],
   [/machad|acha|picareta|marreta|martelo|maca\b|bastao|cajado|corrente|nunchaku|motosserra|coronhada|improvisad/, 'machado'],
-  [/espada|florete|machete|faca|punhal|baioneta|gadanho|lanca|shuriken|garra|gancho/, 'espada'],
+  [/faca|facao|punhal|adaga|canivete|estilete|navalha|bisturi|baioneta|kunai|shuriken|sai\b|tanto\b/, 'faca'],
+  [/espada|florete|machete|gadanho|lanca|garra|gancho/, 'espada'],
 ]
 
 // Pelo tipo de dano (sigla ou nome): balístico → pistola, corte/perfuração → espada, impacto →
@@ -54,6 +57,16 @@ export function somDaArma(nome: string | null | undefined, tipoDano?: string | n
   const d = sem(tipoDano ?? '').trim()
   for (const [re, som] of POR_DANO) if (re.test(d)) return som
   return null
+}
+
+// Ataque com nome próprio ("Slash 💔") vindo do inventário: tenta o nome do ataque, depois o da
+// arma de onde veio (Punhal X), e só então o tipo de dano.
+export function somDoAtaque(nomeDoAtaque: string | null | undefined, nomeDaArma: string | null | undefined, tipoDano?: string | null): SomDeArma | null {
+  return somDaArma(nomeDoAtaque) ?? somDaArma(nomeDaArma, tipoDano)
+}
+
+export function ehSomDeArma(som: string | null | undefined): som is SomDeArma {
+  return !!som && som in SONS_DE_ARMA
 }
 
 // "Ataque: Pistola (crítico!) — Caído" → "Pistola"

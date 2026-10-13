@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { armaDoRotulo, somDaArma } from './somDasArmas'
+import { armaDoRotulo, somDaArma, somDoAtaque } from './somDasArmas'
 
 describe('som das armas', () => {
   it('pelo nome da arma do livro', () => {
     expect(somDaArma('Katana')).toBe('katana')
     expect(somDaArma('Espada')).toBe('espada')
-    expect(somDaArma('Faca tática')).toBe('espada')
+    expect(somDaArma('Faca tática')).toBe('faca')
+    expect(somDaArma('Punhal X')).toBe('faca')
+    expect(somDaArma('Adaga ritualística')).toBe('faca')
+    expect(somDaArma('Canivete')).toBe('faca')
     expect(somDaArma('Machado Tático')).toBe('machado')
     expect(somDaArma('Marreta')).toBe('machado')
     expect(somDaArma('Arco composto')).toBe('arco')
@@ -28,6 +31,11 @@ describe('som das armas', () => {
     expect(somDaArma('Lâmina do Avô', 'C')).toBe('espada')
     expect(somDaArma('Coisa', 'Impacto')).toBe('machado')
     expect(somDaArma('Coisa')).toBeNull()
+  })
+  it('ataque com nome próprio usa a arma de origem (13/10)', () => {
+    expect(somDoAtaque('Slash 💔', 'Punhal X', 'Perfuração')).toBe('faca')
+    expect(somDoAtaque('Pistola', 'Punhal X')).toBe('pistola')
+    expect(somDoAtaque('Slash', null, 'Corte')).toBe('espada')
   })
   it('arma do rótulo da rolagem', () => {
     expect(armaDoRotulo('Ataque: Pistola (crítico!)')).toBe('Pistola')

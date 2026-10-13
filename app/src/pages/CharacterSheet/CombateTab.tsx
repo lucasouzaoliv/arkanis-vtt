@@ -31,6 +31,7 @@ import { notaDoGasto, recursoDoRitual } from './ritualCusto'
 const NOME_DO_ATRIBUTO: Record<string, string> = { forca: 'Força', agilidade: 'Agilidade', intelecto: 'Intelecto', vigor: 'Vigor', presenca: 'Presença' }
 import { useVersaoDaFicha } from './fichaAoVivo'
 import { dentroDaMesa, tocarSomDeArma } from '../../lib/sons'
+import { somDoAtaque } from '../../lib/somDasArmas'
 
 type Attack = {
   id: string
@@ -383,6 +384,9 @@ export default function CombateTab({ character, onUpdated, editMode, onGastar }:
 
     const effectiveThreatMargin = attack.threat_margin - threatBonus
     const isCrit = kept >= effectiveThreatMargin
+    // Som: pelo nome do ataque ou, se ele tiver nome próprio, pela arma do inventário (13/10).
+    const nomeDaArma = attack.from_inventory_item_id ? inventoryAmmo.find((i) => i.id === attack.from_inventory_item_id)?.name ?? null : null
+    const som = somDoAtaque(attack.name, nomeDaArma, attack.damage[0]?.tipo)
 
     // Com alvo marcado na mesa: "[Personagem] está atacando [Alvo]" no chat, com os botões
     // Ataque e Dano; quem rola é o chat (e o dano já sai descontado da Vida do alvo).
@@ -402,6 +406,7 @@ export default function CombateTab({ character, onUpdated, editMode, onGastar }:
           partes: attack.damage.map((d) => ({ formula: formulaDaEmpunhadura(d.formula, attack.general_info?.empunhadura), tipo: d.tipo, origem: d.origem, elemento: d.elemento })),
           bonus_dano: activeDamageMods.reduce((sum, m) => sum + m.value_bonus, 0) + (attack.general_info?.damage_bonus_from_mods ?? 0) + atributoNoDano(attack),
           corpo,
+          som,
         },
       }).then((erro) => {
         setAvisoMira(erro ?? `Ataque contra ${textoDosAlvos(alvos)} enviado pro chat.${notaPE ? ` ${notaPE}.` : ''}`)
@@ -413,7 +418,7 @@ export default function CombateTab({ character, onUpdated, editMode, onGastar }:
 
     const label = rotuloComCondicoes(`Ataque: ${attack.name}${isCrit ? ' (crítico!)' : ''}`, cond.motivos)
     // Fora da mesa, o som da arma toca aqui (dentro, a mesa toca junto com os dados 3D, pra todos).
-    if (!dentroDaMesa()) tocarSomDeArma(attack.name)
+    if (!dentroDaMesa()) tocarSomDeArma(attack.name, null, som)
     setRoll({
       label,
       rolls,
@@ -436,6 +441,7 @@ export default function CombateTab({ character, onUpdated, editMode, onGastar }:
         detail: `d20 mantido: ${kept} (rolados: ${rolls.join(', ')}) + bônus ${bonus}`,
         dice: rolls.map((v) => ({ sides: 20, value: v, discarded: v !== kept })), bonus,
         nota: notaPE,
+        som,
       })
     }
     if (notaPE) {
