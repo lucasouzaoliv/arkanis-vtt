@@ -1,21 +1,26 @@
 import { useEffect, useState } from 'react'
 
-// Tamanho do celular na tela (pedido da Millie, 14/10): 100% é o normal; dá pra encolher tudo.
-// É uma preferência de quem está olhando, então fica neste navegador.
-export const TAMANHOS = [100, 75, 50, 25, 10] as const
+// Tamanho do celular na tela (pedido da Millie, 14/10): uma barra de arrastar de 100% (normal) até
+// 30%. É uma preferência de quem está olhando, então fica neste navegador.
+export const TAMANHO_MINIMO = 30
+export const TAMANHO_MAXIMO = 100
+
+export function prenderTamanho(v: number): number {
+  return Number.isFinite(v) && v > 0 ? Math.min(TAMANHO_MAXIMO, Math.max(TAMANHO_MINIMO, Math.round(v))) : TAMANHO_MAXIMO
+}
 const CHAVE = 'arkanis-celular-tamanho'
 const EVENTO = 'arkanis-celular-tamanho'
 
 export function lerTamanho(): number {
   try {
-    const v = Number(localStorage.getItem(CHAVE))
-    return (TAMANHOS as readonly number[]).includes(v) ? v : 100
+    return prenderTamanho(Number(localStorage.getItem(CHAVE)))
   } catch {
     return 100
   }
 }
 
-export function salvarTamanho(v: number) {
+export function salvarTamanho(valor: number) {
+  const v = prenderTamanho(valor)
   try { localStorage.setItem(CHAVE, String(v)) } catch { /* sem armazenamento: vale só agora */ }
   window.dispatchEvent(new CustomEvent(EVENTO, { detail: v }))
 }
@@ -23,7 +28,7 @@ export function salvarTamanho(v: number) {
 export function useTamanhoDoCelular(): number {
   const [t, setT] = useState(lerTamanho)
   useEffect(() => {
-    const ouvir = (e: Event) => setT(Number((e as CustomEvent).detail) || 100)
+    const ouvir = (e: Event) => setT(prenderTamanho(Number((e as CustomEvent).detail)))
     window.addEventListener(EVENTO, ouvir)
     return () => window.removeEventListener(EVENTO, ouvir)
   }, [])

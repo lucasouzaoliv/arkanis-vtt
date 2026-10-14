@@ -7,7 +7,7 @@ import { useCelular } from '../estado'
 import { IDIOMAS, texto } from '../textos'
 import { escolherArquivo, escolherImagem } from '../arquivos'
 import { tocarNotificacao, tocarToque } from '../sons'
-import { TAMANHOS, salvarTamanho, useTamanhoDoCelular } from '../tamanho'
+import { TAMANHO_MAXIMO, TAMANHO_MINIMO, salvarTamanho, useTamanhoDoCelular } from '../tamanho'
 
 const PAPEIS = ['padrao', 'conhecimento', 'energia', 'medo', 'morte', 'sangue'].map((n) => `/celular/papeis/${n}.webp`)
 const CAPINHAS = ['#1d1f24', '#2b2b30', '#e8e3d9', '#c9a227', '#7a1e2b', '#1f4b8f', '#2f6b3a', '#6a3fa0', '#e58fb8', '#ff7a1a']
@@ -194,12 +194,23 @@ export default function AppConfiguracoes() {
       {tela === 'tamanho' && (
         <>
           <Topo titulo={texto(idioma, 'tamanhoNaTela')} />
-          <div className="cel-lista">
-            {TAMANHOS.map((t) => (
-              <button key={t} type="button" className="cel-lista-item" onClick={() => salvarTamanho(t)}>
-                <span>{t}%{t === 100 ? ` (${texto(idioma, 'normal')})` : ''}</span>{tamanho === t && <FontAwesomeIcon icon={faCheck} />}
-              </button>
-            ))}
+          {/* Barra de arrastar: o celular encolhe enquanto a pessoa arrasta (100% a 30%). */}
+          <div className="cel-form">
+            <div className="cel-tamanho">
+              <span className="cel-tamanho-pequeno" aria-hidden><FontAwesomeIcon icon={faMaximize} /></span>
+              <input
+                type="range"
+                min={TAMANHO_MINIMO}
+                max={TAMANHO_MAXIMO}
+                step={1}
+                value={tamanho}
+                aria-label={texto(idioma, 'tamanhoNaTela')}
+                onChange={(ev) => salvarTamanho(Number(ev.target.value))}
+              />
+              <span className="cel-tamanho-grande" aria-hidden><FontAwesomeIcon icon={faMaximize} /></span>
+            </div>
+            <p className="cel-tamanho-valor">{tamanho}%{tamanho === TAMANHO_MAXIMO ? ` (${texto(idioma, 'normal')})` : ''}</p>
+            {tamanho !== TAMANHO_MAXIMO && <button type="button" className="cel-link" onClick={() => salvarTamanho(TAMANHO_MAXIMO)}>{texto(idioma, 'voltarAoNormal')}</button>}
           </div>
           <p className="cel-dica">{texto(idioma, 'tamanhoDica')}</p>
         </>

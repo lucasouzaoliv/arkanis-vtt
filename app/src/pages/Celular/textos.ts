@@ -81,6 +81,7 @@ const T = {
   emBreve: ['Este app ainda não abre.', 'This app does not open yet.', 'Esta app aún no abre.'],
   tamanhoNaTela: ['Tamanho na tela', 'Size on screen', 'Tamaño en pantalla'],
   normal: ['normal', 'normal', 'normal'],
+  voltarAoNormal: ['Voltar ao normal', 'Reset to normal', 'Volver a lo normal'],
   tamanhoDica: ['Vale só pra você, neste navegador. Arraste o celular pela moldura pra mudar de lugar.', 'Only for you, in this browser. Drag the phone by its frame to move it.', 'Solo para ti, en este navegador. Arrastra el teléfono por el marco para moverlo.'],
 } as const
 

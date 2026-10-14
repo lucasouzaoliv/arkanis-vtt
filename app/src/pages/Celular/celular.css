@@ -896,3 +896,10 @@
 .cel-flutuante .cel-tela, .cel-flutuante button, .cel-flutuante input, .cel-flutuante select, .cel-flutuante label { cursor: auto; }
 .cel-flutuante .cel-tela button, .cel-flutuante button { cursor: pointer; }
 .cel-flutuante-conteudo { display: flex; flex-direction: column; align-items: center; }
+
+/* Barra do tamanho na tela (14/10): 100% a 30%. */
+.cel-tamanho { display: flex; align-items: center; gap: 10px; padding: 14px 12px; border-radius: 12px; background: #fff; }
+.cel-tamanho input { flex: 1; min-width: 0; accent-color: #007aff; padding: 0; border: none; background: none; }
+.cel-tamanho-pequeno { font-size: 11px; color: #8e8e93; }
+.cel-tamanho-grande { font-size: 19px; color: #8e8e93; }
+.cel-tamanho-valor { margin: 2px 0 0; text-align: center; font-size: 15px; font-weight: 600; color: #111; }
