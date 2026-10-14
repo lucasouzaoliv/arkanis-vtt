@@ -39,7 +39,10 @@ export default function AppLoja() {
               <IconeDoApp id={a.id} modelo={c.modelo} tamanho={46} />
               <span><strong>{a.nome}</strong><small>{a.descricao ?? (a.funciona ? 'Aplicativo' : 'Só o ícone, por enquanto')}</small></span>
               {baixando === a.id ? (
-                <span className="cel-baixando" aria-label="Baixando"><span /></span>
+                <span className="cel-baixando" role="progressbar" aria-label="Baixando">
+                  <svg viewBox="0 0 36 36"><circle className="cel-baixando-fundo" cx="18" cy="18" r="15" /><circle className="cel-baixando-anel" cx="18" cy="18" r="15" /></svg>
+                  <i />
+                </span>
               ) : tem ? (
                 a.deFabrica ? <small className="cel-instalado">{texto(idioma, 'instalado')}</small> : (
                   <button type="button" className="cel-botao-loja secundario" onClick={() => void e.acoes.mudarCelular({ apps: desinstalarApp(c.apps, a.id) })}>{texto(idioma, 'remover')}</button>
