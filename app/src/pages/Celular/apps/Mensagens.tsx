@@ -13,6 +13,7 @@ import { escolherArquivo, escolherImagem, tipoDoArquivo } from '../arquivos'
 import { momento, tempoAtivo, tempoCompleto } from '../../Mesa/tempo'
 import { Brasao } from '../Brasao'
 import { minutoDoJogo } from './comum'
+import FichaDoContato from './FichaDoContato'
 import { useMostrarImagem } from '../../Mesa/mostrarImagem'
 
 type App = Conversa['app']
@@ -23,6 +24,7 @@ type Tela =
   | { tipo: 'grupo' }
   | { tipo: 'contato' }
   | { tipo: 'info'; id: string }
+  | { tipo: 'pessoa'; lado: Lado; conversaId: string }
 
 // Cor do nome de cada pessoa no grupo (como no WhatsApp).
 const CORES = ['#e542a3', '#1f7aec', '#d9822b', '#7f66ff', '#02a698', '#c5463e', '#53bdeb', '#a5b337']
@@ -458,7 +460,7 @@ function TelaDaConversa({ id, app, ir }: { id: string; app: App; ir: (t: Tela) =
     <div className={`cel-conversa cel-conversa-${app}`}>
       <header className="cel-conversa-topo">
         <button type="button" className="cel-link" onClick={() => ir({ tipo: 'lista' })} aria-label="Voltar"><FontAwesomeIcon icon={faArrowLeft} /></button>
-        <button type="button" className="cel-conversa-quem" onClick={() => conversa.tipo === 'grupo' && ir({ tipo: 'info', id })}>
+        <button type="button" className="cel-conversa-quem" onClick={() => (conversa.tipo === 'grupo' ? ir({ tipo: 'info', id }) : t.outro && ir({ tipo: 'pessoa', lado: t.outro.lado, conversaId: id }))}>
           <Avatar foto={t.foto} tamanho={34} grupo={conversa.tipo === 'grupo'} />
           <span><strong>{t.nome}</strong><small>{subtitulo}</small></span>
         </button>
@@ -626,6 +628,7 @@ export default function AppMensagens({ app }: { app: App }) {
       {tela.tipo === 'grupo' && <NovoGrupo app={app} ir={ir} />}
       {tela.tipo === 'contato' && <NovoContato ir={ir} />}
       {tela.tipo === 'info' && <InfoDoGrupo id={tela.id} ir={ir} />}
+      {tela.tipo === 'pessoa' && <FichaDoContato quem={tela.lado} voltar={() => ir({ tipo: 'conversa', id: tela.conversaId })} onMensagem={() => ir({ tipo: 'conversa', id: tela.conversaId })} />}
     </div>
   )
 }

@@ -272,6 +272,12 @@ export async function mudarContato(id: string, mudancas: Partial<Pick<Contato, '
   return erroDe(error)
 }
 
+// O próprio NPC (quem criou, ou o mestre): nome, foto e número que aparecem pra todo mundo.
+export async function mudarNpc(id: string, mudancas: Partial<Pick<NpcDoCelular, 'nome' | 'foto' | 'numero' | 'recado'>>): Promise<string | null> {
+  const { error } = await supabase.from('celular_npcs').update(mudancas).eq('id', id)
+  return erroDe(error)
+}
+
 export async function apagarContato(id: string): Promise<string | null> {
   const { error } = await supabase.from('celular_contatos').delete().eq('id', id)
   return erroDe(error)

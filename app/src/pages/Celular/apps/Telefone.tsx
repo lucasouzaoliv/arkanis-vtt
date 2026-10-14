@@ -2,12 +2,12 @@
 // de ligação no celular de quem recebe (o mestre atende pelos NPCs).
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAddressBook, faClock, faDeleteLeft, faPhone, faStar, faTableCells, faArrowLeft, faTrash, faVoicemail } from '@fortawesome/free-solid-svg-icons'
+import { faAddressBook, faClock, faDeleteLeft, faPhone, faStar, faTableCells, faVoicemail } from '@fortawesome/free-solid-svg-icons'
 import { ehEu, pessoa, useCelular, type Pessoa } from '../estado'
 import { horaDaMensagem, type Lado } from '../dados'
 import { texto } from '../textos'
-import { escolherArquivo } from '../arquivos'
 import { Avatar } from './Mensagens'
+import FichaDoContato from './FichaDoContato'
 
 type Aba = 'favoritos' | 'recentes' | 'contatos' | 'teclado' | 'correio'
 
@@ -51,43 +51,8 @@ export default function AppTelefone() {
   const contato = detalhe ? e.contatos.find((k) => k.id === detalhe) : null
 
   if (contato) {
-    const p = pessoa(e, { celular: contato.contato_celular_id, npc: contato.npc_id })
-    return (
-      <div className="cel-telefone">
-        <header className="cel-topo-simples">
-          <button type="button" className="cel-link" onClick={() => setDetalhe(null)}><FontAwesomeIcon icon={faArrowLeft} /></button>
-          <strong>{texto(idioma, 'contatos')}</strong><span />
-        </header>
-        <div className="cel-grupo-info">
-          <Avatar foto={p.foto} tamanho={84} />
-          <strong>{p.nome}</strong>
-          <small>{p.numero}</small>
-        </div>
-        <div className="cel-form">
-          <label className="cel-campo"><span>{texto(idioma, 'nome')}</span>
-            <input defaultValue={contato.apelido ?? ''} placeholder={p.nome} onBlur={(ev) => void e.acoes.mudarContato(contato.id, { apelido: ev.target.value.trim() || null })} />
-          </label>
-          <div className="cel-linha-acoes">
-            <button type="button" className="cel-botao-secundario" onClick={() => void ligar(p.lado)}><FontAwesomeIcon icon={faPhone} /> Ligar</button>
-            <button type="button" className="cel-botao-secundario" onClick={() => void e.acoes.mudarContato(contato.id, { favorito: !contato.favorito })}>
-              <FontAwesomeIcon icon={faStar} className={contato.favorito ? 'cel-favorito' : 'cel-nao-favorito'} /> {texto(idioma, 'favoritos')}
-            </button>
-          </div>
-          <div className="cel-linha-acoes">
-            <button type="button" className="cel-botao-secundario" onClick={async () => {
-              const f = await escolherArquivo('audio/*')
-              if (!f) return
-              const r = await e.acoes.enviarArquivo(f, f.name)
-              if (r.url) await e.acoes.mudarContato(contato.id, { toque: r.url })
-            }}>{texto(idioma, 'toqueLigacao')}: {contato.toque ? '♪' : 'padrão'}</button>
-            {contato.toque && <button type="button" className="cel-link" onClick={() => void e.acoes.mudarContato(contato.id, { toque: null })}>{texto(idioma, 'tirar')}</button>}
-          </div>
-          <button type="button" className="cel-botao-perigo" onClick={async () => { await e.acoes.apagarContato(contato.id); setDetalhe(null) }}>
-            <FontAwesomeIcon icon={faTrash} /> {texto(idioma, 'remover')}
-          </button>
-        </div>
-      </div>
-    )
+    // Editar nome, foto e número do contato (14/10).
+    return <FichaDoContato quem={contato.contato_celular_id ? { celular: contato.contato_celular_id } : { npc: contato.npc_id! }} voltar={() => setDetalhe(null)} />
   }
 
   return (
