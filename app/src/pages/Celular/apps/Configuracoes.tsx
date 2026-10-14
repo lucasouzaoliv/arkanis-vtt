@@ -2,16 +2,17 @@
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faApple, faAndroid } from '@fortawesome/free-brands-svg-icons'
-import { faArrowLeft, faBell, faChevronRight, faCircleUser, faGlobe, faImage, faMobileScreen, faPalette, faPlay, faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faBell, faChevronRight, faCircleUser, faGlobe, faImage, faMobileScreen, faPalette, faPlay, faCheck, faMaximize } from '@fortawesome/free-solid-svg-icons'
 import { useCelular } from '../estado'
 import { IDIOMAS, texto } from '../textos'
 import { escolherArquivo, escolherImagem } from '../arquivos'
 import { tocarNotificacao, tocarToque } from '../sons'
+import { TAMANHOS, salvarTamanho, useTamanhoDoCelular } from '../tamanho'
 
 const PAPEIS = ['padrao', 'conhecimento', 'energia', 'medo', 'morte', 'sangue'].map((n) => `/celular/papeis/${n}.webp`)
 const CAPINHAS = ['#1d1f24', '#2b2b30', '#e8e3d9', '#c9a227', '#7a1e2b', '#1f4b8f', '#2f6b3a', '#6a3fa0', '#e58fb8', '#ff7a1a']
 
-type Tela = 'menu' | 'perfil' | 'papel' | 'capinha' | 'aparelho' | 'toques' | 'idioma'
+type Tela = 'menu' | 'perfil' | 'papel' | 'capinha' | 'aparelho' | 'toques' | 'idioma' | 'tamanho'
 
 export default function AppConfiguracoes() {
   const e = useCelular()
@@ -21,6 +22,7 @@ export default function AppConfiguracoes() {
   const [ocupado, setOcupado] = useState(false)
   const [tocando, setTocando] = useState<(() => void) | null>(null)
   const ehNpc = 'npc' in e.eu
+  const tamanho = useTamanhoDoCelular()
 
   async function subirImagem(proporcao: 'quadrado' | 'retrato', titulo: string): Promise<string | null> {
     const f = await escolherImagem(proporcao, titulo)
@@ -55,8 +57,13 @@ export default function AppConfiguracoes() {
     </header>
   )
 
-  if (ehNpc) {
-    return <div className="cel-ajustes"><p className="cel-vazio">Este é o celular de um NPC: o perfil dele muda pela lista de NPCs do mestre.</p></div>
+  if (ehNpc && tela !== 'tamanho') {
+    return (
+      <div className="cel-ajustes">
+        <p className="cel-vazio">Este é o celular de um NPC: o perfil dele muda pela lista de NPCs do mestre.</p>
+        <button type="button" className="cel-botao-principal" onClick={() => setTela('tamanho')}>{texto(idioma, 'tamanhoNaTela')}: {tamanho}%</button>
+      </div>
+    )
   }
 
   return (
@@ -76,6 +83,7 @@ export default function AppConfiguracoes() {
               ['aparelho', faMobileScreen, texto(idioma, 'aparelho'), '#8e8e93'],
               ['toques', faBell, texto(idioma, 'toques'), '#ff2d55'],
               ['idioma', faGlobe, texto(idioma, 'idioma'), '#34c759'],
+              ['tamanho', faMaximize, texto(idioma, 'tamanhoNaTela'), '#5856d6'],
             ] as const).map(([id, icone, nome, cor]) => (
               <button key={id} type="button" className="cel-ajustes-item" onClick={() => setTela(id)}>
                 <span className="cel-ajustes-icone" style={{ background: cor }}><FontAwesomeIcon icon={icone} /></span>
@@ -180,6 +188,20 @@ export default function AppConfiguracoes() {
             ))}
             <p className="cel-dica">Dá pra pôr um toque diferente pra cada contato no app Telefone.</p>
           </div>
+        </>
+      )}
+
+      {tela === 'tamanho' && (
+        <>
+          <Topo titulo={texto(idioma, 'tamanhoNaTela')} />
+          <div className="cel-lista">
+            {TAMANHOS.map((t) => (
+              <button key={t} type="button" className="cel-lista-item" onClick={() => salvarTamanho(t)}>
+                <span>{t}%{t === 100 ? ` (${texto(idioma, 'normal')})` : ''}</span>{tamanho === t && <FontAwesomeIcon icon={faCheck} />}
+              </button>
+            ))}
+          </div>
+          <p className="cel-dica">{texto(idioma, 'tamanhoDica')}</p>
         </>
       )}
 

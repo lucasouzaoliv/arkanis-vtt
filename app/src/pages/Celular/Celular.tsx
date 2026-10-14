@@ -21,6 +21,7 @@ import AppGaleria from './apps/Galeria'
 import AppMapas from './apps/Mapas'
 import AppOrdem from './apps/Ordem'
 import './celular.css'
+import { escalaDe } from './tamanho'
 
 // ---- Hora do jogo, andando ----
 
@@ -98,7 +99,7 @@ function TelaDeBloqueio({ onAbrir }: { onAbrir: () => void }) {
       className={`cel-bloqueio cel-bloqueio-${e.celular.modelo}`}
       style={{ transform: `translateY(${-puxado}px)`, opacity: 1 - puxado / 400, transition: inicio.current === null ? 'transform .3s, opacity .3s' : 'none' }}
       onPointerDown={(ev) => { inicio.current = ev.clientY; ev.currentTarget.setPointerCapture(ev.pointerId) }}
-      onPointerMove={(ev) => { if (inicio.current !== null) setPuxado(Math.max(0, inicio.current - ev.clientY)) }}
+      onPointerMove={(ev) => { if (inicio.current !== null) setPuxado(Math.max(0, (inicio.current - ev.clientY) / escalaDe(ev.currentTarget))) }}
       onPointerUp={soltar}
       onPointerCancel={soltar}
     >
@@ -189,7 +190,7 @@ function TelaInicial({ onAbrir }: { onAbrir: (id: string, origem: DOMRect) => vo
         onPointerDown={(ev) => { inicio.current = ev.clientX; arrastou.current = false }}
         onPointerMove={(ev) => {
           if (inicio.current === null) return
-          const d = ev.clientX - inicio.current
+          const d = (ev.clientX - inicio.current) / escalaDe(ev.currentTarget)
           if (Math.abs(d) > 6) { arrastou.current = true; ev.currentTarget.setPointerCapture(ev.pointerId) }
           setArrasto(d)
         }}
@@ -223,8 +224,10 @@ function JanelaDoApp({ origem, tela, fechando, onFechado, children }: { origem: 
   if (origem && caixa && caixa.width) {
     const sx = origem.width / caixa.width
     const sy = origem.height / caixa.height
-    const dx = origem.left - caixa.left
-    const dy = origem.top - caixa.top
+    // Com o celular encolhido (tamanho na tela), o deslocamento vai em pixels de dentro dele.
+    const k = escalaDe(tela)
+    const dx = (origem.left - caixa.left) / k
+    const dy = (origem.top - caixa.top) / k
     deIcone = { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, opacity: 0.2, borderRadius: 120 }
   }
   const visivel = aberto && !fechando

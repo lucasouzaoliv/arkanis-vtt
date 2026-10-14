@@ -873,9 +873,11 @@ export default function Mesa() {
 
       <div className={`mesa-lateral${recolhida ? ' recolhida' : ''}`}>
         <nav className="mesa-barra" aria-label="Abas da mesa">
-          <BarraIcones lado="direita" itens={ABAS_DIREITA} ativo={recolhida ? null : aba} piscando={chatPiscando ? ['chat'] : []} onEscolher={escolherAba} />
-          <BotaoIcone id="recolher" rotulo={recolhida ? 'Expandir' : 'Recolher'} lado="direita" onClick={() => setRecolhida((v) => !v)} />
+          <BarraIcones lado="direita" itens={ABAS_DIREITA.filter((a) => a.id !== 'config')} ativo={recolhida ? null : aba} piscando={chatPiscando ? ['chat'] : []} onEscolher={escolherAba} />
+          {/* Celular antes de Configurações e Recolher (pedido da Millie, 14/10). */}
           <BotaoIcone id="celular" rotulo={souMestre ? 'Central dos celulares' : 'Celular'} lado="direita" ativo={celularAberto} onClick={() => setCelularAberto((v) => !v)} />
+          <BarraIcones lado="direita" itens={ABAS_DIREITA.filter((a) => a.id === 'config')} ativo={recolhida ? null : aba} onEscolher={escolherAba} />
+          <BotaoIcone id="recolher" rotulo={recolhida ? 'Expandir' : 'Recolher'} lado="direita" onClick={() => setRecolhida((v) => !v)} />
           {!chatAberto && <ModosEnvio vertical modo={modo} onMudar={mudarModo} />}
         </nav>
 

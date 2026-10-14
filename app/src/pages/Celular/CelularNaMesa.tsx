@@ -13,27 +13,64 @@ import type { Celular as Cel, Ligacao, Mensagem, NpcDoCelular } from './dados'
 import { IconeDoApp } from './IconeDoApp'
 import { tocarNotificacao } from './sons'
 import { escolherImagem } from './arquivos'
+import { useTamanhoDoCelular } from './tamanho'
 
 const ELEMENTOS = [['', 'Nenhum'], ['conhecimento', 'Conhecimento (dourado)'], ['sangue', 'Sangue'], ['morte', 'Morte'], ['energia', 'Energia'], ['medo', 'Medo']] as const
 
 type Aviso = { id: string; titulo: string; texto: string }
 
 // Janela que dá pra arrastar pela borda de cima, com o celular dentro.
+// O celular inteiro arrasta pra qualquer lugar da tela (pedido da Millie, 14/10): pela moldura, pela
+// barrinha de cima ou pelo fundo da central. Botões, campos e a tela do celular continuam
+// funcionando (lá dentro o arrasto é o do próprio celular: deslizar, rolar). O lugar fica guardado.
+const CHAVE_POSICAO = 'arkanis-celular-posicao'
+const NAO_ARRASTA = 'button, input, select, textarea, label, a, audio, video, .cel-tela'
+
+function posicaoGuardada(): { x: number; y: number } {
+  try {
+    const p = JSON.parse(localStorage.getItem(CHAVE_POSICAO) ?? '')
+    // Janela do navegador menor que da última vez: traz de volta pra dentro.
+    if (typeof p?.x === 'number' && typeof p?.y === 'number') return { x: Math.max(0, Math.min(window.innerWidth - 60, p.x)), y: Math.max(0, Math.min(window.innerHeight - 60, p.y)) }
+  } catch { /* primeira vez */ }
+  return { x: Math.max(12, window.innerWidth - 420), y: Math.max(12, window.innerHeight - 720) }
+}
+
 function Flutuante({ onFechar, children, titulo }: { onFechar: () => void; children: React.ReactNode; titulo?: string }) {
-  const [pos, setPos] = useState(() => ({ x: Math.max(12, window.innerWidth - 420), y: Math.max(12, window.innerHeight - 720) }))
+  const tamanho = useTamanhoDoCelular()
+  const [pos, setPos] = useState(posicaoGuardada)
   const arrasto = useRef<{ dx: number; dy: number } | null>(null)
+  const caixa = useRef<HTMLDivElement>(null)
+  // Sempre sobra um pedaço visível pra pegar de volta.
+  const prender = (x: number, y: number) => {
+    const r = caixa.current?.getBoundingClientRect()
+    const w = r?.width ?? 200
+    const h = r?.height ?? 200
+    return { x: Math.min(window.innerWidth - 40, Math.max(40 - w, x)), y: Math.min(window.innerHeight - 30, Math.max(-h + 30, y)) }
+  }
   return (
-    <div className="cel-flutuante" style={{ left: pos.x, top: pos.y }}>
-      <div
-        className="cel-flutuante-alca"
-        onPointerDown={(e) => { if ((e.target as HTMLElement).closest('button')) return; arrasto.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y }; e.currentTarget.setPointerCapture(e.pointerId) }}
-        onPointerMove={(e) => { if (arrasto.current) setPos({ x: Math.min(window.innerWidth - 120, Math.max(-200, e.clientX - arrasto.current.dx)), y: Math.min(window.innerHeight - 60, Math.max(0, e.clientY - arrasto.current.dy)) }) }}
-        onPointerUp={() => { arrasto.current = null }}
-      >
-        <span>{titulo}</span>
-        <button type="button" className="cel-flutuante-fechar" onClick={onFechar} aria-label="Guardar o celular"><FontAwesomeIcon icon={faXmark} /></button>
+    <div
+      ref={caixa}
+      className={`cel-flutuante${arrasto.current ? ' arrastando' : ''}`}
+      style={{ left: pos.x, top: pos.y }}
+      onPointerDown={(e) => {
+        if (e.button !== 0 || (e.target as HTMLElement).closest(NAO_ARRASTA)) return
+        arrasto.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y }
+        e.currentTarget.setPointerCapture(e.pointerId)
+      }}
+      onPointerMove={(e) => { if (arrasto.current) setPos(prender(e.clientX - arrasto.current.dx, e.clientY - arrasto.current.dy)) }}
+      onPointerUp={() => {
+        if (!arrasto.current) return
+        arrasto.current = null
+        try { localStorage.setItem(CHAVE_POSICAO, JSON.stringify(pos)) } catch { /* sem armazenamento */ }
+      }}
+    >
+      <div className="cel-flutuante-conteudo" style={{ zoom: tamanho / 100 }}>
+        <div className="cel-flutuante-alca">
+          <span>{titulo}</span>
+          <button type="button" className="cel-flutuante-fechar" onClick={onFechar} aria-label="Guardar o celular"><FontAwesomeIcon icon={faXmark} /></button>
+        </div>
+        {children}
       </div>
-      {children}
     </div>
   )
 }

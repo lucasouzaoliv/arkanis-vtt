@@ -889,3 +889,10 @@
 .cel-central-foto img { width: 100%; height: 100%; object-fit: cover; }
 .cel-central-dica { color: #8b8596; font-size: 12px; }
 .cel-lista-item .cel-ligar svg { color: #34c759; }
+
+/* Arrastar o módulo inteiro (14/10): a moldura e o fundo da central pegam o arrasto. */
+.cel-flutuante { cursor: grab; touch-action: none; }
+.cel-flutuante.arrastando, .cel-flutuante:active { cursor: grabbing; }
+.cel-flutuante .cel-tela, .cel-flutuante button, .cel-flutuante input, .cel-flutuante select, .cel-flutuante label { cursor: auto; }
+.cel-flutuante .cel-tela button, .cel-flutuante button { cursor: pointer; }
+.cel-flutuante-conteudo { display: flex; flex-direction: column; align-items: center; }

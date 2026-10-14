@@ -79,6 +79,9 @@ const T = {
   pronto: ['Tudo pronto!', 'All set!', '¡Listo!'],
   desligado: ['O celular está desligado.', 'The phone is off.', 'El teléfono está apagado.'],
   emBreve: ['Este app ainda não abre.', 'This app does not open yet.', 'Esta app aún no abre.'],
+  tamanhoNaTela: ['Tamanho na tela', 'Size on screen', 'Tamaño en pantalla'],
+  normal: ['normal', 'normal', 'normal'],
+  tamanhoDica: ['Vale só pra você, neste navegador. Arraste o celular pela moldura pra mudar de lugar.', 'Only for you, in this browser. Drag the phone by its frame to move it.', 'Solo para ti, en este navegador. Arrastra el teléfono por el marco para moverlo.'],
 } as const
 
 export type ChaveDeTexto = keyof typeof T
