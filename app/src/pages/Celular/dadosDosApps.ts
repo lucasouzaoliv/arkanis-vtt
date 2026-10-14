@@ -66,13 +66,16 @@ export async function apagarNoticia(id: string): Promise<string | null> {
 // ---- Instagram ----
 
 export type Post = { id: string; campaign_id: string; de_celular_id: string | null; de_npc_id: string | null; imagem: string; legenda: string | null; minuto_no_jogo: number | null; created_at: string }
-export type Curtida = { post_id: string; celular_id: string }
+export type Curtida = { post_id: string; celular_id: string | null; npc_id: string | null }
+export type Comentario = { id: string; post_id: string; de_celular_id: string | null; de_npc_id: string | null; texto: string; minuto_no_jogo: number | null; created_at: string }
 
-export async function postsDa(campanhaId: string): Promise<{ posts: Post[]; curtidas: Curtida[] }> {
+export async function postsDa(campanhaId: string): Promise<{ posts: Post[]; curtidas: Curtida[]; comentarios: Comentario[] }> {
   const { data } = await supabase.from('celular_posts').select('*').eq('campaign_id', campanhaId).order('created_at', { ascending: false }).limit(100)
   const posts = (data ?? []) as Post[]
-  const { data: c } = posts.length ? await supabase.from('celular_curtidas').select('post_id, celular_id').in('post_id', posts.map((p) => p.id)) : { data: [] }
-  return { posts, curtidas: (c ?? []) as Curtida[] }
+  const ids = posts.map((p) => p.id)
+  const { data: c } = ids.length ? await supabase.from('celular_curtidas').select('post_id, celular_id, npc_id').in('post_id', ids) : { data: [] }
+  const { data: m } = ids.length ? await supabase.from('celular_comentarios').select('*').in('post_id', ids).order('created_at') : { data: [] }
+  return { posts, curtidas: (c ?? []) as Curtida[], comentarios: (m ?? []) as Comentario[] }
 }
 
 export async function postar(p: { campanhaId: string; de: Lado; imagem: string; legenda?: string; minutoNoJogo?: number | null }): Promise<string | null> {
@@ -83,10 +86,25 @@ export async function postar(p: { campanhaId: string; de: Lado; imagem: string; 
   return erroDe(error)
 }
 
-export async function curtir(postId: string, celularId: string, curtido: boolean): Promise<string | null> {
+// Curtir/descurtir, por um celular ou por um NPC (o mestre), 0170.
+export async function curtir(postId: string, quem: Lado, curtido: boolean): Promise<string | null> {
+  const coluna = 'celular' in quem ? 'celular_id' : 'npc_id'
+  const valor = 'celular' in quem ? quem.celular : quem.npc
   const { error } = curtido
-    ? await supabase.from('celular_curtidas').delete().eq('post_id', postId).eq('celular_id', celularId)
-    : await supabase.from('celular_curtidas').insert({ post_id: postId, celular_id: celularId })
+    ? await supabase.from('celular_curtidas').delete().eq('post_id', postId).eq(coluna, valor)
+    : await supabase.from('celular_curtidas').insert({ post_id: postId, [coluna]: valor })
+  return erroDe(error)
+}
+
+export async function comentar(postId: string, quem: Lado, texto: string, minutoNoJogo?: number | null): Promise<string | null> {
+  const { error } = await supabase.from('celular_comentarios').insert({
+    post_id: postId, de_celular_id: 'celular' in quem ? quem.celular : null, de_npc_id: 'npc' in quem ? quem.npc : null, texto: texto.trim(), minuto_no_jogo: minutoNoJogo ?? null,
+  })
+  return erroDe(error)
+}
+
+export async function apagarComentario(id: string): Promise<string | null> {
+  const { error } = await supabase.from('celular_comentarios').delete().eq('id', id)
   return erroDe(error)
 }
 
