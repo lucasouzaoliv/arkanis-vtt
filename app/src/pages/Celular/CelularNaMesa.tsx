@@ -232,7 +232,7 @@ function CentralDoMestre({ campanhaId, tempo, fichas, aberto, setAberto }: {
                       <select value={c.efeitos.brilho ?? ''} onChange={(ev) => efeito([c.id], { brilho: ev.target.value || null })} aria-label="Brilho de ritual">
                         {ELEMENTOS.map(([v, n]) => <option key={v} value={v}>{v ? `Brilho: ${n}` : 'Sem brilho'}</option>)}
                       </select>
-                      <label className="cel-central-bateria">🔋 <input type="range" min={0} max={100} step={5} defaultValue={c.bateria} onMouseUp={(ev) => efeito([c.id], {}, Number((ev.target as HTMLInputElement).value))} onKeyUp={(ev) => efeito([c.id], {}, Number((ev.target as HTMLInputElement).value))} /></label>
+                      <label className="cel-central-bateria">🔋 <input key={c.bateria} type="range" min={0} max={100} step={5} defaultValue={c.bateria} onMouseUp={(ev) => efeito([c.id], {}, Number((ev.target as HTMLInputElement).value))} onKeyUp={(ev) => efeito([c.id], {}, Number((ev.target as HTMLInputElement).value))} /></label>
                     </div>
                   )}
                 </div>
