@@ -1,6 +1,7 @@
 // Mapas: o mapa da cidade que o mestre escolhe, com os pontos que ele marca (pra todos ou só pra
 // alguns celulares) e o "Você está aqui" de cada um. Sem sinal, o GPS some.
 import { useRef, useState } from 'react'
+import { escalaDe } from '../tamanho'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLocationCrosshairs, faLocationDot, faMagnifyingGlass, faMinus, faPlus, faImage, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { useCelular } from '../estado'
@@ -25,6 +26,20 @@ export default function AppMapas() {
   const [novo, setNovo] = useState<Novo | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const area = useRef<HTMLDivElement>(null)
+  // Arrastar o mapa (pedido 14/10): clica e arrasta pra andar por ele; arrastou, não marca ponto.
+  const arrasto = useRef<{ x: number; y: number; sl: number; st: number; moveu: boolean } | null>(null)
+  const arrastou = useRef(false)
+
+  // Zoom mantendo o meio da tela no mesmo lugar do mapa.
+  function mudarZoom(novo: number) {
+    const el = area.current
+    const z = Math.min(4, Math.max(1, novo))
+    if (!el || z === zoom) { setZoom(z); return }
+    const cx = (el.scrollLeft + el.clientWidth / 2) / zoom
+    const cy = (el.scrollTop + el.clientHeight / 2) / zoom
+    setZoom(z)
+    requestAnimationFrame(() => { el.scrollLeft = cx * z - el.clientWidth / 2; el.scrollTop = cy * z - el.clientHeight / 2 })
+  }
   useAoVivo('celular_mapa_pontos', `campaign_id=eq.${campanha}`, () => { void mapaDa(campanha).then((r) => { setMapa(r.mapa); setPontos(r.pontos) }) })
   useAoVivo('celular_mapas', `campaign_id=eq.${campanha}`, () => { void mapaDa(campanha).then((r) => setMapa(r.mapa)) })
 
@@ -39,7 +54,7 @@ export default function AppMapas() {
   }
 
   function clicouNoMapa(ev: React.MouseEvent<HTMLImageElement>) {
-    if (!e.souMestre) return
+    if (!e.souMestre || arrastou.current) return
     const r = ev.currentTarget.getBoundingClientRect()
     setNovo({ x: (ev.clientX - r.left) / r.width, y: (ev.clientY - r.top) / r.height, nome: '', descricao: '', cor: CORES[0], quem: 'todos' })
   }
@@ -72,7 +87,28 @@ export default function AppMapas() {
         <FontAwesomeIcon icon={faMagnifyingGlass} />
         <input placeholder={texto(idioma, 'buscar')} value={busca} onChange={(ev) => setBusca(ev.target.value)} />
       </label>
-      <div className="cel-mapas-area" ref={area}>
+      <div
+        className="cel-mapas-area"
+        ref={area}
+        onPointerDown={(ev) => {
+          if ((ev.target as HTMLElement).closest('button')) return
+          const el = ev.currentTarget
+          arrasto.current = { x: ev.clientX, y: ev.clientY, sl: el.scrollLeft, st: el.scrollTop, moveu: false }
+          arrastou.current = false
+        }}
+        onPointerMove={(ev) => {
+          const a = arrasto.current
+          if (!a) return
+          const k = escalaDe(ev.currentTarget)
+          const dx = (ev.clientX - a.x) / k
+          const dy = (ev.clientY - a.y) / k
+          if (!a.moveu && Math.hypot(dx, dy) > 5) { a.moveu = true; arrastou.current = true; ev.currentTarget.setPointerCapture(ev.pointerId) }
+          if (a.moveu) { ev.currentTarget.scrollLeft = a.sl - dx; ev.currentTarget.scrollTop = a.st - dy }
+        }}
+        onPointerUp={() => { arrasto.current = null; window.setTimeout(() => { arrastou.current = false }, 0) }}
+        onPointerCancel={() => { arrasto.current = null; arrastou.current = false }}
+        onWheel={(ev) => { if (ev.deltaY) mudarZoom(zoom + (ev.deltaY < 0 ? 0.25 : -0.25)) }}
+      >
         <div className="cel-mapas-tela" style={{ width: `${zoom * 100}%` }}>
           <img src={mapa.imagem} alt="" draggable={false} onClick={clicouNoMapa} className={`${semSinal ? 'sem-sinal' : ''}${e.souMestre ? ' mestre' : ''}`} />
           {!semSinal && visiveis.map((p) => (
@@ -90,8 +126,8 @@ export default function AppMapas() {
         </div>
       </div>
       <div className="cel-mapas-zoom">
-        <button type="button" onClick={() => setZoom((z) => Math.min(4, z + 0.5))} aria-label="Aproximar"><FontAwesomeIcon icon={faPlus} /></button>
-        <button type="button" onClick={() => setZoom((z) => Math.max(1, z - 0.5))} aria-label="Afastar"><FontAwesomeIcon icon={faMinus} /></button>
+        <button type="button" onClick={() => mudarZoom(zoom + 0.5)} aria-label="Aproximar"><FontAwesomeIcon icon={faPlus} /></button>
+        <button type="button" onClick={() => mudarZoom(zoom - 0.5)} aria-label="Afastar"><FontAwesomeIcon icon={faMinus} /></button>
         {e.souMestre && <button type="button" onClick={trocarMapa} aria-label="Trocar o mapa"><FontAwesomeIcon icon={faImage} /></button>}
       </div>
       {semSinal && <div className="cel-mapas-aviso"><FontAwesomeIcon icon={faLocationCrosshairs} /><p>{texto(idioma, 'semServico')}</p></div>}

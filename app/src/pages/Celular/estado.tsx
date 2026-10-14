@@ -133,15 +133,22 @@ export function useCelularDoBanco(p: {
   const aoChegar = useRef(p.aoChegar)
   aoChegar.current = p.aoChegar
 
-  // NPC aberto pelo mestre: um "celular" de mentira, só pra moldura e o perfil.
+  // NPC aberto pelo mestre: um "celular" de mentira (o NPC não tem celular no banco). Vem com todos
+  // os apps que funcionam; o que o mestre muda nele (apps, papel de parede, modelo) fica neste
+  // navegador (bug 14/10: instalar no celular do NPC voltava pro Instalar).
   const npcAberto = p.npcId ? npcs.find((n) => n.id === p.npcId) ?? null : null
+  const chaveDoNpc = p.npcId ? `arkanis-celular-npc-${p.npcId}` : null
+  const [ajustesDoNpc, setAjustesDoNpc] = useState<Partial<Celular>>(() => {
+    try { return chaveDoNpc ? JSON.parse(localStorage.getItem(chaveDoNpc) ?? '{}') : {} } catch { return {} }
+  })
   const celularDoNpc: Celular | null = useMemo(() => (p.npcId ? {
     id: `npc:${p.npcId}`, campaign_id: p.campanhaId, character_id: '', modelo: 'android', capinha: {}, papel_de_parede: null, papel_de_bloqueio: null,
     nome_no_perfil: npcAberto?.nome ?? 'NPC', foto_perfil: npcAberto?.foto ?? null, recado: npcAberto?.recado ?? null, toque_padrao: npcAberto?.toque ?? null,
     toque_mensagem: null, numero: npcAberto?.numero ?? null, configurado: true, idioma: 'pt-BR',
-    apps: { instalados: ['telefone', 'mensagens', 'configuracoes', 'mapas', 'loja', 'ordem', 'galeria', 'camera'] }, efeitos: {}, bateria: 100,
+    apps: { instalados: db.APPS.filter((a) => a.funciona).map((a) => a.id) }, efeitos: {}, bateria: 100,
     created_at: '', updated_at: '',
-  } : null), [p.npcId, p.campanhaId, npcAberto])
+    ...ajustesDoNpc,
+  } : null), [p.npcId, p.campanhaId, npcAberto, ajustesDoNpc])
 
   const eu: Lado | null = p.npcId ? { npc: p.npcId } : celular ? { celular: celular.id } : null
 
@@ -219,7 +226,14 @@ export function useCelularDoBanco(p: {
     const id = 'celular' in eu ? eu.celular : null
     return {
       mudarCelular: async (m) => {
-        if (!id) return 'O celular do NPC não muda por aqui.'
+        if (!id) {
+          setAjustesDoNpc((a) => {
+            const novo = { ...a, ...m }
+            try { if (chaveDoNpc) localStorage.setItem(chaveDoNpc, JSON.stringify(novo)) } catch { /* sem armazenamento: vale só agora */ }
+            return novo
+          })
+          return null
+        }
         setCelular((c) => (c ? { ...c, ...m } : c))
         return db.mudarCelular(id, m)
       },

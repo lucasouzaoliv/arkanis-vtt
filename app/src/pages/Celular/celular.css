@@ -1025,3 +1025,9 @@
 .cel-agendar-linha { flex-wrap: wrap; }
 .cel-agendar-linha select, .cel-agendar-linha input { flex: 0 1 auto; padding: 2px 4px; border: 1px solid #e0c97a; border-radius: 6px; background: #fff; font: inherit; }
 .cel-agendada { padding: 0 4px; border-radius: 4px; background: #fff3c4; color: #8a6d00; font-size: 9px; text-transform: uppercase; letter-spacing: .03em; }
+
+/* Arrastar o mapa (14/10). */
+.cel-mapas-area { cursor: grab; touch-action: none; overscroll-behavior: contain; scrollbar-width: none; }
+.cel-mapas-area:active { cursor: grabbing; }
+.cel-mapas-area::-webkit-scrollbar { display: none; }
+.cel-mapas-tela img.mestre { cursor: inherit; }
