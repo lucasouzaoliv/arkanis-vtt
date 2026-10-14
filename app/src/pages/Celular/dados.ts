@@ -77,6 +77,8 @@ export type Conversa = {
   descricao: string | null
   criada_por_celular: string | null
   ultima_em: string
+  /** Em qual app a conversa vive: Mensagens (tipo WhatsApp) ou o canal da Ordem (0166). */
+  app: 'mensagens' | 'ordem'
 }
 
 export type Participante = {
@@ -150,7 +152,7 @@ const ladoDe = (l: Lado) => ('celular' in l ? { celular: l.celular, npc: null } 
 
 // Cada app: o que já vem no aparelho, o que se baixa na loja, e os que são só enfeite (ficam com o
 // ícone na tela, sem abrir nada). Os nomes e ícones finais vêm com o visual.
-export type App = { id: string; nome: string; funciona: boolean; deFabrica?: boolean }
+export type App = { id: string; nome: string; funciona: boolean; deFabrica?: boolean; descricao?: string }
 
 export const APPS: App[] = [
   { id: 'telefone', nome: 'Telefone', funciona: true, deFabrica: true },
@@ -158,12 +160,20 @@ export const APPS: App[] = [
   { id: 'configuracoes', nome: 'Configurações', funciona: true, deFabrica: true },
   { id: 'mapas', nome: 'Mapas', funciona: true, deFabrica: true },
   { id: 'loja', nome: 'Loja', funciona: true, deFabrica: true },
+  { id: 'ordem', nome: 'Ordo Realitas', funciona: true, descricao: 'Canal seguro dos agentes da Ordem.' },
   { id: 'galeria', nome: 'Galeria', funciona: true },
   { id: 'camera', nome: 'Câmera', funciona: true },
-  { id: 'notas', nome: 'Notas', funciona: true },
-  { id: 'noticias', nome: 'Notícias', funciona: true },
-  { id: 'rede_social', nome: 'Rede social', funciona: true },
-  { id: 'email', nome: 'E-mail', funciona: true },
+  // Os de baixo ainda são só o ícone (Notas, Notícias, rede social e e-mail entram nas próximas partes).
+  { id: 'notas', nome: 'Notas', funciona: false },
+  { id: 'noticias', nome: 'Notícias', funciona: false },
+  { id: 'rede_social', nome: 'Instagram', funciona: false },
+  { id: 'email', nome: 'E-mail', funciona: false },
+  { id: 'spotify', nome: 'Spotify', funciona: false },
+  { id: 'uber', nome: 'Uber', funciona: false },
+  { id: 'twitter', nome: 'X', funciona: false },
+  { id: 'tiktok', nome: 'TikTok', funciona: false },
+  { id: 'youtube', nome: 'YouTube', funciona: false },
+  { id: 'discord', nome: 'Discord', funciona: false },
   { id: 'calculadora', nome: 'Calculadora', funciona: false },
   { id: 'banco', nome: 'Banco', funciona: false },
   { id: 'musica', nome: 'Música', funciona: false },
@@ -268,9 +278,9 @@ export async function apagarContato(id: string): Promise<string | null> {
 
 // ---- Conversas e mensagens ----
 
-export async function criarConversa(p: { deCelular: string; tipo: 'direta' | 'grupo'; celulares?: string[]; npcs?: string[]; nome?: string; foto?: string | null }): Promise<{ id: string | null; erro: string | null }> {
+export async function criarConversa(p: { deCelular: string; tipo: 'direta' | 'grupo'; celulares?: string[]; npcs?: string[]; nome?: string; foto?: string | null; app?: Conversa['app'] }): Promise<{ id: string | null; erro: string | null }> {
   const { data, error } = await supabase.rpc('criar_conversa', {
-    p_de_celular: p.deCelular, p_tipo: p.tipo, p_celulares: p.celulares ?? [], p_npcs: p.npcs ?? [], p_nome: p.nome ?? null, p_foto: p.foto ?? null,
+    p_de_celular: p.deCelular, p_tipo: p.tipo, p_celulares: p.celulares ?? [], p_npcs: p.npcs ?? [], p_nome: p.nome ?? null, p_foto: p.foto ?? null, p_app: p.app ?? 'mensagens',
   })
   return { id: (data as string | null) ?? null, erro: erroDe(error) }
 }
@@ -281,6 +291,13 @@ export async function conversasDaCampanha(campanhaId: string): Promise<{ convers
   const ids = (conversas ?? []).map((c) => c.id)
   const { data: participantes } = ids.length ? await supabase.from('celular_participantes').select('*').in('conversa_id', ids) : { data: [] }
   return { conversas: (conversas ?? []) as Conversa[], participantes: (participantes ?? []) as Participante[] }
+}
+
+// As últimas mensagens de várias conversas de uma vez (prévia na lista e contador de não lidas).
+export async function ultimasMensagens(conversaIds: string[], limite = 400): Promise<Mensagem[]> {
+  if (!conversaIds.length) return []
+  const { data } = await supabase.from('celular_mensagens').select('*').in('conversa_id', conversaIds).order('created_at', { ascending: false }).limit(limite)
+  return ((data ?? []) as Mensagem[]).reverse()
 }
 
 export async function mensagensDa(conversaId: string, limite = 200): Promise<Mensagem[]> {
@@ -397,7 +414,7 @@ export async function efeitoNoCelular(campanhaId: string, efeitos: { [K in keyof
 // As regras do banco já filtram o que cada um pode ver.
 export function ouvirCelulares(campanhaId: string, aoMudar: (tabela: string, linha: Record<string, unknown>) => void): () => void {
   const canal = supabase.channel(`celular-${campanhaId}-${Math.random().toString(36).slice(2)}`)
-  for (const tabela of ['celulares', 'celular_conversas', 'celular_mensagens', 'celular_ligacoes']) {
+  for (const tabela of ['celulares', 'celular_npcs', 'celular_conversas', 'celular_mensagens', 'celular_ligacoes']) {
     canal.on('postgres_changes', { event: '*', schema: 'public', table: tabela, filter: `campaign_id=eq.${campanhaId}` }, (p) => {
       aoMudar(tabela, (p.new && Object.keys(p.new).length ? p.new : p.old) as Record<string, unknown>)
     })

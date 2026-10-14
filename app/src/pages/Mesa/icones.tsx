@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faBookOpen,
+  faMobileScreen,
   faCircle,
   faHeadphones,
   faVolumeHigh,
@@ -50,6 +51,7 @@ export const ICONES: Record<string, ReactNode> = {
   playlist: fa(faMusic),
   config: fa(faGears),
   recolher: fa(faCaretRight),
+  celular: fa(faMobileScreen),
   // Barra esquerda: categorias e ferramentas
   tokens: fa(faUser),
   desenho: fa(faPencil),

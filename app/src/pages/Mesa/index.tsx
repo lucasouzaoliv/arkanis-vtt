@@ -64,6 +64,7 @@ import { QuemVeContexto } from './AcaoNoChat'
 import { useMira } from './useMira'
 import { useAnunciarAlvos } from '../../lib/miraDaMesa'
 import { postarAtaque } from './acoesDeMira'
+import CelularNaMesa from '../Celular/CelularNaMesa'
 import type { AcaoAtaque, Alvo, AtaqueDaAcao } from './mira'
 import {
   ABAS_DIREITA,
@@ -111,6 +112,8 @@ export default function Mesa() {
   // Como no Foundry, a mesa abre com o chat à mostra.
   const [aba, setAba] = useState<AbaDireita>('chat')
   const [recolhida, setRecolhida] = useState(false)
+  // Celular do personagem (jogador) ou a central dos celulares (mestre), 14/10.
+  const [celularAberto, setCelularAberto] = useState(false)
   const [categoria, setCategoria] = useState<CategoriaEsquerda>('tokens')
   const [ferramenta, setFerramenta] = useState('selecionar')
   const [copiado, setCopiado] = useState(false)
@@ -872,6 +875,7 @@ export default function Mesa() {
         <nav className="mesa-barra" aria-label="Abas da mesa">
           <BarraIcones lado="direita" itens={ABAS_DIREITA} ativo={recolhida ? null : aba} piscando={chatPiscando ? ['chat'] : []} onEscolher={escolherAba} />
           <BotaoIcone id="recolher" rotulo={recolhida ? 'Expandir' : 'Recolher'} lado="direita" onClick={() => setRecolhida((v) => !v)} />
+          <BotaoIcone id="celular" rotulo={souMestre ? 'Central dos celulares' : 'Celular'} lado="direita" ativo={celularAberto} onClick={() => setCelularAberto((v) => !v)} />
           {!chatAberto && <ModosEnvio vertical modo={modo} onMudar={mudarModo} />}
         </nav>
 
@@ -1459,6 +1463,16 @@ export default function Mesa() {
           onFechar={() => setEditorAmeaca(null)}
         />
       )}
+
+      <CelularNaMesa
+        campanhaId={campanha.id}
+        souMestre={souMestre}
+        tempo={campanha.configuracoes?.tempo ?? null}
+        meuPersonagemId={eu?.personagemId ?? null}
+        fichas={atores.atores.filter((a) => a.tipo === 'jogador' && a.character_id).map((a) => ({ id: a.character_id!, nome: a.name, foto: atores.fichas[a.character_id!]?.avatar_url ?? null }))}
+        aberto={celularAberto}
+        setAberto={setCelularAberto}
+      />
 
       <PainelSessao conectados={online} latencia={latencia} fps={fps} />
     </main>
