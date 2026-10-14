@@ -110,6 +110,8 @@ export type DadosDoAlvo =
       pv?: number | null
       san?: number | null
       pe?: number | null
+      // Treino em Luta (nenhum/treinado/veterano/expert): contra-atacar exige treino (13/10).
+      luta?: string | null
     }
   | { tipo: 'criatura'; nome: string; defesa: number; resistencias: string | null; vulnerabilidades: string | null; pv_maximo?: number | null }
   | { tipo: 'nenhum'; nome: string }

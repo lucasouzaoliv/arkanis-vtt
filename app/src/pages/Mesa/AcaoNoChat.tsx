@@ -1,19 +1,36 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBriefcase, faChevronDown, faChevronRight, faCrosshairs, faDiceD20, faBurst, faHeartPulse, faPersonRunning, faRotateLeft, faShieldHalved } from '@fortawesome/free-solid-svg-icons'
 import type { Mensagem } from './chat'
 import { nomeDoTipo, SIGLA_RECURSO, textoDosAlvos, type AcaoAtaque, type AcaoCura, type AcaoInteracao } from './mira'
 import PartesDoDano from './PartesDoDano'
 import { SimboloDoRitual, fundoDoRitual } from './RitualNoChat'
-import { reagirAoAtaque, rolarAtaqueDaMensagem, rolarCuraDaMensagem, rolarDanoDaMensagem, rolarTesteDaCura } from './acoesDeMira'
+import { dadosDoAlvo, reagirAoAtaque, rolarAtaqueDaMensagem, rolarCuraDaMensagem, rolarDanoDaMensagem, rolarTesteDaCura } from './acoesDeMira'
 
 // Quem está olhando o chat: pra saber quem pode clicar em Ataque/Dano e quem reage.
 export type QuemVe = {
   userId: string
   souMestre: boolean
   controlaAlvo: (tokenId: string) => boolean
-  // Contra-atacar: mira em quem errou (devolve o erro, se não achar o token dele na cena).
-  contraAtacar: (acao: AcaoAtaque) => string | null
+  // Contra-atacar: mira em quem errou e abre a ficha de quem contra-ataca (devolve o erro, se não achar o token).
+  contraAtacar: (acao: AcaoAtaque, tokenId: string) => string | null
+}
+
+// Contra-atacar exige treino em Luta (13/10). Lido uma vez por token (só dos alvos que a pessoa controla).
+const treinoEmLuta = new Map<string, Promise<boolean>>()
+function useTreinadosEmLuta(tokenIds: string[]): Record<string, boolean> {
+  const [treinados, setTreinados] = useState<Record<string, boolean>>({})
+  const chave = tokenIds.join(',')
+  useEffect(() => {
+    let vivo = true
+    for (const id of tokenIds) {
+      if (!treinoEmLuta.has(id)) treinoEmLuta.set(id, dadosDoAlvo(id).then((d) => d?.tipo === 'ficha' && !!d.luta && d.luta !== 'nenhum'))
+      treinoEmLuta.get(id)!.then((ok) => { if (vivo) setTreinados((t) => (t[id] === ok ? t : { ...t, [id]: ok })) })
+    }
+    return () => { vivo = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chave])
+  return treinados
 }
 
 export const QuemVeContexto = createContext<QuemVe | null>(null)
@@ -48,6 +65,9 @@ function CartaoAtaque({ mensagem, acao }: { mensagem: Mensagem; acao: AcaoAtaque
   const [verDados, setVerDados] = useState<'ataque' | 'dano' | null>(null)
   const { ataque, dano, aplicado } = acao.estado
   const algumAcerto = !!ataque && acao.alvos.some((a) => ataque.acertos[a.token_id])
+  // Só os alvos que esta pessoa controla e que erraram um corpo a corpo precisam saber o treino.
+  const quemPodeContra = acao.ataque.corpo && ataque ? acao.alvos.filter((a) => ataque.acertos[a.token_id] === false && !!quem?.controlaAlvo(a.token_id)).map((a) => a.token_id) : []
+  const treinados = useTreinadosEmLuta(quemPodeContra)
   const reacaoDe = (t: string) => acao.estado.reacoes?.[t] ?? (acao.estado.bloqueios?.[t] !== undefined ? { tipo: 'bloqueio' as const, valor: acao.estado.bloqueios[t] } : undefined)
 
   const rotuloReacao = (r: NonNullable<ReturnType<typeof reacaoDe>>) =>
@@ -120,7 +140,8 @@ function CartaoAtaque({ mensagem, acao }: { mensagem: Mensagem; acao: AcaoAtaque
           const controla = !reacao && !!quem?.controlaAlvo(a.token_id)
           const podeEsquivar = controla && !ataque
           const podeBloquear = controla && !dano && (!ataque || acertou)
-          const podeContra = controla && !!ataque && acertou === false && !!acao.ataque.corpo
+          // Contra-ataque: o ataque corpo a corpo errou, a reação ainda não foi gasta e o alvo é treinado em Luta.
+          const podeContra = controla && !!ataque && acertou === false && !!acao.ataque.corpo && !!treinados[a.token_id]
           return (
             <li key={a.token_id} className={acertou === undefined ? '' : acertou ? 'acertou' : 'errou'}>
               <span className="chat-acao-alvo">{a.nome}</span>
@@ -141,8 +162,8 @@ function CartaoAtaque({ mensagem, acao }: { mensagem: Mensagem; acao: AcaoAtaque
                   type="button"
                   className="chat-acao-mini"
                   disabled={ocupado}
-                  title="Marca quem errou como seu alvo; ataque pela sua ficha"
-                  onClick={() => fazer(async () => (await reagirAoAtaque(mensagem, a.token_id, 'contra')) ?? quem!.contraAtacar(acao))}
+                  title="Gasta a sua reação: quem errou vira o seu alvo e a sua ficha abre pra você atacar"
+                  onClick={() => fazer(async () => (await reagirAoAtaque(mensagem, a.token_id, 'contra')) ?? quem!.contraAtacar(acao, a.token_id))}
                 >
                   <FontAwesomeIcon icon={faRotateLeft} /> Contra-atacar
                 </button>

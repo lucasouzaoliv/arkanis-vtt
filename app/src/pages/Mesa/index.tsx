@@ -689,8 +689,8 @@ export default function Mesa() {
     postarAtaque({ campanhaId: campanha.id, characterId: null, autor, ataque, alvos: alvosComNome, atorId }).then((e) => e && avisar(e, true))
   }
 
-  // Contra-atacar (12.9): quem errou vira o alvo de quem contra-ataca; ele ataca pela ficha.
-  function contraAtacar(acao: AcaoAtaque): string | null {
+  // Contra-atacar (12.9): quem errou vira o alvo de quem contra-ataca; a ficha dele abre pra atacar (13/10).
+  function contraAtacar(acao: AcaoAtaque, tokenId: string): string | null {
     const o = objetos.objetos.find((x) => {
       if (acao.origem?.actor_id && x.actor_id === acao.origem.actor_id) return true
       if (!acao.origem?.character_id) return false
@@ -700,7 +700,10 @@ export default function Mesa() {
     })
     if (!o) return `O token de ${acao.atacante} não está nesta cena — marque ele com M e ataque pela ficha.`
     mira.setMeus([o.id])
-    avisar(`Contra-ataque: ${acao.atacante} é o seu alvo. Ataque pela sua ficha.`, true)
+    const meu = objetos.objetos.find((x) => x.id === tokenId)
+    const ator = meu && (meu.actor_id ? atores.atores.find((y) => y.id === meu.actor_id) : atores.atores.find((y) => y.character_id === meu.character_id))
+    if (ator) abrirFicha(ator.id)
+    avisar(`Contra-ataque: ${acao.atacante} é o seu alvo. Escolha o ataque na aba Combate da sua ficha.`, true)
     return null
   }
 
