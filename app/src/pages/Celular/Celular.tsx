@@ -20,6 +20,14 @@ import AppLoja from './apps/Loja'
 import AppGaleria from './apps/Galeria'
 import AppMapas from './apps/Mapas'
 import AppOrdem from './apps/Ordem'
+import AppNotas from './apps/Notas'
+import AppNoticias from './apps/Noticias'
+import AppInstagram from './apps/Instagram'
+import AppEmail from './apps/Email'
+import AppCalculadora from './apps/Calculadora'
+import AppClima from './apps/Clima'
+import RecadoDeVoz from './RecadoDeVoz'
+import { ehEu } from './estado'
 import './celular.css'
 import { escalaDe } from './tamanho'
 
@@ -253,6 +261,12 @@ function ConteudoDoApp({ id, onFechar }: { id: string; onFechar: () => void }) {
     case 'galeria': return <AppGaleria />
     case 'camera': return <AppGaleria camera />
     case 'mapas': return <AppMapas />
+    case 'notas': return <AppNotas />
+    case 'noticias': return <AppNoticias />
+    case 'rede_social': return <AppInstagram />
+    case 'email': return <AppEmail />
+    case 'calculadora': return <AppCalculadora />
+    case 'clima': return <AppClima />
     default:
       return (
         <div className="cel-app-vazio" onClick={onFechar}>
@@ -279,6 +293,11 @@ export function TelaDoCelular() {
   // Ligação tocando pra este celular (ou em andamento com ele): a tela de ligação fica por cima.
   const ligacao = e.ligacoes.find((l) => (l.estado === 'chamando' || l.estado === 'em_curso')
     && ('celular' in e.eu ? l.para_celular_id === e.eu.celular || l.de_celular_id === e.eu.celular : l.para_npc_id === e.eu.npc || l.de_npc_id === e.eu.npc))
+
+  // Correio de voz: liguei, ninguém atendeu (ou recusou) há pouco → oferece deixar recado.
+  const [recadoFeito, setRecadoFeito] = useState<string | null>(null)
+  const naoAtendida = e.ligacoes.find((l) => (l.estado === 'perdida' || l.estado === 'recusada') && ehEu(e.eu, { celular: l.de_celular_id, npc: l.de_npc_id })
+    && l.encerrada_em && Date.now() - Date.parse(l.encerrada_em) < 45000)
 
   function abrir(id: string, origem: DOMRect) {
     setFechando(false)
@@ -321,6 +340,7 @@ export function TelaDoCelular() {
               </JanelaDoApp>
             )}
             {ligacao && <TelaDeLigacao ligacao={ligacao} />}
+            {!ligacao && naoAtendida && recadoFeito !== naoAtendida.id && <RecadoDeVoz ligacao={naoAtendida} onFechar={() => setRecadoFeito(naoAtendida.id)} />}
           </>
         )}
         {!desligado && e.celular.configurado && (

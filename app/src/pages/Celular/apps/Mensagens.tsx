@@ -12,6 +12,7 @@ import { texto } from '../textos'
 import { escolherArquivo, escolherImagem, tipoDoArquivo } from '../arquivos'
 import { momento, tempoAtivo, tempoCompleto } from '../../Mesa/tempo'
 import { Brasao } from '../Brasao'
+import { minutoDoJogo } from './comum'
 import { useMostrarImagem } from '../../Mesa/mostrarImagem'
 
 type App = Conversa['app']
@@ -360,7 +361,8 @@ function Balao({ m, grupo, onAcao }: { m: Mensagem; grupo: boolean; onAcao: (m: 
         )}
         <span className="cel-balao-hora">
           {horaDaMensagem(e.tempo, m.minuto_no_jogo, m.created_at)}
-          {minha && !m.apagada && <FontAwesomeIcon icon={m.estado === 'pendente' ? faClock : faCheckDouble} className={lidaPorTodos ? 'lida' : ''} />}
+          {m.estado === 'agendada' && <span className="cel-agendada" title="Agendada: sai quando o relógio do jogo chegar nessa hora">agendada</span>}
+          {minha && !m.apagada && m.estado !== 'agendada' && <FontAwesomeIcon icon={m.estado === 'pendente' ? faClock : faCheckDouble} className={lidaPorTodos ? 'lida' : ''} />}
         </span>
       </div>
     </div>
@@ -378,6 +380,8 @@ function TelaDaConversa({ id, app, ir }: { id: string; app: App; ir: (t: Tela) =
   const [gravando, setGravando] = useState<{ rec: MediaRecorder; desde: number } | null>(null)
   const [, setTique] = useState(0)
   const [outroLado, setOutroLado] = useState(false)
+  // Agendar (mestre): daqui a N dias, às HH:MM do relógio do jogo.
+  const [agendar, setAgendar] = useState<{ dias: number; hora: string } | null>(null)
   const fim = useRef<HTMLDivElement>(null)
   const membros = membrosDaConversa(e, id)
   const npcsAqui = membros.filter((p) => p.npc_id).map((p) => p.npc_id!)
@@ -402,12 +406,13 @@ function TelaDaConversa({ id, app, ir }: { id: string; app: App; ir: (t: Tela) =
     : t.outro?.recado || texto(idioma, 'online')
   const de: Lado | undefined = como !== 'eu' ? { npc: como } : undefined
   const efeito = outroLado && e.souMestre ? { corrompida: true, some_apos_ler: true } : null
+  const agendarPara = agendar && e.souMestre ? (() => { const [h, mi] = agendar.hora.split(':').map(Number); return minutoDoJogo(e.tempo, agendar.dias, h || 0, mi || 0) })() : null
 
   async function mandarTexto() {
     const t2 = escrito.trim()
     if (!t2) return
     setEscrito('')
-    const r = await e.acoes.enviar({ conversaId: id, tipo: 'texto', texto: t2, de, efeito })
+    const r = await e.acoes.enviar({ conversaId: id, tipo: 'texto', texto: t2, de, efeito, agendarPara })
     setErro(r)
   }
 
@@ -415,7 +420,7 @@ function TelaDaConversa({ id, app, ir }: { id: string; app: App; ir: (t: Tela) =
     if (!f) return
     const up = await e.acoes.enviarArquivo(f, f.name)
     if (!up.url) { setErro(up.erro); return }
-    const r = await e.acoes.enviar({ conversaId: id, tipo: tipoDoArquivo(f), arquivoUrl: up.url, arquivo: { nome: f.name }, de, efeito })
+    const r = await e.acoes.enviar({ conversaId: id, tipo: tipoDoArquivo(f), arquivoUrl: up.url, arquivo: { nome: f.name }, de, efeito, agendarPara })
     setErro(r)
   }
 
@@ -437,7 +442,7 @@ function TelaDaConversa({ id, app, ir }: { id: string; app: App; ir: (t: Tela) =
         const blob = new Blob(pedacos, { type: rec.mimeType || 'audio/webm' })
         const up = await e.acoes.enviarArquivo(blob, 'audio.webm')
         if (!up.url) { setErro(up.erro); return }
-        setErro(await e.acoes.enviar({ conversaId: id, tipo: 'audio', arquivoUrl: up.url, arquivo: { nome: 'Áudio', duracao }, de, efeito }))
+        setErro(await e.acoes.enviar({ conversaId: id, tipo: 'audio', arquivoUrl: up.url, arquivo: { nome: 'Áudio', duracao }, de, efeito, agendarPara }))
       }
       rec.start()
       setGravando({ rec, desde })
@@ -503,6 +508,18 @@ function TelaDaConversa({ id, app, ir }: { id: string; app: App; ir: (t: Tela) =
             {npcsAqui.filter((n) => !('npc' in e.eu && e.eu.npc === n)).map((n) => <option key={n} value={n}>{pessoa(e, { npc: n }).nome}</option>)}
           </select>
           <label title="Texto corrompido que some depois de lido"><input type="checkbox" checked={outroLado} onChange={(ev) => setOutroLado(ev.target.checked)} /> <FontAwesomeIcon icon={faGhost} /></label>
+          <button type="button" className={`cel-link cel-agendar${agendar ? ' ligado' : ''}`} title="Agendar pra uma hora do jogo" onClick={() => setAgendar((a) => (a ? null : { dias: 0, hora: '03:00' }))}><FontAwesomeIcon icon={faClock} /></button>
+        </div>
+      )}
+      {e.souMestre && agendar && (
+        <div className="cel-como cel-agendar-linha">
+          <span>Sai</span>
+          <select value={agendar.dias} onChange={(ev) => setAgendar({ ...agendar, dias: Number(ev.target.value) })}>
+            <option value={0}>hoje</option><option value={1}>amanhã</option><option value={2}>em 2 dias</option><option value={3}>em 3 dias</option><option value={7}>em 1 semana</option>
+          </select>
+          <span>às</span>
+          <input type="time" value={agendar.hora} onChange={(ev) => setAgendar({ ...agendar, hora: ev.target.value })} />
+          {agendarPara === null && <small>(precisa do relógio do jogo ligado)</small>}
         </div>
       )}
 

@@ -105,9 +105,9 @@ export type Mensagem = {
   tipo: TipoDeMensagem
   texto: string | null
   arquivo_url: string | null
-  arquivo: { nome?: string; duracao?: number; largura?: number; altura?: number } | null
+  arquivo: { nome?: string; duracao?: number; largura?: number; altura?: number; correio?: boolean } | null
   minuto_no_jogo: number | null
-  estado: 'pendente' | 'enviada'
+  estado: 'pendente' | 'enviada' | 'agendada'
   efeito: { corrompida?: boolean; some_apos_ler?: boolean; elemento?: string } | null
   responde_a: string | null
   apagada: boolean
@@ -163,21 +163,22 @@ export const APPS: App[] = [
   { id: 'ordem', nome: 'Ordo Realitas', funciona: true, descricao: 'Canal seguro dos agentes da Ordem.' },
   { id: 'galeria', nome: 'Galeria', funciona: true },
   { id: 'camera', nome: 'Câmera', funciona: true },
-  // Os de baixo ainda são só o ícone (Notas, Notícias, rede social e e-mail entram nas próximas partes).
-  { id: 'notas', nome: 'Notas', funciona: false },
-  { id: 'noticias', nome: 'Notícias', funciona: false },
-  { id: 'rede_social', nome: 'Instagram', funciona: false },
-  { id: 'email', nome: 'E-mail', funciona: false },
+  { id: 'notas', nome: 'Notas', funciona: true, descricao: 'Bloco de notas do personagem.' },
+  { id: 'noticias', nome: 'Notícias', funciona: true, descricao: 'As manchetes da cidade.' },
+  { id: 'rede_social', nome: 'Instagram', funciona: true, descricao: 'Fotos de quem você conhece.' },
+  { id: 'email', nome: 'E-mail', funciona: true, descricao: 'Caixa de entrada.' },
+  // Os de baixo são só o ícone na tela.
+
   { id: 'spotify', nome: 'Spotify', funciona: false },
   { id: 'uber', nome: 'Uber', funciona: false },
   { id: 'twitter', nome: 'X', funciona: false },
   { id: 'tiktok', nome: 'TikTok', funciona: false },
   { id: 'youtube', nome: 'YouTube', funciona: false },
   { id: 'discord', nome: 'Discord', funciona: false },
-  { id: 'calculadora', nome: 'Calculadora', funciona: false },
+  { id: 'calculadora', nome: 'Calculadora', funciona: true },
   { id: 'banco', nome: 'Banco', funciona: false },
   { id: 'musica', nome: 'Música', funciona: false },
-  { id: 'clima', nome: 'Clima', funciona: false },
+  { id: 'clima', nome: 'Clima', funciona: true, descricao: 'O tempo de hoje e dos próximos dias.' },
   { id: 'jogo', nome: 'Jogo', funciona: false },
 ]
 
@@ -314,11 +315,13 @@ export async function enviarMensagem(p: {
   arquivo?: Mensagem['arquivo']
   efeito?: Mensagem['efeito']
   respondeA?: string | null
+  /** Só o mestre: sai quando o relógio do jogo chegar nesse minuto (0169). */
+  agendarPara?: number | null
 }): Promise<string | null> {
   const l = ladoDe(p.de)
   const { error } = await supabase.rpc('enviar_no_celular', {
     p_conversa_id: p.conversaId, p_tipo: p.tipo, p_texto: p.texto ?? null, p_arquivo_url: p.arquivoUrl ?? null, p_arquivo: p.arquivo ?? null,
-    p_de_celular: l.celular, p_de_npc: l.npc, p_efeito: p.efeito ?? null, p_responde_a: p.respondeA ?? null,
+    p_de_celular: l.celular, p_de_npc: l.npc, p_efeito: p.efeito ?? null, p_responde_a: p.respondeA ?? null, p_agendar_para: p.agendarPara ?? null,
   })
   return erroDe(error)
 }

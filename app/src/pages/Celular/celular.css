@@ -905,3 +905,123 @@
 .cel-tamanho-valor { margin: 2px 0 0; text-align: center; font-size: 15px; font-weight: 600; color: #111; }
 
 .cel-balao-midia.clicavel, .cel-galeria-foto img.clicavel { cursor: zoom-in; }
+
+/* ---- Apps que faltavam (14/10) ---- */
+
+/* Notas */
+.cel-notas { display: flex; flex-direction: column; background: #f2f2f7; overflow-y: auto; }
+.cel-notas-nova { font-size: 22px; margin-bottom: 14px; color: #e0a800; }
+.cel-notas-lista .cel-lista-item { background: #fff; }
+.cel-notas-editor { background: #fffdf5; }
+.cel-notas-editor .cel-link { color: #e0a800; }
+.cel-notas-titulo { margin: 10px 16px 4px; padding: 4px 0; border: none; background: none; font: inherit; font-size: 22px; font-weight: 700; color: #111; outline: none; }
+.cel-notas-texto { flex: 1; min-height: 160px; margin: 0 16px 16px; padding: 4px 0; border: none; background: none; font: inherit; font-size: 15px; line-height: 1.45; color: #111; outline: none; resize: none; }
+.cel-form .cel-notas-texto { margin: 0; padding: 10px 12px; border: 1px solid #d1d1d6; border-radius: 10px; background: #fff; min-height: 120px; }
+.cel-notas-texto.pequeno { min-height: 70px; }
+
+/* Notícias */
+.cel-noticias { display: flex; flex-direction: column; overflow-y: auto; background: #fff; }
+.cel-noticias-lista { display: flex; flex-direction: column; gap: 10px; padding: 0 12px 30px; }
+.cel-noticia-cartao { display: flex; gap: 10px; align-items: flex-start; width: 100%; padding: 10px; border: none; border-radius: 12px; background: #f2f2f7; text-align: left; font: inherit; color: #111; cursor: pointer; }
+.cel-noticia-cartao img { width: 76px; height: 76px; flex-shrink: 0; border-radius: 8px; object-fit: cover; }
+.cel-noticia-cartao > span { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cel-noticia-cartao strong { font-size: 14px; line-height: 1.25; }
+.cel-noticia-cartao small { font-size: 11px; color: #8e8e93; }
+.cel-noticia-cartao.destaque { flex-direction: column; padding: 0; overflow: hidden; }
+.cel-noticia-cartao.destaque img { width: 100%; height: 150px; border-radius: 0; }
+.cel-noticia-cartao.destaque > span { padding: 8px 12px 12px; }
+.cel-noticia-cartao.destaque strong { font-size: 17px; }
+.cel-noticia { padding: 12px 16px 40px; color: #111; }
+.cel-noticia h2 { margin: 4px 0 6px; font-size: 22px; line-height: 1.2; }
+.cel-noticia small { color: #8e8e93; font-size: 12px; }
+.cel-noticia p { font-size: 15px; line-height: 1.5; }
+.cel-noticia-foto { display: block; width: 100%; max-height: 220px; margin: 10px 0; border-radius: 10px; object-fit: cover; }
+
+/* Instagram */
+.cel-insta { display: flex; flex-direction: column; background: #fff; color: #111; }
+.cel-insta-topo { display: flex; align-items: center; justify-content: space-between; padding: 46px 14px 8px; border-bottom: 1px solid #efefef; }
+.cel-insta-topo strong { font-size: 20px; font-family: 'Segoe Script', 'Brush Script MT', cursive; font-weight: 600; }
+.cel-insta-topo .cel-link { color: #111; font-size: 20px; }
+.cel-insta-feed { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 30px; }
+.cel-insta-post { border-bottom: 1px solid #efefef; padding-bottom: 8px; }
+.cel-insta-post header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
+.cel-insta-post header strong { flex: 1; font-size: 13px; }
+.cel-insta-foto { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: #f2f2f2; cursor: zoom-in; }
+.cel-insta-acoes { display: flex; align-items: center; gap: 6px; padding: 6px 10px 0; font-size: 13px; font-weight: 600; }
+.cel-insta-acoes .cel-link { color: #262626; font-size: 22px; }
+.cel-insta-acoes .cel-link.curtido { color: #ff3040; }
+.cel-insta-legenda { margin: 4px 12px 0; font-size: 13px; line-height: 1.35; }
+.cel-insta-hora { display: block; margin: 4px 12px 0; font-size: 10px; color: #8e8e93; text-transform: uppercase; }
+
+/* E-mail */
+.cel-email { display: flex; flex-direction: column; overflow-y: auto; background: #fff; }
+.cel-email-item > span { gap: 1px; }
+.cel-email-item b { font-size: 13px; font-weight: 500; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cel-email-item.novo strong, .cel-email-item.novo b { font-weight: 700; }
+.cel-email-item.novo::before { content: ''; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: #007aff; margin-right: -4px; }
+.cel-email-ler { padding: 4px 16px 40px; color: #111; }
+.cel-email-ler h2 { margin: 6px 0 12px; font-size: 20px; }
+.cel-email-de { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.cel-email-de span { display: flex; flex-direction: column; }
+.cel-email-de small { color: #8e8e93; font-size: 12px; }
+.cel-email-ler p { font-size: 14.5px; line-height: 1.5; margin: 0 0 10px; }
+.cel-email-anexos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cel-email-anexo { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid #d1d1d6; border-radius: 8px; background: #f7f7f8; color: #111; font: inherit; font-size: 12px; text-decoration: none; cursor: pointer; }
+
+/* Mapas com o mapa da cidade */
+.cel-mapas-com-mapa { display: flex; flex-direction: column; background: #e8eef2; }
+.cel-mapas-com-mapa .cel-mapas-busca { margin: 50px 12px 8px; z-index: 2; }
+.cel-mapas-area { position: relative; flex: 1; min-height: 0; overflow: auto; }
+.cel-mapas-tela { position: relative; }
+.cel-mapas-tela img { display: block; width: 100%; height: auto; user-select: none; }
+.cel-mapas-tela img.mestre { cursor: crosshair; }
+.cel-mapas-tela img.sem-sinal { filter: grayscale(1) blur(2px) brightness(.8); }
+.cel-pino { position: absolute; transform: translate(-50%, -100%); padding: 0; border: none; background: none; font-size: 24px; cursor: pointer; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
+.cel-pino.voce { transform: translate(-50%, -50%); }
+.cel-pino-voce { display: block; width: 14px; height: 14px; border-radius: 50%; background: #007aff; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(0,122,255,.25); animation: cel-pulsa 2s ease-in-out infinite; }
+.cel-mapas-zoom { position: absolute; right: 10px; bottom: 90px; display: flex; flex-direction: column; gap: 6px; z-index: 3; }
+.cel-mapas-zoom button { width: 34px; height: 34px; border: none; border-radius: 10px; background: #fff; color: #111; box-shadow: 0 2px 6px rgba(0,0,0,.2); cursor: pointer; }
+.cel-mapas-ficha { position: absolute; left: 10px; right: 10px; bottom: 30px; z-index: 4; display: flex; flex-direction: column; gap: 6px; padding: 12px; border-radius: 14px; background: #fff; color: #111; box-shadow: 0 6px 20px rgba(0,0,0,.25); animation: cel-sobe .2s ease-out; }
+.cel-mapas-ficha strong { font-size: 15px; }
+.cel-mapas-ficha small { color: #8e8e93; font-size: 12px; }
+.cel-mapas-ficha p { margin: 0; font-size: 13px; }
+.cel-mapas-fechar { position: absolute; top: 6px; right: 6px; color: #8e8e93; }
+.cel-mapas-dica { position: absolute; left: 0; right: 0; bottom: 30px; text-align: center; font-size: 11px; color: #555; text-shadow: 0 1px 0 #fff; pointer-events: none; }
+.cel-mapas-escolher { position: absolute; left: 0; right: 0; bottom: 110px; }
+
+/* Calculadora */
+.cel-calc { display: flex; flex-direction: column; justify-content: flex-end; padding: 0 14px 34px; background: #000; color: #fff; }
+.cel-calc-visor { padding: 0 8px 10px; text-align: right; font-weight: 300; line-height: 1.1; overflow: hidden; white-space: nowrap; }
+.cel-calc-teclas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.cel-calc-tecla { aspect-ratio: 1; border: none; border-radius: 50%; background: #333; color: #fff; font: inherit; font-size: 26px; cursor: pointer; }
+.cel-calc-tecla:active { filter: brightness(1.4); }
+.cel-calc-tecla.cinza { background: #a5a5a5; color: #000; font-size: 22px; }
+.cel-calc-tecla.laranja { background: #ff9f0a; }
+.cel-calc-tecla.laranja.ativa { background: #fff; color: #ff9f0a; }
+.cel-calc-tecla.zero { grid-column: span 2; aspect-ratio: auto; border-radius: 40px; text-align: left; padding-left: 26px; }
+
+/* Clima */
+.cel-clima { display: flex; flex-direction: column; align-items: center; padding: 70px 16px 30px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.cel-clima-lugar { margin: 0; font-size: 15px; opacity: .9; }
+.cel-clima-graus { margin: 4px 0 0; font-size: 84px; font-weight: 200; line-height: 1; }
+.cel-clima-nome { margin: 6px 0 24px; font-size: 16px; }
+.cel-clima-dias { display: flex; justify-content: space-between; width: 100%; padding: 12px; box-sizing: border-box; border-radius: 16px; background: rgba(255,255,255,.18); backdrop-filter: blur(10px); }
+.cel-clima-dias div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; }
+.cel-clima-dias svg { font-size: 18px; }
+.cel-clima-aviso { margin: auto; text-align: center; }
+
+/* Correio de voz */
+.cel-recado { position: absolute; inset: 0; z-index: 64; display: flex; align-items: flex-end; background: rgba(0,0,0,.45); }
+.cel-recado-caixa { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 22px 16px 40px; border-radius: 22px 22px 0 0; background: #1c1c1e; color: #fff; animation: cel-sobe .25s ease-out; }
+.cel-recado-caixa p { margin: 0; font-size: 13px; opacity: .8; }
+.cel-recado-fechar { position: absolute; top: 8px; right: 10px; color: #8e8e93; }
+.cel-recado-item > span { display: flex; flex-direction: column; gap: 4px; }
+.cel-bolinha-aba { position: absolute; top: 0; margin-left: 14px; min-width: 16px; height: 16px; line-height: 16px; font-size: 9px; }
+.cel-abas-baixo button { position: relative; }
+
+/* Mensagem agendada (mestre) */
+.cel-agendar { color: #8a6d00; font-size: 13px; }
+.cel-agendar.ligado { color: #007aff; }
+.cel-agendar-linha { flex-wrap: wrap; }
+.cel-agendar-linha select, .cel-agendar-linha input { flex: 0 1 auto; padding: 2px 4px; border: 1px solid #e0c97a; border-radius: 6px; background: #fff; font: inherit; }
+.cel-agendada { padding: 0 4px; border-radius: 4px; background: #fff3c4; color: #8a6d00; font-size: 9px; text-transform: uppercase; letter-spacing: .03em; }

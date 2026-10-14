@@ -2,14 +2,14 @@
 // de ligação no celular de quem recebe (o mestre atende pelos NPCs).
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAddressBook, faClock, faDeleteLeft, faPhone, faStar, faTableCells, faArrowLeft, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAddressBook, faClock, faDeleteLeft, faPhone, faStar, faTableCells, faArrowLeft, faTrash, faVoicemail } from '@fortawesome/free-solid-svg-icons'
 import { ehEu, pessoa, useCelular, type Pessoa } from '../estado'
 import { horaDaMensagem, type Lado } from '../dados'
 import { texto } from '../textos'
 import { escolherArquivo } from '../arquivos'
 import { Avatar } from './Mensagens'
 
-type Aba = 'favoritos' | 'recentes' | 'contatos' | 'teclado'
+type Aba = 'favoritos' | 'recentes' | 'contatos' | 'teclado' | 'correio'
 
 export default function AppTelefone() {
   const e = useCelular()
@@ -28,6 +28,12 @@ export default function AppTelefone() {
     ? e.celulares.map((c) => pessoa(e, { celular: c.id }))
     : e.contatos.map((k) => ({ ...pessoa(e, { celular: k.contato_celular_id, npc: k.npc_id }), contatoId: k.id, favorito: k.favorito }))
   agenda.sort((a, b) => a.nome.localeCompare(b.nome))
+
+  // Recados de voz que me deixaram (áudios marcados como correio, nas conversas comigo).
+  const recados = Object.values(e.mensagens).flat()
+    .filter((m) => m.tipo === 'audio' && m.arquivo?.correio && !m.apagada && m.estado === 'enviada' && !ehEu(e.eu, { celular: m.de_celular_id, npc: m.de_npc_id })
+      && e.participantes.some((p) => p.conversa_id === m.conversa_id && !p.saiu_em && ehEu(e.eu, { celular: p.celular_id, npc: p.npc_id })))
+    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
 
   const minhas = e.ligacoes.filter((l) => ehEu(e.eu, { celular: l.de_celular_id, npc: l.de_npc_id }) || ehEu(e.eu, { celular: l.para_celular_id, npc: l.para_npc_id }))
 
@@ -87,7 +93,25 @@ export default function AppTelefone() {
   return (
     <div className="cel-telefone">
       <div className="cel-telefone-corpo">
-        {aba === 'teclado' ? (
+        {aba === 'correio' ? (
+          <>
+            <h1 className="cel-titulo-grande">Correio de voz</h1>
+            <div className="cel-lista">
+              {recados.map((m) => {
+                const de = pessoa(e, { celular: m.de_celular_id, npc: m.de_npc_id })
+                return (
+                  <div key={m.id} className="cel-lista-item cel-pessoa cel-recado-item">
+                    <Avatar foto={de.foto} tamanho={32} />
+                    <span><strong>{de.nome}</strong><small>{horaDaMensagem(e.tempo, m.minuto_no_jogo, m.created_at)}{m.arquivo?.duracao ? ` · ${m.arquivo.duracao}s` : ''}</small>
+                      {m.arquivo_url && <audio src={m.arquivo_url} controls className="cel-balao-audio" />}
+                    </span>
+                  </div>
+                )
+              })}
+              {recados.length === 0 && <p className="cel-vazio">Nenhum recado.</p>}
+            </div>
+          </>
+        ) : aba === 'teclado' ? (
           <div className="cel-teclado">
             <div className="cel-teclado-visor">{digitado || ' '}</div>
             <div className="cel-teclado-grade">
@@ -139,9 +163,9 @@ export default function AppTelefone() {
         {erro && <p className="cel-erro" onClick={() => setErro(null)}>{erro}</p>}
       </div>
       <nav className="cel-abas-baixo">
-        {([['favoritos', faStar], ['recentes', faClock], ['contatos', faAddressBook], ['teclado', faTableCells]] as const).map(([id, icone]) => (
+        {([['favoritos', faStar], ['recentes', faClock], ['contatos', faAddressBook], ['teclado', faTableCells], ['correio', faVoicemail]] as const).map(([id, icone]) => (
           <button key={id} type="button" className={aba === id ? 'ativo' : ''} onClick={() => setAba(id)}>
-            <FontAwesomeIcon icon={icone} /><span>{texto(idioma, id)}</span>
+            <FontAwesomeIcon icon={icone} /><span>{id === 'correio' ? 'Recados' : texto(idioma, id)}</span>{id === 'correio' && recados.length > 0 && <b className="cel-bolinha cel-bolinha-aba">{recados.length}</b>}
           </button>
         ))}
       </nav>

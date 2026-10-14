@@ -14,6 +14,7 @@ import { IconeDoApp } from './IconeDoApp'
 import { tocarNotificacao } from './sons'
 import { escolherImagem } from './arquivos'
 import { useTamanhoDoCelular } from './tamanho'
+import { entregarAgendadas } from './dadosDosApps'
 
 const ELEMENTOS = [['', 'Nenhum'], ['conhecimento', 'Conhecimento (dourado)'], ['sangue', 'Sangue'], ['morte', 'Morte'], ['energia', 'Energia'], ['medo', 'Medo']] as const
 
@@ -182,6 +183,13 @@ function CentralDoMestre({ campanhaId, tempo, fichas, aberto, setAberto }: {
       }
     })
   }, [campanhaId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Mensagem agendada: confere a cada 10 s se o relógio do jogo já chegou na hora (com a mesa aberta).
+  useEffect(() => {
+    const t = window.setInterval(() => { void entregarAgendadas(campanhaId) }, 10000)
+    void entregarAgendadas(campanhaId)
+    return () => window.clearInterval(t)
+  }, [campanhaId])
 
   async function efeito(celularesAlvo: string[] | undefined, efeitos: Parameters<typeof db.efeitoNoCelular>[1], bateria?: number) {
     setErro(await db.efeitoNoCelular(campanhaId, efeitos, { celulares: celularesAlvo, bateria }))
