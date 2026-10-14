@@ -65,6 +65,7 @@ import { useMira } from './useMira'
 import { useAnunciarAlvos } from '../../lib/miraDaMesa'
 import { postarAtaque } from './acoesDeMira'
 import CelularNaMesa from '../Celular/CelularNaMesa'
+import { ImagensMostradas } from './mostrarImagem'
 import type { AcaoAtaque, Alvo, AtaqueDaAcao } from './mira'
 import {
   ABAS_DIREITA,
@@ -486,6 +487,15 @@ export default function Mesa() {
     })
   }
 
+  // Imagem muito grande (a planta do manicômio) entrava gigante: limita a 40% do mapa, centrada onde
+  // soltou, sem perder qualidade (a imagem é a mesma; só a caixa começa menor). Pedido 14/10.
+  async function caixaLimitada(ponto: { x: number; y: number }, w: number, h: number) {
+    const atual = cenas.atual
+    const mapa = atual?.background_url ? await tamanhoDaImagem(atual.background_url) : { w: 0, h: 0 }
+    const t = mapa.w && mapa.h ? tamanhoInicial(w, h, mapa.w, mapa.h) : { width: w, height: h }
+    return caixaNoPonto(ponto, t.width, t.height)
+  }
+
   // Imagem arrastada pra mesa (12.2): sem cena, vira uma cena nova; cena sem fundo, vira o
   // fundo; cena com fundo, entra por cima do mapa onde foi solta.
   async function soltarImagem(origem: File | string, ponto: { x: number; y: number }, mapa: { w: number; h: number }) {
@@ -535,7 +545,7 @@ export default function Mesa() {
     const nat = i.image_url ? await tamanhoDaImagem(i.image_url) : { w: 0, h: 0 }
     await objetos.criar({
       scene_id: atual.id, campaign_id: campanha.id, name: i.name, image_url: url, item_id: i.id, layer: 'mapa',
-      ...caixaNoPonto(ponto, nat.w || atual.grid_size, nat.h || atual.grid_size),
+      ...(await caixaLimitada(ponto, nat.w || atual.grid_size, nat.h || atual.grid_size)),
     })
   }
 
@@ -587,7 +597,7 @@ export default function Mesa() {
     const largura = nat.w || atual.grid_size
     const altura = nat.h || atual.grid_size
     await objetos.criar({
-      ...base, name: p.name, image_url: p.url, ...caixaNoPonto(ponto, largura, altura),
+      ...base, name: p.name, image_url: p.url, ...(await caixaLimitada(ponto, largura, altura)),
       layer: p.categoria === 'token' ? 'token' : 'mapa', luz: p.categoria === 'luz',
       ...(p.categoria === 'luz' && p.dados.luz ? { luz_ajuste: p.dados.luz } : {}),
       ...(p.categoria === 'luz' && p.dados.efeito ? { efeito: p.dados.efeito } : {}),
@@ -601,7 +611,7 @@ export default function Mesa() {
     const nat = await tamanhoDaImagem(t.url)
     await objetos.criar({
       scene_id: atual.id, campaign_id: campanha.id, name: t.nome, image_url: t.url, layer: 'token',
-      ...caixaNoPonto(ponto, nat.w || atual.grid_size, nat.h || atual.grid_size),
+      ...(await caixaLimitada(ponto, nat.w || atual.grid_size, nat.h || atual.grid_size)),
     })
   }
 
@@ -752,6 +762,7 @@ export default function Mesa() {
 
   return (
     <QuemVeContexto.Provider value={{ userId: userId ?? '', souMestre, controlaAlvo, contraAtacar }}>
+    <ImagensMostradas campanhaId={campanha.id} nome={eu?.personagem || eu?.nomeConta || 'Alguém'}>
     <main className="mesa" style={campanha.accent_color ? ({ '--mesa-destaque': campanha.accent_color } as React.CSSProperties) : undefined}>
       <PalcoCena
         cena={cenas.atual}
@@ -1478,6 +1489,7 @@ export default function Mesa() {
 
       <PainelSessao conectados={online} latencia={latencia} fps={fps} />
     </main>
+    </ImagensMostradas>
     </QuemVeContexto.Provider>
   )
 }

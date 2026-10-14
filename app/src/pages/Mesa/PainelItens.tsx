@@ -6,6 +6,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import Janela, { Campo } from './Janela'
 import MenuContexto, { type ItemMenu } from './MenuContexto'
+import { itensDeImagem, useMostrarImagem } from './mostrarImagem'
 import { montarArvore, type NoPasta, type Pasta } from './cenas'
 import { CATEGORIAS_ITEM, itemDoCompendio, itemDoObjeto, nivelNoItem, ordenarItens, type CategoriaItem, type ItemMesa } from './itens'
 import { BuscaCompendio, ICONE_COMPENDIO } from './EscolherDoCompendio'
@@ -37,6 +38,7 @@ export default function PainelItens({ souMestre, userId, itens, pastas, acoes }:
   const [ordem, setOrdem] = useState<'alfabetica' | 'criacao'>('alfabetica')
   const [fechadas, setFechadas] = useState<Set<string>>(new Set())
   const [menu, setMenu] = useState<{ x: number; y: number; itens: ItemMenu[] } | null>(null)
+  const imagem = useMostrarImagem()
 
   const ordenados = ordenarItens(itens, ordem).map((i, n) => ({ ...i, sort: n }))
   // A ordem da raiz e das pastas "alfabéticas" segue o botão; nas manuais, a ordem de criação.
@@ -51,6 +53,7 @@ export default function PainelItens({ souMestre, userId, itens, pastas, acoes }:
       y: e.clientY,
       itens: [
         { rotulo: nivel === 'dono' ? 'Editar' : 'Ver', icone: faPenToSquare, onClick: () => acoes.onAbrir(i) },
+        ...itensDeImagem(imagem, i.image_url, i.name),
         ...(souMestre
           ? [
               { rotulo: 'Configurar Propriedade', icone: faUserGear, onClick: () => acoes.onPropriedade(i) } as ItemMenu,

@@ -7,6 +7,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import Janela, { Campo } from './Janela'
 import MenuContexto, { type ItemMenu } from './MenuContexto'
+import { itensDeImagem, useMostrarImagem } from './mostrarImagem'
 import { CriarPasta } from './PainelCenas'
 import { EditorTexto } from './PainelPlaylist'
 import { montarArvore, type NoPasta, type Pasta } from './cenas'
@@ -57,6 +58,7 @@ export default function PainelPosicionaveis({ souMestre, userId, api, categoria,
   const [busca, setBusca] = useState('')
   const [fechadas, setFechadas] = useState<Set<string>>(new Set())
   const [menu, setMenu] = useState<{ x: number; y: number; itens: ItemMenu[] } | null>(null)
+  const imagem = useMostrarImagem()
   const [pasta, setPasta] = useState<{ pai: string | null; editando?: Pasta } | null>(null)
   const [renomeando, setRenomeando] = useState<Posicionavel | null>(null)
   const [soltando, setSoltando] = useState<string | null>(null) // id da pasta (ou '' = raiz)
@@ -168,6 +170,7 @@ export default function PainelPosicionaveis({ souMestre, userId, api, categoria,
         ...(p.categoria === 'nota' ? [{ rotulo: 'Abrir Nota', icone: faPenToSquare, onClick: () => onAbrirNota(p) } as ItemMenu] : []),
         ...(p.url && !vaiProMapa(p) ? [{ rotulo: 'Abrir', icone: faArrowUpRightFromSquare, onClick: () => abrir(p) } as ItemMenu] : []),
         { rotulo: 'Renomear', icone: faFont, onClick: () => setRenomeando(p) },
+        ...(p.url && p.categoria !== 'som' && ehImagem(p.url) ? itensDeImagem(imagem, p.url, p.name) : []),
         { tipo: 'linha' },
         { rotulo: 'Excluir', icone: faTrash, perigo: true, onClick: () => window.confirm(`Excluir "${p.name}" dos Posicionáveis?`) && api.excluir(p.id) },
       ],

@@ -12,6 +12,7 @@ import { texto } from '../textos'
 import { escolherArquivo, escolherImagem, tipoDoArquivo } from '../arquivos'
 import { momento, tempoAtivo, tempoCompleto } from '../../Mesa/tempo'
 import { Brasao } from '../Brasao'
+import { useMostrarImagem } from '../../Mesa/mostrarImagem'
 
 type App = Conversa['app']
 type Tela =
@@ -321,6 +322,8 @@ function Balao({ m, grupo, onAcao }: { m: Mensagem; grupo: boolean; onAcao: (m: 
   const minha = ehEu(e.eu, { celular: m.de_celular_id, npc: m.de_npc_id })
   const autor = pessoa(e, { celular: m.de_celular_id, npc: m.de_npc_id })
   const corrompida = !!m.efeito?.corrompida
+  // Clicar na foto abre ela grande, na janela da mesa (pedido 14/10).
+  const verImagem = useMostrarImagem()
   // "Some depois de lida": quem recebe vê por uns segundos e a mensagem se apaga.
   useEffect(() => {
     if (!m.efeito?.some_apos_ler || m.apagada || minha) return
@@ -348,7 +351,7 @@ function Balao({ m, grupo, onAcao }: { m: Mensagem; grupo: boolean; onAcao: (m: 
           <em><FontAwesomeIcon icon={faTrash} /> {texto(idioma, 'apagada')}</em>
         ) : (
           <>
-            {m.tipo === 'foto' && m.arquivo_url && <img className="cel-balao-midia" src={m.arquivo_url} alt="" />}
+            {m.tipo === 'foto' && m.arquivo_url && <img className={`cel-balao-midia${verImagem ? ' clicavel' : ''}`} src={m.arquivo_url} alt="" onClick={() => verImagem?.ver(m.arquivo_url!, autor.nome)} />}
             {m.tipo === 'video' && m.arquivo_url && <video className="cel-balao-midia" src={m.arquivo_url} controls />}
             {m.tipo === 'audio' && m.arquivo_url && <audio className="cel-balao-audio" src={m.arquivo_url} controls />}
             {m.tipo === 'arquivo' && m.arquivo_url && <a className="cel-balao-arquivo" href={m.arquivo_url} target="_blank" rel="noreferrer"><FontAwesomeIcon icon={faPaperclip} /> {m.arquivo?.nome ?? 'Arquivo'}</a>}

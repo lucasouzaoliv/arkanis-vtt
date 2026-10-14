@@ -6,6 +6,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import Janela from './Janela'
 import MenuContexto, { type ItemMenu } from './MenuContexto'
+import { useMostrarImagem } from './mostrarImagem'
 import { EditorTexto } from './PainelPlaylist'
 import { sanitizarHtml } from './chat'
 import {
@@ -131,6 +132,7 @@ export default function FichaItem({ item, podeEditar, userId, jogadores, sistema
   const [buscandoCompendio, setBuscandoCompendio] = useState(false)
   const imagem = useRef<HTMLInputElement>(null)
   const ed = podeEditar && editando
+  const verImagem = useMostrarImagem()
   const det = i.detalhes
   const mudarDetalhes = (c: Partial<DetalhesItem>) => mudar({ detalhes: { ...det, ...c } })
   const usos = det.usos ?? { gastos: 0, max: null, quem: 'todos' as const }
@@ -193,7 +195,8 @@ export default function FichaItem({ item, podeEditar, userId, jogadores, sistema
     <Janela titulo={i.name} largura={560} altura={620} topo={chave} semTitulo className="ficha-item" onFechar={onFechar}>
       <div className="ficha-item-corpo">
         <header className="ficha-item-topo">
-          <button type="button" className="ficha-item-imagem" disabled={!ed} title={ed ? 'Trocar Imagem' : undefined} onClick={() => imagem.current?.click()}>
+          {/* Quem não edita clica na imagem e ela abre ampliada (pedido 14/10). */}
+          <button type="button" className="ficha-item-imagem" disabled={!ed && !i.image_url} title={ed ? 'Trocar Imagem' : 'Ver imagem'} onClick={() => (ed ? imagem.current?.click() : i.image_url && verImagem?.ver(i.image_url, i.name))}>
             {i.image_url ? <img src={i.image_url} alt="" /> : <FontAwesomeIcon icon={faBriefcase} />}
           </button>
           <input ref={imagem} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) trocarImagem(f) }} />

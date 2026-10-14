@@ -903,3 +903,5 @@
 .cel-tamanho-pequeno { font-size: 11px; color: #8e8e93; }
 .cel-tamanho-grande { font-size: 19px; color: #8e8e93; }
 .cel-tamanho-valor { margin: 2px 0 0; text-align: center; font-size: 15px; font-weight: 600; color: #111; }
+
+.cel-balao-midia.clicavel, .cel-galeria-foto img.clicavel { cursor: zoom-in; }

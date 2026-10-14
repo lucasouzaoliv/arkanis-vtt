@@ -6,6 +6,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import Janela, { Campo } from './Janela'
 import MenuContexto, { type ItemMenu } from './MenuContexto'
+import { itensDeImagem, useMostrarImagem } from './mostrarImagem'
 import { montarArvore, type NoPasta, type Pasta } from './cenas'
 import { ordenarItens } from './itens'
 import { nivelNoDiario, type EntradaDiario } from './diario'
@@ -37,6 +38,7 @@ export default function PainelDiario({ souMestre, userId, podeCriar = true, entr
   const [ordem, setOrdem] = useState<'alfabetica' | 'criacao'>('alfabetica')
   const [fechadas, setFechadas] = useState<Set<string>>(new Set())
   const [menu, setMenu] = useState<{ x: number; y: number; itens: ItemMenu[] } | null>(null)
+  const imagem = useMostrarImagem()
   const arquivo = useRef<HTMLInputElement>(null)
   const importando = useRef<EntradaDiario | null>(null)
 
@@ -55,6 +57,8 @@ export default function PainelDiario({ souMestre, userId, podeCriar = true, entr
       itens: [
         { rotulo: dono ? 'Editar' : 'Ver', icone: faPenToSquare, onClick: () => acoes.onAbrir(e) },
         ...(souMestre ? [{ rotulo: 'Configurar Propriedade', icone: faUserGear, onClick: () => acoes.onPropriedade(e) } as ItemMenu] : []),
+        // Documento com imagem: a primeira página de imagem.
+        ...itensDeImagem(imagem, e.paginas.find((p) => p.tipo === 'imagem' && p.url)?.url, e.name),
         { tipo: 'linha' },
         { rotulo: 'Exportar Dados', icone: faFileExport, onClick: () => acoes.onExportar(e) },
         ...(dono

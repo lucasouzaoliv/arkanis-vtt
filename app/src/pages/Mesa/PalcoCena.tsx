@@ -6,6 +6,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import EfeitoClimatico from './EfeitoClimatico'
 import MenuContexto, { type ItemMenu } from './MenuContexto'
+import { itensDeImagem, useMostrarImagem } from './mostrarImagem'
 import Janela, { Campo } from './Janela'
 import {
   ajustarVista, celulaDaGrade, filtroAmbiente, imagemDoArrasto, ladrilhoHex, telaParaMapa, tracoDaGrade, zoomEm,
@@ -119,6 +120,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   const [soltando, setSoltando] = useState(false)
   const [selecionados, setSelecionados] = useState<string[]>([])
   const [menu, setMenu] = useState<{ x: number; y: number; mapa: { x: number; y: number }; objeto: ObjetoCena | null } | null>(null)
+  const imagem = useMostrarImagem()
   const [propriedade, setPropriedade] = useState<ObjetoCena | null>(null)
   const gesto = useRef<Gesto | null>(null)
   // Token embaixo do mouse: o M mira nele (qualquer um mira tokens alheios).
@@ -828,6 +830,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
           : []),
         ...(o && podeEditar(o) ? [editarItem(o)] : []),
         ...doPersonagem,
+        ...(o ? itensDeImagem(imagem, o.image_url, o.name) : []),
         // Dono do token (jogador): também vira na horizontal/vertical (12.8).
         ...(o && !souMestre && podeMover(o)
           ? [
@@ -872,6 +875,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
       { rotulo: 'Colar', icone: faPaste, desativado: !copiados.current.length, onClick: () => colar(menu.mapa) },
       ...historicoItens,
       ...doPersonagem,
+      ...itensDeImagem(imagem, o.image_url, o.name),
       { tipo: 'linha' },
       ...(o.item_id ? [editarItem(o), { rotulo: 'Interagir', icone: faHandPointer, onClick: () => onInteragir?.(o, celula) } as ItemMenu] : []),
       { rotulo: 'Configurar Propriedade', icone: faUserGear, onClick: () => setPropriedade(o) },

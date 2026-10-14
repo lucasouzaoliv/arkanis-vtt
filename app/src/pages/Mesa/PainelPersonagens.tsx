@@ -4,6 +4,7 @@ import {
   faClone, faFolder, faFolderOpen, faFolderPlus, faImage, faPenToSquare, faSkull, faTrash, faUser, faUserGear, faUserPlus,
 } from '@fortawesome/free-solid-svg-icons'
 import MenuContexto, { type ItemMenu } from './MenuContexto'
+import { itensDeImagem, useMostrarImagem } from './mostrarImagem'
 import { imagemDoToken, type Ator } from './atores'
 import { montarArvore, type NoPasta, type Pasta } from './cenas'
 import type { CriaturaResumo, FichaResumo } from './useAtores'
@@ -34,6 +35,7 @@ export default function PainelPersonagens({ souMestre, userId, atores, pastas, f
   acoes: Acoes
 }) {
   const [menu, setMenu] = useState<{ x: number; y: number; itens: ItemMenu[] } | null>(null)
+  const imagem = useMostrarImagem()
   const [fechadas, setFechadas] = useState<Set<string>>(new Set())
   const arvore = montarArvore<Ator>(pastas, atores)
 
@@ -50,6 +52,8 @@ export default function PainelPersonagens({ souMestre, userId, atores, pastas, f
       { rotulo: 'Editar', icone: faPenToSquare, onClick: () => acoes.onAbrir(a) },
       ...(souMestre && a.tipo !== 'jogador' ? [{ rotulo: 'Configurar Propriedade', icone: faUserGear, onClick: () => acoes.onPropriedade(a) } as ItemMenu] : []),
       { rotulo: 'Configurar Token', icone: faImage, onClick: () => acoes.onToken(a) },
+      // A foto da ficha (a redonda) ou, sem ela, o token.
+      ...itensDeImagem(imagem, (a.character_id && fichas[a.character_id]?.avatar_url) || (a.creature_id && criaturas[a.creature_id]?.image_url) || miniatura(a), a.name),
       ...(souMestre && a.tipo !== 'jogador'
         ? [
             { tipo: 'linha' } as ItemMenu,

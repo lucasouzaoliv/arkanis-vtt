@@ -6,6 +6,7 @@ import { useCelular } from '../estado'
 import { texto } from '../textos'
 import { escolherArquivo } from '../arquivos'
 import { horaDaMensagem, type FotoDaGaleria } from '../dados'
+import { useMostrarImagem } from '../../Mesa/mostrarImagem'
 
 export default function AppGaleria({ camera }: { camera?: boolean }) {
   const e = useCelular()
@@ -13,6 +14,7 @@ export default function AppGaleria({ camera }: { camera?: boolean }) {
   const [aberta, setAberta] = useState<FotoDaGaleria | null>(null)
   const [ocupado, setOcupado] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const verImagem = useMostrarImagem()
 
   async function adicionar() {
     const f = await escolherArquivo(camera ? 'image/*' : 'image/*,video/*')
@@ -34,7 +36,7 @@ export default function AppGaleria({ camera }: { camera?: boolean }) {
           <strong>{horaDaMensagem(e.tempo, aberta.minuto_no_jogo, aberta.created_at)}</strong>
           <button type="button" className="cel-link perigo" aria-label="Apagar" onClick={async () => { await e.acoes.apagarDaGaleria(aberta.id); setAberta(null) }}><FontAwesomeIcon icon={faTrash} /></button>
         </header>
-        {aberta.tipo === 'video' ? <video src={aberta.url} controls autoPlay /> : <img src={aberta.url} alt="" />}
+        {aberta.tipo === 'video' ? <video src={aberta.url} controls autoPlay /> : <img src={aberta.url} alt="" className={verImagem ? 'clicavel' : undefined} onClick={() => verImagem?.ver(aberta.url, 'Foto da galeria')} />}
         {aberta.legenda && <p>{aberta.legenda}</p>}
       </div>
     )

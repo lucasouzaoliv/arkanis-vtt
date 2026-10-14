@@ -18629,3 +18629,7 @@ label.janela-botao {
 .ability-afinidade {
   margin-top: 0.5em;
 }
+
+/* Imagem ampliada / "Mostrar para todos" (14/10): a janela se ajusta ao tamanho da imagem. */
+.janela-imagem-mostrada .janela-corpo { padding: 0; display: flex; justify-content: center; background: #0b0a0e; }
+.imagem-mostrada { display: block; max-width: 80vw; max-height: calc(78vh - 50px); object-fit: contain; user-select: none; }
