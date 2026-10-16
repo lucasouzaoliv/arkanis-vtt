@@ -438,6 +438,11 @@ export function ConfirmarExclusao({ ator, onSim, onNao }: { ator: Ator; onSim: (
 
 // Ficha portátil (12.7): janela flutuante, redimensionável. NPC e jogador abrem a ficha de
 // Ordem Paranormal inteira (a mesma da seção 5, salvando sozinha); Ameaça abre a ficha dela.
+// A ficha cabe inteira com 1240px; tela menor, ela ocupa quase tudo (e encolhe por dentro).
+function larguraDaFicha(): number {
+  return Math.max(320, Math.min(1240, window.innerWidth - 32))
+}
+
 export function FichaPortatil({ ator, podeEditar, onMudarPv, onRolar, onMostrar, onFechar, alvos, onAtacar, meuId, onEditarAmeaca }: {
   ator: Ator
   podeEditar: boolean
@@ -452,7 +457,9 @@ export function FichaPortatil({ ator, podeEditar, onMudarPv, onRolar, onMostrar,
 }) {
   const ameaca = ator.tipo === 'ameaca' && ator.creature_id
   return (
-    <Janela titulo={ator.name} icone={ameaca ? faSkull : faUser} largura={ameaca ? 440 : 1100} altura={ameaca ? 620 : 760} inicial={{ x: 40, y: 30 }} onFechar={onFechar}>
+    // Ficha de personagem abre larga o bastante pras três colunas (Agente, perícias e Combate/Habilidades…)
+    // aparecerem sem precisar esticar a janela (pedido 16/10), centralizada.
+    <Janela titulo={ator.name} icone={ameaca ? faSkull : faUser} largura={ameaca ? 440 : larguraDaFicha()} altura={ameaca ? 620 : Math.min(820, window.innerHeight - 40)} inicial={ameaca ? { x: 40, y: 30 } : { x: Math.max(8, (window.innerWidth - larguraDaFicha()) / 2), y: 20 }} onFechar={onFechar}>
       {ameaca ? (
         <FichaAmeaca criaturaId={ator.creature_id!} nome={ator.name} pvAtual={ator.pv_atual} podeEditar={podeEditar} podeRolar={podeEditar} onMudarPv={onMudarPv} onRolar={onRolar} onMostrar={onMostrar} alvos={alvos} onAtacar={onAtacar} meuId={meuId} onEditar={onEditarAmeaca} />
       ) : (

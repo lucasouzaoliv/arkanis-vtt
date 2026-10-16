@@ -18633,3 +18633,12 @@ label.janela-botao {
 /* Imagem ampliada / "Mostrar para todos" (14/10): a janela se ajusta ao tamanho da imagem. */
 .janela-imagem-mostrada .janela-corpo { padding: 0; display: flex; justify-content: center; background: #0b0a0e; }
 .imagem-mostrada { display: block; max-width: 80vw; max-height: calc(78vh - 50px); object-fit: contain; user-select: none; }
+
+/* Ficha estreita (janela da mesa ou tela pequena): em vez de jogar a terceira coluna pra baixo,
+   o conteúdo encolhe um pouco e as três colunas continuam lado a lado (pedido 16/10). */
+@media (max-width: 1200px) and (min-width: 1001px) {
+  .vtt-columns { zoom: 1; }
+}
+@media (max-width: 1060px) and (min-width: 1001px) {
+  .vtt-columns { zoom: 0.92; }
+}
