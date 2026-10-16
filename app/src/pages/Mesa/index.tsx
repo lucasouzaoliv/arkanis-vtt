@@ -65,6 +65,8 @@ import { useMira } from './useMira'
 import { useAnunciarAlvos } from '../../lib/miraDaMesa'
 import { postarAtaque } from './acoesDeMira'
 import CelularNaMesa from '../Celular/CelularNaMesa'
+import { CentralDeSustos, SustoNaTela } from './CentralDeSustos'
+import { useCanalDeSustos, type SustoDisparado } from './dadosDosSustos'
 import { ImagensMostradas } from './mostrarImagem'
 import type { AcaoAtaque, Alvo, AtaqueDaAcao } from './mira'
 import {
@@ -115,6 +117,9 @@ export default function Mesa() {
   const [recolhida, setRecolhida] = useState(false)
   // Celular do personagem (jogador) ou a central dos celulares (mestre), 14/10.
   const [celularAberto, setCelularAberto] = useState(false)
+  // Jump scare (16/10): a central do mestre e o susto que está na tela agora.
+  const [centralSustos, setCentralSustos] = useState(false)
+  const [susto, setSusto] = useState<SustoDisparado | null>(null)
   const [categoria, setCategoria] = useState<CategoriaEsquerda>('tokens')
   const [ferramenta, setFerramenta] = useState('selecionar')
   const [copiado, setCopiado] = useState(false)
@@ -414,6 +419,8 @@ export default function Mesa() {
   const tom = tempoLigado && tempo.relogio && tempo.tomDaCena ? tomDaHora(tempo, momento(comAgora(tempo))) : null
 
   const eu = membros.find((m) => m.userId === userId)
+  // Susto chegando pela mesa (o mestre dispara; quem é alvo vê na hora).
+  const dispararSusto = useCanalDeSustos(campanha.id, userId ?? null, (s) => setSusto(s))
   const mestre = membros.find((m) => m.papel === 'mestre')
   const modo = modoEscolhido ?? estado.meuModo
   const chatAberto = !recolhida && aba === 'chat'
@@ -887,6 +894,7 @@ export default function Mesa() {
           <BarraIcones lado="direita" itens={ABAS_DIREITA.filter((a) => a.id !== 'config')} ativo={recolhida ? null : aba} piscando={chatPiscando ? ['chat'] : []} onEscolher={escolherAba} />
           {/* Celular antes de Configurações e Recolher (pedido da Millie, 14/10). */}
           <BotaoIcone id="celular" rotulo={souMestre ? 'Central dos celulares' : 'Celular'} lado="direita" ativo={celularAberto} onClick={() => setCelularAberto((v) => !v)} />
+          {souMestre && <BotaoIcone id="sustos" rotulo="Central dos sustos" lado="direita" ativo={centralSustos} onClick={() => setCentralSustos((v) => !v)} />}
           <BarraIcones lado="direita" itens={ABAS_DIREITA.filter((a) => a.id === 'config')} ativo={recolhida ? null : aba} onEscolher={escolherAba} />
           <BotaoIcone id="recolher" rotulo={recolhida ? 'Expandir' : 'Recolher'} lado="direita" onClick={() => setRecolhida((v) => !v)} />
           {!chatAberto && <ModosEnvio vertical modo={modo} onMudar={mudarModo} />}
@@ -1476,6 +1484,17 @@ export default function Mesa() {
           onFechar={() => setEditorAmeaca(null)}
         />
       )}
+
+      {souMestre && centralSustos && (
+        <CentralDeSustos
+          campanhaId={campanha.id}
+          jogadores={membros.filter((m) => m.papel !== 'mestre')}
+          onDisparar={dispararSusto}
+          onTestar={(s) => setSusto(s)}
+          onFechar={() => setCentralSustos(false)}
+        />
+      )}
+      {susto && <SustoNaTela key={susto.id} susto={susto} onAcabou={() => setSusto(null)} />}
 
       <CelularNaMesa
         campanhaId={campanha.id}

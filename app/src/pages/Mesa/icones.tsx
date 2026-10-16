@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faBookOpen,
   faMobileScreen,
+  faGhost,
   faCircle,
   faHeadphones,
   faVolumeHigh,
@@ -52,6 +53,7 @@ export const ICONES: Record<string, ReactNode> = {
   config: fa(faGears),
   recolher: fa(faCaretRight),
   celular: fa(faMobileScreen),
+  sustos: fa(faGhost),
   // Barra esquerda: categorias e ferramentas
   tokens: fa(faUser),
   desenho: fa(faPencil),
