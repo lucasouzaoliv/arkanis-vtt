@@ -355,6 +355,10 @@ export default function Mesa() {
     for (const n of nomesDasFontes(pronta?.campanha.configuracoes)) if (!FONTES.includes(n)) FONTES.push(n)
   }, [pronta?.campanha.configuracoes])
 
+  // Susto chegando pela mesa (o mestre dispara; quem é alvo vê na hora). Fica antes dos returns
+  // de carregando/sem acesso: hook depois deles derrubava a mesa (tela preta, 16/10).
+  const dispararSusto = useCanalDeSustos(pronta?.campanha.id ?? null, userId ?? null, (s) => setSusto(s))
+
   if (estado.tipo === 'carregando') {
     return <main className="mesa mesa-aviso"><p>Carregando a mesa…</p></main>
   }
@@ -419,8 +423,6 @@ export default function Mesa() {
   const tom = tempoLigado && tempo.relogio && tempo.tomDaCena ? tomDaHora(tempo, momento(comAgora(tempo))) : null
 
   const eu = membros.find((m) => m.userId === userId)
-  // Susto chegando pela mesa (o mestre dispara; quem é alvo vê na hora).
-  const dispararSusto = useCanalDeSustos(campanha.id, userId ?? null, (s) => setSusto(s))
   const mestre = membros.find((m) => m.papel === 'mestre')
   const modo = modoEscolhido ?? estado.meuModo
   const chatAberto = !recolhida && aba === 'chat'

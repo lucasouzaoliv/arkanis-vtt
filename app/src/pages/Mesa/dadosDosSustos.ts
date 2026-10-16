@@ -60,11 +60,12 @@ export async function enviarArquivoDeSusto(arquivo: File): Promise<{ url: string
 // ---- Ao vivo ----
 
 // Ouve os sustos da mesa (todo mundo) e devolve a função de disparar (o mestre).
-export function useCanalDeSustos(campanhaId: string, userId: string | null, aoChegar: (s: SustoDisparado) => void) {
+export function useCanalDeSustos(campanhaId: string | null, userId: string | null, aoChegar: (s: SustoDisparado) => void) {
   const canal = useRef<RealtimeChannel | null>(null)
   const chegar = useRef(aoChegar)
   chegar.current = aoChegar
   useEffect(() => {
+    if (!campanhaId) return
     const c = supabase
       .channel(`sustos:${campanhaId}`, { config: { broadcast: { self: false } } })
       .on('broadcast', { event: 'susto' }, ({ payload }) => {
