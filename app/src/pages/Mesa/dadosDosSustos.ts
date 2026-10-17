@@ -82,6 +82,62 @@ export function useCanalDeSustos(campanhaId: string | null, userId: string | nul
 
 // ---- YouTube (só o áudio) ----
 
+// O áudio do YouTube não tocava (bug 16/10): o player de 1×1 é pequeno demais (o YouTube exige pelo
+// menos 200×200) e ele levava ~1 s pra carregar, morrendo junto com o susto. Agora usa o player
+// oficial (IFrame API), invisível mas no tamanho certo, e o som segue tocando depois que a imagem some.
+type PlayerYT = { setVolume: (v: number) => void; playVideo: () => void; destroy: () => void }
+type APIdoYT = { Player: new (el: HTMLElement, opcoes: Record<string, unknown>) => PlayerYT }
+let carregandoAPI: Promise<APIdoYT> | null = null
+
+function apiDoYoutube(): Promise<APIdoYT> {
+  const w = window as unknown as { YT?: APIdoYT & { loaded?: number }; onYouTubeIframeAPIReady?: () => void }
+  if (w.YT?.Player) return Promise.resolve(w.YT)
+  carregandoAPI ??= new Promise((resolver, rejeitar) => {
+    const antes = w.onYouTubeIframeAPIReady
+    w.onYouTubeIframeAPIReady = () => { antes?.(); if (w.YT) resolver(w.YT) }
+    const s = document.createElement('script')
+    s.src = 'https://www.youtube.com/iframe_api'
+    s.async = true
+    s.onerror = () => { carregandoAPI = null; rejeitar(new Error('YouTube não carregou')) }
+    document.head.appendChild(s)
+  })
+  return carregandoAPI
+}
+
+// Toca só o áudio por `segundos`. Se o vídeo não deixar tocar fora do YouTube (ou não carregar),
+// chama `semSom` (o susto usa um som pronto no lugar, pra não ficar mudo). Devolve o "parar".
+export function tocarYoutube(url: string | null, inicio: number, segundos: number, semSom?: () => void): () => void {
+  const id = idDoYoutube(url)
+  if (!id) { semSom?.(); return () => {} }
+  const caixa = document.createElement('div')
+  caixa.className = 'susto-youtube'
+  const alvo = document.createElement('div')
+  caixa.appendChild(alvo)
+  document.body.appendChild(caixa)
+  let player: PlayerYT | null = null
+  let acabou = false
+  const parar = () => {
+    if (acabou) return
+    acabou = true
+    window.clearTimeout(tempo)
+    try { player?.destroy() } catch { /* já foi */ }
+    caixa.remove()
+  }
+  const tempo = window.setTimeout(parar, segundos * 1000)
+  apiDoYoutube().then((YT) => {
+    if (acabou) return
+    player = new YT.Player(alvo, {
+      width: 200, height: 200, videoId: id,
+      playerVars: { autoplay: 1, start: Math.max(0, inicio), controls: 0, playsinline: 1, disablekb: 1, rel: 0 },
+      events: {
+        onReady: (e: { target: PlayerYT }) => { e.target.setVolume(Math.round(volumeDoSusto() * 100)); e.target.playVideo() },
+        onError: () => { parar(); semSom?.() },
+      },
+    })
+  }).catch(() => { parar(); semSom?.() })
+  return parar
+}
+
 export function idDoYoutube(url: string | null | undefined): string | null {
   const m = /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{6,})/i.exec(url ?? '')
   return m ? m[1] : null

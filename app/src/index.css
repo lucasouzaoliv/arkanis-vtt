@@ -18648,7 +18648,10 @@ label.janela-botao {
 .susto.saindo { opacity: 0; transition: opacity .4s ease-in; }
 .susto-midia { width: 100%; height: 100%; object-fit: cover; user-select: none; }
 .susto-flash { position: absolute; inset: 0; z-index: 2; background: #fff; mix-blend-mode: screen; animation: susto-flash .45s ease-out forwards; pointer-events: none; }
-.susto-youtube { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0; }
+/* O player do YouTube precisa de pelo menos 200×200 pra tocar: fica no canto, invisível. */
+.susto-youtube { position: fixed; left: 0; bottom: 0; width: 200px; height: 200px; opacity: 0.01; pointer-events: none; z-index: -1; overflow: hidden; }
+.susto-youtube iframe { width: 200px; height: 200px; border: 0; }
+.sustos-linha-botoes { display: flex; align-items: center; gap: 8px; }
 @keyframes susto-entra { from { opacity: 0; } to { opacity: 1; } }
 @keyframes susto-flash { 0% { opacity: 1; background: #fff; } 25% { opacity: .85; background: #b0000f; } 100% { opacity: 0; background: #000; } }
 .susto-pulo .susto-midia { animation: susto-pulo .25s cubic-bezier(.2, 1.6, .4, 1) both; }

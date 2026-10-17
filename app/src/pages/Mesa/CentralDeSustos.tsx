@@ -1,12 +1,12 @@
 // Jump scare (pedido da Millie, 16/10): a central do mestre (sustos prontos, pra quem, testar) e o
 // susto em tela cheia na tela de quem toma — imagem/GIF/vídeo, som, flash e tela tremendo.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGhost, faPlay, faPenToSquare, faTrash, faPlus, faEye } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../../lib/supabase'
 import Janela from './Janela'
 import {
-  SONS_PRONTOS, apagarSusto, enviarArquivoDeSusto, idDoYoutube, inicioDoYoutube, salvarSusto, sustosDa, tocarSomPronto, volumeDoSusto,
+  SONS_PRONTOS, apagarSusto, enviarArquivoDeSusto, idDoYoutube, inicioDoYoutube, salvarSusto, sustosDa, tocarSomPronto, tocarYoutube, volumeDoSusto,
   type Efeito, type Susto, type SustoDisparado, type TipoDeSom,
 } from './dadosDosSustos'
 import type { Membro } from './mesa'
@@ -15,8 +15,6 @@ import type { Membro } from './mesa'
 
 export function SustoNaTela({ susto, onAcabou }: { susto: SustoDisparado; onAcabou: () => void }) {
   const [saindo, setSaindo] = useState(false)
-  const yt = susto.som_tipo === 'youtube' ? idDoYoutube(susto.som) : null
-  const iframe = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
     let parar = () => {}
@@ -27,18 +25,14 @@ export function SustoNaTela({ susto, onAcabou }: { susto: SustoDisparado; onAcab
       void a.play().catch(() => {})
       parar = () => { a.pause(); a.src = '' }
     }
+    // YouTube: o som segue um pouco depois da imagem sumir (ele demora pra carregar); vídeo que não
+    // deixa tocar fora do YouTube vira o grito pronto.
+    if (susto.som_tipo === 'youtube') tocarYoutube(susto.som, susto.som_inicio, Math.max(8, susto.duracao + 5), () => tocarSomPronto('grito'))
     const sai = window.setTimeout(() => setSaindo(true), susto.duracao * 1000)
     const fim = window.setTimeout(() => { parar(); onAcabou() }, susto.duracao * 1000 + 450)
     return () => { window.clearTimeout(sai); window.clearTimeout(fim); parar() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [susto.id])
-
-  // YouTube: volume do susto assim que o player carrega.
-  function quandoCarregar() {
-    const v = Math.round(volumeDoSusto() * 100)
-    iframe.current?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [v] }), '*')
-    iframe.current?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*')
-  }
 
   const comSomDoVideo = susto.midia_tipo === 'video' && susto.som_tipo === 'nenhum'
   return (
@@ -47,16 +41,6 @@ export function SustoNaTela({ susto, onAcabou }: { susto: SustoDisparado; onAcab
       {susto.midia_url && (susto.midia_tipo === 'video'
         ? <video className="susto-midia" src={susto.midia_url} autoPlay playsInline muted={!comSomDoVideo} loop />
         : <img className="susto-midia" src={susto.midia_url} alt="" draggable={false} />)}
-      {yt && (
-        <iframe
-          ref={iframe}
-          className="susto-youtube"
-          title="som"
-          allow="autoplay"
-          onLoad={quandoCarregar}
-          src={`https://www.youtube.com/embed/${yt}?autoplay=1&controls=0&enablejsapi=1&start=${susto.som_inicio || 0}&playsinline=1`}
-        />
-      )}
     </div>
   )
 }
@@ -188,7 +172,10 @@ export function CentralDeSustos({ campanhaId, jogadores, onDisparar, onTestar, o
               <div className="sustos-linha">
                 <input placeholder="https://www.youtube.com/watch?v=…" value={editando.som ?? ''} onChange={(e) => setEditando({ ...editando, som: e.target.value, som_inicio: inicioDoYoutube(e.target.value) || editando.som_inicio })} />
                 <label className="sustos-inicio">começa em <input type="number" min={0} value={editando.som_inicio} onChange={(e) => setEditando({ ...editando, som_inicio: Math.max(0, Number(e.target.value) || 0) })} /> s</label>
-                <small>Toca só o áudio do vídeo.</small>
+                <div className="sustos-linha-botoes">
+                  <button type="button" disabled={!idDoYoutube(editando.som)} onClick={() => tocarYoutube(editando.som, editando.som_inicio, 6, () => setErro('Esse vídeo não deixa tocar fora do YouTube (o dono bloqueou). Tente outro link ou envie o áudio.'))}><FontAwesomeIcon icon={faPlay} /> Testar o som</button>
+                  <small>Toca só o áudio do vídeo.</small>
+                </div>
               </div>
             )}
             {editando.som_tipo === 'nenhum' && editando.midia_tipo === 'video' && <small>O vídeo toca com o som dele.</small>}
