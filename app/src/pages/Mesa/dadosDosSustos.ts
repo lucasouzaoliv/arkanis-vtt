@@ -106,7 +106,8 @@ function apiDoYoutube(): Promise<APIdoYT> {
 
 // Toca só o áudio por `segundos`. Se o vídeo não deixar tocar fora do YouTube (ou não carregar),
 // chama `semSom` (o susto usa um som pronto no lugar, pra não ficar mudo). Devolve o "parar".
-export function tocarYoutube(url: string | null, inicio: number, segundos: number, semSom?: () => void): () => void {
+// onTocando: o som começou de verdade (o susto aparece nessa hora, junto com o som).
+export function tocarYoutube(url: string | null, inicio: number, segundos: number, semSom?: () => void, onTocando?: () => void): () => void {
   const id = idDoYoutube(url)
   if (!id) { semSom?.(); return () => {} }
   const caixa = document.createElement('div')
@@ -131,6 +132,7 @@ export function tocarYoutube(url: string | null, inicio: number, segundos: numbe
       playerVars: { autoplay: 1, start: Math.max(0, inicio), controls: 0, playsinline: 1, disablekb: 1, rel: 0 },
       events: {
         onReady: (e: { target: PlayerYT }) => { e.target.setVolume(Math.round(volumeDoSusto() * 100)); e.target.playVideo() },
+        onStateChange: (e: { data: number }) => { if (e.data === 1) onTocando?.() },
         onError: () => { parar(); semSom?.() },
       },
     })

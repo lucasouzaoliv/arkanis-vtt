@@ -1,6 +1,6 @@
 // Jump scare (pedido da Millie, 16/10): a central do mestre (sustos prontos, pra quem, testar) e o
 // susto em tela cheia na tela de quem toma — imagem/GIF/vídeo, som, flash e tela tremendo.
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGhost, faPlay, faPenToSquare, faTrash, faPlus, faEye } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../../lib/supabase'
@@ -13,34 +13,56 @@ import type { Membro } from './mesa'
 
 // ---- O susto na tela ----
 
+// A imagem e o som aparecem juntos (bug 16/10: a imagem vinha antes do som). Tudo carrega escondido;
+// o susto aparece quando o som começa e a imagem já carregou. Se passar de 4 s, aparece assim mesmo.
 export function SustoNaTela({ susto, onAcabou }: { susto: SustoDisparado; onAcabou: () => void }) {
+  const [somPronto, setSomPronto] = useState(susto.som_tipo === 'nenhum' || susto.som_tipo === 'pronto' || !susto.som)
+  const [midiaPronta, setMidiaPronta] = useState(!susto.midia_url)
+  const [esgotou, setEsgotou] = useState(false)
   const [saindo, setSaindo] = useState(false)
+  const visivel = (somPronto && midiaPronta) || esgotou
+  const audio = useRef<HTMLAudioElement | null>(null)
+  const parar = useRef<() => void>(() => {})
 
+  // Começa a carregar o som na hora que o susto chega.
   useEffect(() => {
-    let parar = () => {}
-    if (susto.som_tipo === 'pronto' && susto.som) parar = tocarSomPronto(susto.som)
     if (susto.som_tipo === 'arquivo' && susto.som) {
       const a = new Audio(susto.som)
+      a.preload = 'auto'
       a.volume = Math.min(1, volumeDoSusto())
-      void a.play().catch(() => {})
-      parar = () => { a.pause(); a.src = '' }
+      a.addEventListener('canplaythrough', () => setSomPronto(true), { once: true })
+      a.addEventListener('error', () => setSomPronto(true), { once: true })
+      a.load()
+      audio.current = a
+      parar.current = () => { a.pause(); a.src = '' }
     }
-    // YouTube: o som segue um pouco depois da imagem sumir (ele demora pra carregar); vídeo que não
-    // deixa tocar fora do YouTube vira o grito pronto.
-    if (susto.som_tipo === 'youtube') tocarYoutube(susto.som, susto.som_inicio, Math.max(8, susto.duracao + 5), () => tocarSomPronto('grito'))
-    const sai = window.setTimeout(() => setSaindo(true), susto.duracao * 1000)
-    const fim = window.setTimeout(() => { parar(); onAcabou() }, susto.duracao * 1000 + 450)
-    return () => { window.clearTimeout(sai); window.clearTimeout(fim); parar() }
+    // YouTube: o próprio player avisa quando o som começou; vídeo bloqueado vira o grito pronto.
+    if (susto.som_tipo === 'youtube') {
+      tocarYoutube(susto.som, susto.som_inicio, Math.max(8, susto.duracao + 5), () => { tocarSomPronto('grito'); setSomPronto(true) }, () => setSomPronto(true))
+    }
+    const limite = window.setTimeout(() => setEsgotou(true), 4000)
+    return () => { window.clearTimeout(limite); parar.current() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [susto.id])
 
+  // Apareceu: o som pronto e o mp3 tocam nesse instante, e a contagem da duração começa.
+  useEffect(() => {
+    if (!visivel) return
+    if (susto.som_tipo === 'pronto' && susto.som) parar.current = tocarSomPronto(susto.som)
+    if (audio.current) void audio.current.play().catch(() => {})
+    const sai = window.setTimeout(() => setSaindo(true), susto.duracao * 1000)
+    const fim = window.setTimeout(() => { parar.current(); onAcabou() }, susto.duracao * 1000 + 450)
+    return () => { window.clearTimeout(sai); window.clearTimeout(fim) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visivel])
+
   const comSomDoVideo = susto.midia_tipo === 'video' && susto.som_tipo === 'nenhum'
   return (
-    <div className={`susto susto-${susto.efeito}${susto.tremor ? ' susto-tremor' : ''}${saindo ? ' saindo' : ''}`} role="presentation">
-      <div className="susto-flash" />
+    <div className={`susto susto-${susto.efeito}${susto.tremor ? ' susto-tremor' : ''}${saindo ? ' saindo' : ''}${visivel ? '' : ' carregando'}`} role="presentation">
+      {visivel && <div className="susto-flash" />}
       {susto.midia_url && (susto.midia_tipo === 'video'
-        ? <video className="susto-midia" src={susto.midia_url} autoPlay playsInline muted={!comSomDoVideo} loop />
-        : <img className="susto-midia" src={susto.midia_url} alt="" draggable={false} />)}
+        ? <video className="susto-midia" src={susto.midia_url} autoPlay={visivel} playsInline muted={!comSomDoVideo} loop preload="auto" onCanPlayThrough={() => setMidiaPronta(true)} onError={() => setMidiaPronta(true)} ref={(v) => { if (v && visivel && v.paused) void v.play().catch(() => {}) }} />
+        : <img className="susto-midia" src={susto.midia_url} alt="" draggable={false} onLoad={() => setMidiaPronta(true)} onError={() => setMidiaPronta(true)} />)}
     </div>
   )
 }

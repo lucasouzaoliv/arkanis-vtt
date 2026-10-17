@@ -18646,6 +18646,9 @@ label.janela-botao {
 /* ---- Jump scare (16/10) ---- */
 .susto { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; animation: susto-entra .05s linear; pointer-events: none; }
 .susto.saindo { opacity: 0; transition: opacity .4s ease-in; }
+/* Carregando escondido (imagem e som chegam juntos): invisível e sem a animação começar antes. */
+.susto.carregando { opacity: 0; animation: none; }
+.susto.carregando .susto-midia { animation: none; }
 .susto-midia { width: 100%; height: 100%; object-fit: cover; user-select: none; }
 .susto-flash { position: absolute; inset: 0; z-index: 2; background: #fff; mix-blend-mode: screen; animation: susto-flash .45s ease-out forwards; pointer-events: none; }
 /* O player do YouTube precisa de pelo menos 200×200 pra tocar: fica no canto, invisível. */
