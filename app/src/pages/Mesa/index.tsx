@@ -1508,6 +1508,12 @@ export default function Mesa() {
         setAberto={setCelularAberto}
       />
 
+      {/* Celular (17/10): a mesa não cabe numa tela pequena, então o jogador ganha um atalho pra
+          ficha em tela cheia. As rolagens de lá caem no chat da mesa do mesmo jeito. */}
+      {!souMestre && eu?.personagemId && (
+        <Link className="mesa-ficha-celular" to={`/personagem/${eu.personagemId}`}>Abrir minha ficha</Link>
+      )}
+
       <PainelSessao conectados={online} latencia={latencia} fps={fps} />
     </main>
     </ImagensMostradas>

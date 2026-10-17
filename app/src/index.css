@@ -18709,3 +18709,31 @@ label.janela-botao {
 .sustos-erro { margin: 0; padding: 6px 10px; border-radius: 8px; background: rgba(217, 83, 79, .15); color: #ffb3b0; font-size: 12px; cursor: pointer; }
 .sustos-acoes { display: flex; justify-content: flex-end; gap: 6px; }
 .sustos-acoes .principal { background: var(--accent-bg); border-color: var(--accent); color: #fff; }
+
+/* ---- Ficha no celular (17/10): uma coluna só, a página inteira rola e as abas viram uma faixa
+   que desliza pro lado. Não é o layout completo de celular, é o mínimo pra jogar pela ficha. ---- */
+@media (max-width: 760px) {
+  .sheet-root { height: 100dvh; }
+  .vtt-topbar { flex-wrap: nowrap; flex-direction: column; align-items: stretch; gap: 0; padding: 0.2em 0.4em; }
+  .vtt-topbar > nav.vtt-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 0.1em; }
+  .vtt-topbar > nav.vtt-tabs::-webkit-scrollbar { display: none; }
+  .vtt-tabs button { flex-shrink: 0; padding: 0.5em 0.55em; font-size: 0.9em; }
+  .vtt-topbar > div { justify-content: space-between; flex-wrap: wrap; }
+  .vtt-topbar .vtt-icon-btn-labeled span { font-size: 0.85em; }
+
+  .vtt-columns { zoom: 1 !important; flex-direction: column; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start; gap: 0.6em; padding: 0.5em; max-width: none; width: 100%; margin: 0; box-sizing: border-box; overflow-x: hidden; overflow-y: auto; }
+  .vtt-col-side, .vtt-col-main, .vtt-col-combat { flex: 0 0 auto; width: 100%; min-width: 0; max-width: none; max-height: none; overflow: visible; box-sizing: border-box; padding: 0.7em 0.6em; }
+  .vtt-col-side { zoom: 1; }
+
+  .modal-box { max-height: 90dvh; overflow-y: auto; box-sizing: border-box; }
+  .roll-card-wrap { bottom: 24px; }
+  .pericias-list { max-height: none; overflow: visible; }
+  .vtt-topbar .dice-picker { position: fixed; top: 84px; left: 8px; right: 8px; width: auto; max-width: none; box-sizing: border-box; }
+  .inv-filtros { flex-wrap: wrap; }
+  .vtt-topbar .dice-picker-grid { flex-wrap: wrap; justify-content: center; }
+}
+/* Atalho da mesa pra ficha: só aparece em tela de celular. */
+.mesa-ficha-celular { display: none; }
+@media (max-width: 760px) {
+  .mesa-ficha-celular { display: block; position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 9000; padding: 12px 22px; border-radius: 999px; background: #4a3280; border: 1px solid var(--accent); color: #fff; font-weight: 700; text-decoration: none; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6); white-space: nowrap; }
+}
