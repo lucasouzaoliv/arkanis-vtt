@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  anguloAte, camposAtuais, comGrupo, deslocamentoDaTecla, desfazer, HISTORICO_VAZIO, ordemParaFrente, ordemParaTras,
+  anguloAte, caixaDoGrupo, camposAtuais, escalarGrupo, girarGrupo, comGrupo, deslocamentoDaTecla, desfazer, HISTORICO_VAZIO, ordemParaFrente, ordemParaTras,
   redimensionarPorAlca, refazer, registrar, tocaNaCaixa, type Passo,
 } from './tokens'
 import type { ObjetoCena } from './cenas'
@@ -102,4 +102,22 @@ it('caixa de seleção pega o que encosta nela, em qualquer direção', () => {
   expect(tocaNaCaixa(caixa, { x: 0, y: 0 }, { x: 150, y: 150 })).toBe(true)
   expect(tocaNaCaixa(caixa, { x: 350, y: 250 }, { x: 250, y: 150 })).toBe(true)
   expect(tocaNaCaixa(caixa, { x: 0, y: 0 }, { x: 90, y: 90 })).toBe(false)
+})
+
+describe('vários selecionados (18/10)', () => {
+  const a = { id: 'a', x: 0, y: 0, width: 100, height: 100, rotation: 0 }
+  const b = { id: 'b', x: 200, y: 0, width: 100, height: 100, rotation: 90 }
+  it('caixa do grupo cobre todos', () => {
+    expect(caixaDoGrupo([a, b])).toEqual({ x: 0, y: 0, width: 300, height: 100 })
+  })
+  it('encolher a caixa encolhe cada um e mantém o lugar no grupo', () => {
+    const r = escalarGrupo([a, b], caixaDoGrupo([a, b]), { x: 0, y: 0, width: 150, height: 50 })
+    expect(r.a).toEqual({ x: 0, y: 0, width: 50, height: 50 })
+    expect(r.b).toEqual({ x: 100, y: 0, width: 50, height: 50 })
+  })
+  it('girar 180 troca os dois de lugar e soma o giro de cada um', () => {
+    const r = girarGrupo([a, b], { x: 150, y: 50 }, 180)
+    expect(r.a).toMatchObject({ x: 200, y: 0, rotation: 180 })
+    expect(r.b).toMatchObject({ x: 0, y: 0, rotation: 270 })
+  })
 })

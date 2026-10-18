@@ -13,8 +13,8 @@ import {
   type Camada, type Cena, type ObjetoCena, type Vista,
 } from './cenas'
 import {
-  ALCAS, anguloAte, camposAtuais, comGrupo, deslocamentoDaTecla, desfazer as passoDesfazer, HISTORICO_VAZIO, ordemParaFrente,
-  ordemParaTras, redimensionarPorAlca, refazer as passoRefazer, registrar, tocaNaCaixa, type Alca, type CamposObjeto, type Historico, type Passo,
+  ALCAS, anguloAte, caixaDoGrupo, camposAtuais, escalarGrupo, girarGrupo, comGrupo, deslocamentoDaTecla, desfazer as passoDesfazer, HISTORICO_VAZIO, ordemParaFrente,
+  ordemParaTras, redimensionarPorAlca, refazer as passoRefazer, registrar, tocaNaCaixa, type Alca, type Caixa, type CamposObjeto, type Historico, type Passo,
 } from './tokens'
 import type { Ping, useObjetos } from './useObjetos'
 import { TIPO_ARRASTO_ATOR } from './PainelPersonagens'
@@ -52,6 +52,9 @@ type Gesto =
   | { tipo: 'mover'; x: number; y: number; ids: string[]; inicio: Record<string, { x: number; y: number }>; dx: number; dy: number }
   | { tipo: 'tamanho'; x: number; y: number; alca: Alca; o: ObjetoCena; ultimo?: CamposObjeto }
   | { tipo: 'girar'; o: ObjetoCena; ultimo?: number }
+  // Vários selecionados (18/10): a caixa do grupo muda de tamanho ou gira, e todos vão juntos.
+  | { tipo: 'tamanhoGrupo'; x: number; y: number; alca: Alca; caixa: Caixa; os: ObjetoCena[]; ultimo?: Record<string, CamposObjeto> }
+  | { tipo: 'girarGrupo'; os: ObjetoCena[]; centro: { x: number; y: number }; inicio: number; ultimo?: Record<string, CamposObjeto> }
   | { tipo: 'caixa'; inicio: { x: number; y: number }; somar: boolean }
   | { tipo: 'regua' }
 
@@ -556,6 +559,22 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
     palcoRef.current?.setPointerCapture(e.pointerId)
   }
 
+  function pegarAlcaDoGrupo(e: React.PointerEvent, os: ObjetoCena[], alca: Alca) {
+    if (e.button !== 0) return
+    e.stopPropagation()
+    gesto.current = { tipo: 'tamanhoGrupo', x: e.clientX, y: e.clientY, alca, caixa: caixaDoGrupo(os), os }
+    palcoRef.current?.setPointerCapture(e.pointerId)
+  }
+
+  function pegarGiroDoGrupo(e: React.PointerEvent, os: ObjetoCena[]) {
+    if (e.button !== 0) return
+    e.stopPropagation()
+    const c = caixaDoGrupo(os)
+    const p = pontoNoMapa(e.clientX, e.clientY)
+    gesto.current = { tipo: 'girarGrupo', os, centro: { x: c.x + c.width / 2, y: c.y + c.height / 2 }, inicio: anguloAte(c, p.x, p.y) }
+    palcoRef.current?.setPointerCapture(e.pointerId)
+  }
+
   function mover(e: React.PointerEvent<HTMLDivElement>) {
     if (seta) setSeta({ ...seta, b: pontoNoMapa(e.clientX, e.clientY) })
     desenho.aoMover(e)
@@ -590,6 +609,17 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
         ultimoEnvio.current = performance.now()
         obj.transmitirArrasto(posicoes)
       }
+    } else if (g.tipo === 'tamanhoGrupo') {
+      const depois = redimensionarPorAlca(g.caixa, g.alca, (e.clientX - g.x) / vista.escala, (e.clientY - g.y) / vista.escala)
+      g.ultimo = escalarGrupo(g.os, g.caixa, depois)
+      obj.alterarVarios(g.ultimo, false)
+    } else if (g.tipo === 'girarGrupo') {
+      const p = pontoNoMapa(e.clientX, e.clientY)
+      const c = { x: g.centro.x - 1, y: g.centro.y - 1, width: 2, height: 2 }
+      let graus = anguloAte(c, p.x, p.y) - g.inicio
+      if (e.shiftKey) graus = Math.round(graus / 15) * 15
+      g.ultimo = girarGrupo(g.os, g.centro, graus)
+      obj.alterarVarios(g.ultimo, false)
     } else if (g.tipo === 'tamanho') {
       const dx = (e.clientX - g.x) / vista.escala
       const dy = (e.clientY - g.y) / vista.escala
@@ -661,6 +691,22 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
         const ok = await obj.moverComoJogador(g.ids, g.dx, g.dy)
         if (!ok) obj.alterarVarios(Object.fromEntries(g.ids.map((id) => [id, g.inicio[id]])), false)
       }
+      return
+    }
+    if (g.tipo === 'tamanhoGrupo' || g.tipo === 'girarGrupo') {
+      if (!g.ultimo) return
+      const depois = g.ultimo
+      if (!souMestre) {
+        // Jogador: cada token dele passa pela função do banco (só caixa e giro).
+        for (const o of g.os) {
+          const ok = await obj.transformarComoJogador({ ...o, ...depois[o.id] } as ObjetoCena)
+          if (!ok) obj.alterarVarios({ [o.id]: { x: o.x, y: o.y, width: o.width, height: o.height, rotation: o.rotation } }, false)
+        }
+        return
+      }
+      historico.current = registrar(historico.current, { tipo: 'alterar', antes: Object.fromEntries(g.os.map((o) => [o.id, camposAtuais(o, depois[o.id])])), depois })
+      setVersaoHistorico((v) => v + 1)
+      await obj.alterarVarios(depois)
       return
     }
     // Jogador (dono do token): grava pela função do banco, que só mexe na caixa e no giro.
@@ -957,6 +1003,9 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   const selecionadoUnico = selecionados.length === 1 ? objetos.find((o) => o.id === selecionados[0]) ?? null : null
   const unico = selecionadoUnico && podeMover(selecionadoUnico) ? selecionadoUnico : null
   const alcaPx = 7 / vista.escala
+  // Vários selecionados: alças e giro em volta do grupo inteiro (só os que essa pessoa pode mexer).
+  const grupoSelecionado = selecionados.length > 1 ? objetos.filter((o) => selecionados.includes(o.id) && podeMover(o) && !o.locked) : []
+  const caixaGrupo = grupoSelecionado.length > 1 ? caixaDoGrupo(grupoSelecionado) : null
 
   return (
     <div
@@ -1084,6 +1133,23 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
                 />
               ))}
               <span className="mesa-giro" style={{ width: alcaPx * 1.4, height: alcaPx * 1.4, top: -alcaPx * 2.6, right: -alcaPx * 2.6 }} onPointerDown={(e) => pegarGiro(e, unico)} title="Girar" />
+            </div>
+          )}
+
+          {caixaGrupo && (
+            <div
+              className="mesa-selecao mesa-selecao-grupo"
+              style={{ left: caixaGrupo.x, top: caixaGrupo.y, width: caixaGrupo.width, height: caixaGrupo.height, ['--borda' as string]: `${2 / vista.escala}px` }}
+            >
+              {ALCAS.map((a) => (
+                <span
+                  key={`${a.hx}${a.hy}`}
+                  className="mesa-alca"
+                  style={{ width: alcaPx, height: alcaPx, left: `${(a.hx + 1) * 50}%`, top: `${(a.hy + 1) * 50}%`, cursor: a.hx === 0 ? 'ns-resize' : a.hy === 0 ? 'ew-resize' : a.hx === a.hy ? 'nwse-resize' : 'nesw-resize' }}
+                  onPointerDown={(e) => pegarAlcaDoGrupo(e, grupoSelecionado, a)}
+                />
+              ))}
+              <span className="mesa-giro" style={{ width: alcaPx * 1.4, height: alcaPx * 1.4, top: -alcaPx * 2.6, right: -alcaPx * 2.6 }} onPointerDown={(e) => pegarGiroDoGrupo(e, grupoSelecionado)} title="Girar todos" />
             </div>
           )}
 

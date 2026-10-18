@@ -39,6 +39,44 @@ export function anguloAte(o: Caixa, px: number, py: number, encaixar = false): n
   return Math.round(graus * 10) / 10
 }
 
+// ---- Vários selecionados de uma vez (pedido 18/10): mudar tamanho e girar o grupo ----
+
+// Caixa que cobre todos (sem contar o giro de cada um).
+export function caixaDoGrupo(os: Caixa[]): Caixa {
+  const x0 = Math.min(...os.map((o) => o.x))
+  const y0 = Math.min(...os.map((o) => o.y))
+  const x1 = Math.max(...os.map((o) => o.x + o.width))
+  const y1 = Math.max(...os.map((o) => o.y + o.height))
+  return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 }
+}
+
+// A caixa do grupo mudou de tamanho (proporcional): cada um cresce/encolhe junto e mantém o
+// lugar dentro do grupo.
+export function escalarGrupo<T extends Caixa & { id: string }>(os: T[], antes: Caixa, depois: Caixa): Record<string, Caixa> {
+  const s = antes.width ? depois.width / antes.width : 1
+  return Object.fromEntries(os.map((o) => [o.id, {
+    x: Math.round(depois.x + (o.x - antes.x) * s),
+    y: Math.round(depois.y + (o.y - antes.y) * s),
+    width: Math.max(5, Math.round(o.width * s)),
+    height: Math.max(5, Math.round(o.height * s)),
+  }]))
+}
+
+// Gira o grupo em volta do centro: cada um anda em volta do centro e gira o mesmo tanto.
+export function girarGrupo<T extends Caixa & { id: string; rotation: number }>(os: T[], centro: { x: number; y: number }, graus: number): Record<string, Caixa & { rotation: number }> {
+  const r = (graus * Math.PI) / 180
+  const cos = Math.cos(r)
+  const sin = Math.sin(r)
+  return Object.fromEntries(os.map((o) => {
+    const cx = o.x + o.width / 2 - centro.x
+    const cy = o.y + o.height / 2 - centro.y
+    const nx = centro.x + cx * cos - cy * sin
+    const ny = centro.y + cx * sin + cy * cos
+    const rotation = Math.round(((((o.rotation + graus) % 360) + 360) % 360) * 10) / 10
+    return [o.id, { x: Math.round(nx - o.width / 2) + 0, y: Math.round(ny - o.height / 2) + 0, width: o.width, height: o.height, rotation }]
+  }))
+}
+
 // Setas do teclado andam um quadrado da grade.
 export function deslocamentoDaTecla(tecla: string, passo: number): { dx: number; dy: number } | null {
   switch (tecla) {
