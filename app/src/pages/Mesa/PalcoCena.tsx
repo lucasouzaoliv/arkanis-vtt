@@ -144,14 +144,21 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   const arrastoInterno = useRef(false)
 
   useEffect(() => {
-    const comeca = () => (arrastoInterno.current = true)
-    const acaba = () => (arrastoInterno.current = false)
+    // Arrasto cancelado (o palco cancela o dragstart das imagens do mapa) não termina com dragend,
+    // e a marca ficava presa: arquivo vindo do computador abria numa aba nova (bug 18/10).
+    const comeca = (e: DragEvent) => { if (!e.defaultPrevented) arrastoInterno.current = true }
+    // Arquivo solto fora de onde a mesa aceita não vira uma aba nova do navegador.
+    const ehArquivo = (e: DragEvent) => !!e.dataTransfer?.types.includes('Files')
+    const segura = (e: DragEvent) => { if (ehArquivo(e)) e.preventDefault() }
+    const acaba = (e: DragEvent) => { arrastoInterno.current = false; segura(e) }
     window.addEventListener('dragstart', comeca)
     window.addEventListener('dragend', acaba)
+    window.addEventListener('dragover', segura)
     window.addEventListener('drop', acaba)
     return () => {
       window.removeEventListener('dragstart', comeca)
       window.removeEventListener('dragend', acaba)
+      window.removeEventListener('dragover', segura)
       window.removeEventListener('drop', acaba)
     }
   }, [])
@@ -753,7 +760,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
       if (cena) onColocarAtor(ator, pontoNoMapa(e.clientX, e.clientY))
       return
     }
-    if (!souMestre || arrastoInterno.current) return
+    if (!souMestre || (arrastoInterno.current && !e.dataTransfer.types.includes('Files'))) return
     e.preventDefault()
     const origem = imagemDoArrasto({
       arquivos: Array.from(e.dataTransfer.files),
@@ -977,7 +984,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
           e.preventDefault()
           return
         }
-        if (!souMestre || arrastoInterno.current) return
+        if (!souMestre || (arrastoInterno.current && !e.dataTransfer.types.includes('Files'))) return
         e.preventDefault()
         setSoltando(true)
       }}
