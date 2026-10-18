@@ -21,6 +21,9 @@ export type Ator = {
   acesso_jogadores: Record<string, NivelAcesso>
   mostrar_mestres: boolean
   pv_atual: number | null
+  // Condições e efeitos da ameaça na mesa (18/10): cada cópia tem as suas.
+  condicoes?: string[]
+  condicoes_personalizadas?: unknown
   sort: number
   created_at: string
 }

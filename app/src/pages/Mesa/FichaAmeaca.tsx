@@ -5,6 +5,9 @@ import { supabase } from '../../lib/supabase'
 import { lerPericias, lerTeste, rolarDano, rolarTeste } from './combate'
 import type { Rolagem } from './chat'
 import { ataqueDaCriatura, textoDosAlvos, type Alvo, type AtaqueDaAcao } from './mira'
+import CondicoesDaAmeaca from './CondicoesDaAmeaca'
+import { defesaDeCondicoes, penalidadeDeCondicoes, rotuloComCondicoes, type ContextoDoTeste } from '../CharacterSheet/condicoes'
+import { lerCondicoesPersonalizadas, type CondicaoPersonalizada } from '../CharacterSheet/efeitosEscolhidos'
 
 type Acao = { nome: string; tipo?: string; teste?: string; dano?: string; descricao?: string }
 
@@ -42,14 +45,29 @@ type Criatura = {
 type Aba = 'status' | 'combate' | 'descricao'
 
 const ATRIBUTOS = ['agi', 'for', 'int', 'pre', 'vig']
+const ATRIBUTO_DA_SIGLA: Record<string, string> = { agi: 'agilidade', for: 'forca', int: 'intelecto', pre: 'presenca', vig: 'vigor' }
+// Atributo de cada perícia (livro), pra condição que pesa em atributo (Fraco, Frustrado…) valer no teste da ameaça.
+const ATRIBUTO_DA_PERICIA: Record<string, string> = {
+  acrobacia: 'agilidade', crime: 'agilidade', furtividade: 'agilidade', iniciativa: 'agilidade', pilotagem: 'agilidade', pontaria: 'agilidade', reflexos: 'agilidade',
+  atletismo: 'forca', luta: 'forca',
+  atualidades: 'intelecto', ciencias: 'intelecto', investigacao: 'intelecto', medicina: 'intelecto', ocultismo: 'intelecto', profissao: 'intelecto', sobrevivencia: 'intelecto', tatica: 'intelecto', tecnologia: 'intelecto',
+  adestramento: 'presenca', artes: 'presenca', diplomacia: 'presenca', enganacao: 'presenca', intimidacao: 'presenca', intuicao: 'presenca', percepcao: 'presenca', religiao: 'presenca', vontade: 'presenca',
+  fortitude: 'vigor',
+}
+const semAcento = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+const contextoDaPericia = (nome: string): ContextoDoTeste => ({ atributo: ATRIBUTO_DA_PERICIA[semAcento(nome)] ?? null, pericia: nome })
 
 // Ficha de Ameaça (12.4): cabeçalho, Vida com as setas e as abas Status / Combate / Descrição.
 // O mestre rola atributos, perícias, testes e danos e manda ações/poderes pro chat
 // (podeRolar); na escolha de ameaças ela é só pra ver, com o botão Adicionar no rodapé.
-export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, podeEditar, podeRolar = false, nome, onMudarPv, onRolar, onMostrar, onAdicionar, alvos = [], onAtacar, meuId, onEditar }: {
+export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, condicoes = [], condicoesPersonalizadas, onMudarCondicoes, podeEditar, podeRolar = false, nome, onMudarPv, onRolar, onMostrar, onAdicionar, alvos = [], onAtacar, meuId, onEditar }: {
   criaturaId: string
   pvAtual: number | null
   pvMax?: number | null
+  // Condições e efeitos desta ameaça na mesa (18/10); sem onMudarCondicoes é só pra ver.
+  condicoes?: string[]
+  condicoesPersonalizadas?: unknown
+  onMudarCondicoes?: (condicoes: string[], personalizadas: CondicaoPersonalizada[]) => void
   podeEditar: boolean
   podeRolar?: boolean
   nome?: string
@@ -85,12 +103,19 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, podeEditar, po
   const mudar = (d: number) => onMudarPv?.(Math.max(0, Math.min(maximo || Infinity, pv + d)))
   const autor = { nome: nome ?? c.name, foto: c.image_url }
 
-  function rolarPericia(rotulo: string, texto: string) {
+  const proprias = lerCondicoesPersonalizadas(condicoesPersonalizadas)
+  // Condição que tira (ou dá) dado no teste: vale sozinha e a rolagem diz por quê.
+  function comCondicoes(t: { dados: number; bonus: number }, contexto: ContextoDoTeste) {
+    const p = penalidadeDeCondicoes(condicoes, contexto, proprias)
+    return { teste: { dados: t.dados + p.dados, bonus: t.bonus + p.valor }, motivos: p.motivos }
+  }
+
+  function rolarPericia(rotulo: string, texto: string, contexto: ContextoDoTeste = { atributo: null }) {
     if (!podeRolar || !onRolar) return
-    const t = lerTeste(texto)
+    const { teste: t, motivos } = comCondicoes(lerTeste(texto), contexto)
     const r = rolarTeste(t)
     onRolar({
-      label: `${rotulo} (${nome ?? c!.name})`, total: r.total, bonus: r.bonus,
+      label: `${rotuloComCondicoes(rotulo, motivos)} (${nome ?? c!.name})`, total: r.total, bonus: r.bonus,
       detail: `d20 mantido: ${r.kept} (rolados: ${r.rolls.join(', ')}) + ${r.bonus}`,
       dice: r.rolls.map((v) => ({ sides: 20, value: v, discarded: v !== r.kept })),
     }, autor)
@@ -99,8 +124,10 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, podeEditar, po
   // Ação com teste e dano, com alvo marcado: manda "[Ameaça] está atacando [Alvo]" pro chat.
   function testarAcao(a: Acao) {
     const ataque = alvos.length && a.dano && onAtacar ? ataqueDaCriatura(a.nome, a.teste ?? '', a.dano) : null
-    if (ataque && podeRolar) onAtacar!(ataque, autor)
-    else rolarPericia(`Teste: ${a.nome}`, a.teste ?? '')
+    if (ataque && podeRolar) {
+      const { teste, motivos } = comCondicoes(ataque, { atributo: null, ataque: ataque.corpo === false ? 'distancia' : 'corpo' })
+      onAtacar!({ ...ataque, ...teste, nome: rotuloComCondicoes(ataque.nome, motivos) }, autor)
+    } else rolarPericia(`Teste: ${a.nome}`, a.teste ?? '', a.dano ? { atributo: null, ataque: /bal[ií]stic|disparo|dist[âa]ncia|arremess|tiro/i.test(`${a.nome} ${a.teste ?? ''} ${a.dano}`) ? 'distancia' : 'corpo' } : { atributo: null })
   }
 
   function rolarDanoDaAcao(a: Acao) {
@@ -117,7 +144,7 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, podeEditar, po
 
   // Teste de atributo: d20 igual ao valor do atributo, fica com o maior (igual à ficha).
   function rolarAtributo(sigla: string, valor: number) {
-    rolarPericia(`Teste de ${sigla.toUpperCase()}`, `+0 (${valor}d20)`)
+    rolarPericia(`Teste de ${sigla.toUpperCase()}`, `+0 (${valor}d20)`, { atributo: ATRIBUTO_DA_SIGLA[sigla] ?? null })
   }
 
   function mostrar(a: Acao) {
@@ -180,6 +207,8 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, podeEditar, po
         </div>
       )}
 
+      <CondicoesDaAmeaca condicoes={condicoes} personalizadas={condicoesPersonalizadas} podeEditar={podeEditar && !!onMudarCondicoes} onMudar={onMudarCondicoes} />
+
       <nav className="janela-abas ficha-ameaca-abas" role="tablist">
         {(['status', 'combate', 'descricao'] as Aba[]).map((a) => (
           <button key={a} type="button" role="tab" aria-selected={aba === a} className={aba === a ? 'ativa' : undefined} onClick={() => setAba(a)}>
@@ -208,7 +237,10 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, podeEditar, po
               </div>
             )}
             <dl className="ficha-ameaca-lista">
-              {c.defesa !== null && <><dt>Defesa</dt><dd>{c.defesa}</dd></>}
+              {c.defesa !== null && (() => {
+                const d = defesaDeCondicoes(condicoes, proprias)
+                return <><dt>Defesa</dt><dd title={d.motivos.join(', ') || undefined}>{c.defesa + d.valor}{d.valor ? <small className="ficha-ameaca-motivo"> ({c.defesa} {d.motivos.join(', ')})</small> : null}</dd></>
+              })()}
               {c.deslocamento && <><dt>Deslocamento</dt><dd>{c.deslocamento}</dd></>}
             </dl>
             <h4 className="ficha-ameaca-titulo">Perícias</h4>
@@ -217,7 +249,7 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, podeEditar, po
                 <li key={n}>
                   <span>{n.toUpperCase()}</span>
                   <strong>{t}</strong>
-                  {dado(() => rolarPericia(n, t ?? ''), `Rolar ${n}`)}
+                  {dado(() => rolarPericia(n, t ?? '', contextoDaPericia(n)), `Rolar ${n}`)}
                 </li>
               ))}
             </ul>

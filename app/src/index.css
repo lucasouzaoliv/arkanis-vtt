@@ -18738,3 +18738,21 @@ label.janela-botao {
 @media (max-width: 760px) {
   .mesa-ficha-celular { display: block; position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 9000; padding: 12px 22px; border-radius: 999px; background: #4a3280; border: 1px solid var(--accent); color: #fff; font-weight: 700; text-decoration: none; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6); white-space: nowrap; }
 }
+
+/* ---- Condições e efeitos nas ameaças (18/10): ficha da ameaça e ordem do combate ---- */
+.ameaca-condicoes { margin: 4px 0 6px; padding: 0 16px; }
+.ameaca-condicoes .ficha-ameaca-titulo { margin: 4px 0 6px; }
+.ameaca-condicoes-lista { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.ameaca-condicao { display: inline-flex; align-items: center; gap: 5px; padding: 3px 4px 3px 7px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 6px; background: rgba(17, 17, 17, 0.55); font-size: 12px; color: var(--text-h); }
+.ameaca-condicao img { width: 15px; height: 15px; object-fit: contain; }
+.ameaca-condicao button { padding: 0 3px; border: none; background: none; color: var(--text-dim); font-size: 11px; line-height: 1; }
+.ameaca-condicao button:hover { color: var(--danger); }
+.ameaca-condicoes-mais { width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 1px dashed rgba(255, 255, 255, 0.25); border-radius: 6px; background: none; color: var(--text-dim); font-size: 11px; flex-shrink: 0; }
+.ameaca-condicoes-mais:hover { color: #fff; border-color: rgba(255, 255, 255, 0.5); }
+/* No combate: só os ícones (o nome aparece passando o mouse), pra caber na linha. */
+.ameaca-condicoes.compacto { margin: 0; max-width: 96px; }
+.ameaca-condicoes.compacto .ameaca-condicoes-lista { gap: 3px; justify-content: flex-end; }
+.ameaca-condicoes.compacto .ameaca-condicao { padding: 2px 2px 2px 4px; gap: 1px; }
+.ameaca-condicoes.compacto .ameaca-condicao > span { display: none; }
+.ameaca-condicoes.compacto .ameaca-condicoes-mais { width: 18px; height: 18px; font-size: 9px; }
+.ficha-ameaca-motivo { color: var(--text-dim); font-size: 11px; }

@@ -3,6 +3,7 @@
 import { rollAttributeTest, rollDiceFormula } from '../../lib/rules'
 import { resistenciasDoItemEquipado, type AppliedModifier } from '../CharacterSheet/itemMods'
 import { defesaTotal } from '../CharacterSheet/defesa'
+import { defesaDeCondicoes } from '../CharacterSheet/condicoes'
 import { lerCondicoesPersonalizadas } from '../CharacterSheet/efeitosEscolhidos'
 import { lerTeste } from './combate'
 
@@ -113,7 +114,7 @@ export type DadosDoAlvo =
       // Treino em Luta (nenhum/treinado/veterano/expert): contra-atacar exige treino (13/10).
       luta?: string | null
     }
-  | { tipo: 'criatura'; nome: string; defesa: number; resistencias: string | null; vulnerabilidades: string | null; pv_maximo?: number | null }
+  | { tipo: 'criatura'; nome: string; defesa: number; resistencias: string | null; vulnerabilidades: string | null; pv_maximo?: number | null; condicoes?: string[]; condicoes_personalizadas?: unknown }
   | { tipo: 'nenhum'; nome: string }
 
 export function normalizar(t: string): string {
@@ -198,7 +199,8 @@ export function perfilDoAlvo(d: DadosDoAlvo): Perfil {
 
 // Mesma conta da ficha (defesa.ts): 10 + Agilidade + itens + poderes fixos + outros + condições.
 export function defesaDoAlvo(d: DadosDoAlvo): number | null {
-  if (d.tipo === 'criatura') return d.defesa
+  // Ameaça com condição (Caído, Vulnerável…) perde Defesa igual a ficha (18/10).
+  if (d.tipo === 'criatura') return d.defesa + defesaDeCondicoes(d.condicoes, lerCondicoesPersonalizadas(d.condicoes_personalizadas)).valor
   if (d.tipo !== 'ficha') return null
   return defesaTotal({ agilidade: d.agilidade, outros: d.defesa_outros, condicoes: d.condicoes, itens: d.itens, poderes: d.poderes ?? [], condicoesPersonalizadas: lerCondicoesPersonalizadas(d.condicoes_personalizadas) }).total
 }

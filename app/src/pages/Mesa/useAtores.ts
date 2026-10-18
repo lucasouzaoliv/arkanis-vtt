@@ -4,7 +4,7 @@ import { copiaDoAtor, variacoesDaCriatura, type Ator } from './atores'
 import type { Pasta } from './cenas'
 
 const CAMPOS =
-  'id, campaign_id, folder_id, tipo, character_id, creature_id, name, token_url, token_variacoes, token_pastas, acesso_padrao, acesso_jogadores, mostrar_mestres, pv_atual, sort, created_at'
+  'id, campaign_id, folder_id, tipo, character_id, creature_id, name, token_url, token_variacoes, token_pastas, acesso_padrao, acesso_jogadores, mostrar_mestres, pv_atual, condicoes, condicoes_personalizadas, sort, created_at'
 const CAMPOS_PASTA = 'id, campaign_id, parent_id, name, color, sort_mode, sort, created_at'
 
 export type FichaResumo = { id: string; user_id: string; avatar_url: string | null; hidden_from_others: boolean; editable_by_others: boolean }

@@ -985,6 +985,11 @@ export default function Mesa() {
                 onRemover={(c, id) => combate.remover(c, id)}
                 onAbrir={abrirCombatente}
                 onSoltarAtor={(c, id) => combate.adicionarAtor(c, id)}
+                condicoesDe={(c) => {
+                  const a = c.actor_id ? atores.atores.find((x) => x.id === c.actor_id) : undefined
+                  return a?.creature_id ? { condicoes: a.condicoes ?? [], personalizadas: a.condicoes_personalizadas } : null
+                }}
+                onMudarCondicoes={(c, condicoes, condicoes_personalizadas) => c.actor_id && atores.salvar(c.actor_id, { condicoes, condicoes_personalizadas })}
               />
             ) : aba === 'personagens' ? (
               <PainelPersonagens
@@ -1462,6 +1467,7 @@ export default function Mesa() {
             ator={a}
             podeEditar={nivel === 'dono'}
             onMudarPv={(pv) => atores.salvar(a.id, { pv_atual: pv })}
+            onMudarCondicoes={(condicoes, condicoes_personalizadas) => atores.salvar(a.id, { condicoes, condicoes_personalizadas })}
             onRolar={rolarNoChat}
             onMostrar={mostrarNoChat}
             alvos={alvosComNome}

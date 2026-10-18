@@ -207,14 +207,17 @@ export function useCombate(campanhaId: string | undefined) {
   // Personagens da aba Personagens (ameaças e NPCs) entrando na ordem de iniciativa.
   const entrarAtores = useCallback(async (combate: Combate, atorIds: string[]) => {
     if (!campanhaId || !atorIds.length) return []
-    const { data: atores } = await supabase.from('campaign_actors').select('id, tipo, character_id, creature_id, name, token_url').in('id', atorIds)
+    const { data: atores } = await supabase.from('campaign_actors').select('id, tipo, character_id, creature_id, name, token_url, condicoes, condicoes_personalizadas').in('id', atorIds)
     const lista = (atores ?? []).filter((a) => a.tipo !== 'jogador')
     const idsCriatura = lista.map((a) => a.creature_id).filter((x): x is string => !!x)
     const { data: criaturas } = idsCriatura.length ? await supabase.from('creatures').select('id, iniciativa, image_url').in('id', idsCriatura) : { data: [] }
     const criatura = new Map((criaturas ?? []).map((c) => [c.id, c]))
     const ameacas = lista.filter((a) => a.tipo === 'ameaca').map((a) => {
       const c = a.creature_id ? criatura.get(a.creature_id) : undefined
-      const t = lerTeste(c?.iniciativa)
+      // Condição da ameaça (Surdo -2d20 na Iniciativa…) vale aqui também (18/10).
+      const base = lerTeste(c?.iniciativa)
+      const p = penalidadeDeCondicoes(a.condicoes, { atributo: 'agilidade', pericia: 'Iniciativa' }, lerCondicoesPersonalizadas(a.condicoes_personalizadas))
+      const t = { dados: base.dados + p.dados, bonus: base.bonus + p.valor }
       return {
         combat_id: combate.id, campaign_id: campanhaId, tipo: 'ameaca', actor_id: a.id, creature_id: a.creature_id, character_id: null,
         name: a.name, image_url: a.token_url ?? c?.image_url ?? null, iniciativa: rolarTeste(t).total, desempate: t.bonus,

@@ -70,6 +70,12 @@ describe('alvo com ficha', () => {
     expect(defesaDoAlvo({ tipo: 'criatura', nome: 'z', defesa: 18, resistencias: null, vulnerabilidades: null })).toBe(18)
     expect(defesaDoAlvo({ tipo: 'nenhum', nome: 'x' })).toBeNull()
   })
+  it('condição na ameaça mexe na Defesa dela (18/10)', () => {
+    const z = { tipo: 'criatura' as const, nome: 'z', defesa: 18, resistencias: null, vulnerabilidades: null }
+    expect(defesaDoAlvo({ ...z, condicoes: ['Vulnerável'] })).toBe(16)
+    expect(defesaDoAlvo({ ...z, condicoes: ['Desprevenido'] })).toBe(13)
+    expect(defesaDoAlvo({ ...z, condicoes: ['Marcado'], condicoes_personalizadas: [{ nome: 'Marcado', efeitos: [{ alvo: 'defesa', valor: -3, modo: 'valor' }] }] })).toBe(15)
+  })
 })
 
 describe('ataque da ameaça', () => {

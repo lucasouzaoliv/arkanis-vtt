@@ -6,10 +6,12 @@ import caveiraMarcada from '../../assets/marked-skull-icon.svg'
 import { corDaVida, desmaiado, posicaoNoCarrossel, type Combatente } from './combate'
 import type { Barras, Combate } from './useCombate'
 import { TIPO_ARRASTO_ATOR } from './PainelPersonagens'
+import CondicoesDaAmeaca from './CondicoesDaAmeaca'
+import type { CondicaoPersonalizada } from '../CharacterSheet/efeitosEscolhidos'
 
 // Aba Encontros de Combate (12.4). Sem combate rodando: a lista dos combates salvos
 // (Nome + VD + Iniciar). Rodando: a ordem de iniciativa, os turnos e a rodada.
-export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo, ordem, vidaDe, barras, meusPersonagens, onCriar, onEditar, onExcluir, onIniciar, onEncerrar, onAdicionar, onPassar, onRemover, onAbrir, onSoltarAtor }: {
+export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo, ordem, vidaDe, barras, meusPersonagens, onCriar, onEditar, onExcluir, onIniciar, onEncerrar, onAdicionar, onPassar, onRemover, onAbrir, onSoltarAtor, condicoesDe, onMudarCondicoes }: {
   souMestre: boolean
   combates: Combate[]
   vdDoCombate: (c: Combate) => number
@@ -30,6 +32,9 @@ export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo,
   onAbrir: (c: Combatente) => void
   // Personagem arrastado da aba Personagens pra um combate.
   onSoltarAtor: (c: Combate, atorId: string) => void
+  // Condições das ameaças (18/10): o mestre põe e tira direto na ordem de iniciativa.
+  condicoesDe?: (c: Combatente) => { condicoes: string[]; personalizadas: unknown } | null
+  onMudarCondicoes?: (c: Combatente, condicoes: string[], personalizadas: CondicaoPersonalizada[]) => void
 }) {
   // Soltar um personagem da aba Personagens em cima do combate coloca ele no combate (mestre).
   const soltavel = (c: Combate) =>
@@ -133,6 +138,10 @@ export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo,
                   {c.tipo === 'jogador' && b && desmaiado(b.pv) && <Caveiras marcas={b.mortes ?? 0} className="combate-caveiras" />}
                 </span>
               </button>
+              {souMestre && c.tipo !== 'jogador' && (() => {
+                const cond = condicoesDe?.(c)
+                return cond ? <CondicoesDaAmeaca compacto condicoes={cond.condicoes} personalizadas={cond.personalizadas} podeEditar={!!onMudarCondicoes} onMudar={(l, p) => onMudarCondicoes?.(c, l, p)} /> : null
+              })()}
               <span className="combate-iniciativa" title="Iniciativa">{c.iniciativa}</span>
               {souMestre && c.tipo !== 'jogador' && ((vida && vida[0] <= 0) || (b && b.pv[0] <= 0)) && (
                 <button type="button" className="combate-icone" aria-label={`Tirar ${c.name} do combate`} title="Tirar do combate" onClick={() => onRemover(ativo, c.id)}>
