@@ -18649,7 +18649,8 @@ label.janela-botao {
 /* Carregando escondido (imagem e som chegam juntos): invisível e sem a animação começar antes. */
 .susto.carregando { opacity: 0; animation: none; }
 .susto.carregando .susto-midia { animation: none; }
-.susto-midia { width: 100%; height: 100%; object-fit: cover; user-select: none; }
+.susto-midia { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: contain; user-select: none; }
+.susto-fundo { position: absolute; inset: -60px; z-index: 0; background: center / cover no-repeat; filter: blur(40px) brightness(0.4); }
 .susto-flash { position: absolute; inset: 0; z-index: 2; background: #fff; mix-blend-mode: screen; animation: susto-flash .45s ease-out forwards; pointer-events: none; }
 /* O player do YouTube precisa de pelo menos 200×200 pra tocar: fica no canto, invisível. */
 .susto-youtube { position: fixed; left: 0; bottom: 0; width: 200px; height: 200px; opacity: 0.01; pointer-events: none; z-index: -1; overflow: hidden; }
@@ -18658,9 +18659,9 @@ label.janela-botao {
 @keyframes susto-entra { from { opacity: 0; } to { opacity: 1; } }
 @keyframes susto-flash { 0% { opacity: 1; background: #fff; } 25% { opacity: .85; background: #b0000f; } 100% { opacity: 0; background: #000; } }
 .susto-pulo .susto-midia { animation: susto-pulo .25s cubic-bezier(.2, 1.6, .4, 1) both; }
-@keyframes susto-pulo { from { transform: scale(1.6); filter: brightness(2) contrast(1.6); } to { transform: scale(1.05); filter: none; } }
+@keyframes susto-pulo { from { transform: scale(1.6); filter: brightness(2) contrast(1.6); } to { transform: scale(1); filter: none; } }
 .susto-zoom .susto-midia { animation: susto-zoom .35s cubic-bezier(.6, 0, .9, .6) both; }
-@keyframes susto-zoom { from { transform: scale(.15); opacity: .3; } to { transform: scale(1.25); opacity: 1; } }
+@keyframes susto-zoom { from { transform: scale(.15); opacity: .3; } to { transform: scale(1); opacity: 1; } }
 .susto-piscar .susto-midia { animation: susto-piscar .5s steps(1) infinite; }
 @keyframes susto-piscar { 0% { opacity: 1; } 18% { opacity: 0; } 30% { opacity: 1; } 55% { opacity: 0; } 62% { opacity: 1; filter: invert(1); } 70% { filter: none; } }
 .susto-tremor { animation: susto-tremor .09s linear infinite; }

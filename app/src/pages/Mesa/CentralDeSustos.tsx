@@ -60,6 +60,8 @@ export function SustoNaTela({ susto, onAcabou }: { susto: SustoDisparado; onAcab
   return (
     <div className={`susto susto-${susto.efeito}${susto.tremor ? ' susto-tremor' : ''}${saindo ? ' saindo' : ''}${visivel ? '' : ' carregando'}`} role="presentation">
       {visivel && <div className="susto-flash" />}
+      {/* A imagem aparece inteira (sem cortar a cabeça da criatura); a cópia borrada atrás preenche as sobras. */}
+      {susto.midia_url && susto.midia_tipo !== 'video' && <div className="susto-fundo" style={{ backgroundImage: `url("${susto.midia_url}")` }} />}
       {susto.midia_url && (susto.midia_tipo === 'video'
         ? <video className="susto-midia" src={susto.midia_url} autoPlay={visivel} playsInline muted={!comSomDoVideo} loop preload="auto" onCanPlayThrough={() => setMidiaPronta(true)} onError={() => setMidiaPronta(true)} ref={(v) => { if (v && visivel && v.paused) void v.play().catch(() => {}) }} />
         : <img className="susto-midia" src={susto.midia_url} alt="" draggable={false} onLoad={() => setMidiaPronta(true)} onError={() => setMidiaPronta(true)} />)}
