@@ -491,6 +491,8 @@ export type BonusDeFicha = {
   valor: number
   /** Texto da condicao quando o bonus nao vale de imediato. Vazio quando vale ao equipar. */
   condicao: string
+  /** Atributo que não aumenta o PE máximo (Carisma: "+1 Presença (sem PE extra)"). */
+  semPe?: boolean
 }
 
 const ATRIBUTO_POR_NOME: Record<string, AlvoDeBonus> = {
@@ -520,7 +522,7 @@ export function bonusDeFichaDaDescricao(descricao: string | null | undefined): B
 
     for (const m of frase.matchAll(/([+-]\s*\d+)\s+([A-Za-zÀ-ÿ]+)/g)) {
       const alvo = ATRIBUTO_POR_NOME[m[2].toLowerCase()]
-      if (alvo) achados.push({ alvo, valor: Number(m[1].replace(/\s+/g, '')), condicao })
+      if (alvo) achados.push({ alvo, valor: Number(m[1].replace(/\s+/g, '')), condicao, ...(/\bsem\s+PE\b/i.test(frase) ? { semPe: true } : {}) })
     }
   }
   return achados
@@ -547,6 +549,8 @@ export type EfeitoDeItem = {
   mod?: { kind: AppliedModifier['kind']; name: string }
   // Opções do mesmo grupo se excluem: ligar uma desliga as outras (Câmera: Investigação OU Percepção).
   grupo?: string
+  // O atributo vale, mas não entra na conta do PE máximo (Carisma).
+  semPe?: boolean
 }
 
 function rotuloDeFicha(alvo: AlvoDeBonus, valor: number) {
@@ -588,7 +592,7 @@ export function efeitosDoItem(
   })
 
   bonusDeFichaDaDescricao(descricao).forEach((b, i) => {
-    lista.push({ chave: `desc-ficha-${i}`, rotulo: rotuloDeFicha(b.alvo, b.valor), condicao: b.condicao, alvo: b.alvo, valor: b.valor })
+    lista.push({ chave: `desc-ficha-${i}`, rotulo: rotuloDeFicha(b.alvo, b.valor), condicao: b.condicao, alvo: b.alvo, valor: b.valor, ...(b.semPe ? { semPe: true } : {}) })
   })
 
   for (const m of mods ?? []) {
@@ -615,6 +619,7 @@ export function efeitosDoItem(
         alvo: b.alvo,
         valor: b.valor,
         mod: { kind: m.kind, name: m.name },
+        ...(b.semPe ? { semPe: true } : {}),
       })
     })
     bonusDePericiaDaDescricao(m.effect).forEach((b, i) => {

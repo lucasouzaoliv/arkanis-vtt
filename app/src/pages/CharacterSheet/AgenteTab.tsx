@@ -129,6 +129,13 @@ export default function AgenteTab({
   const [bonusDeFicha, setBonusDeFicha] = useState<Partial<Record<AlvoDeBonus, number>>>({})
   // Atributo que vale nas contas: o da ficha + itens equipados (o "+1" verde), bug 11/10.
   const atributos = atributosComBonus(character.attributes, bonusDeFicha)
+  // Bônus de atributo que não dá PE (Carisma: "+1 Presença (sem PE extra)"), bug 18/10.
+  const [semPe, setSemPe] = useState<Partial<Record<AlvoDeBonus, number>>>({})
+  const atributosDoPe = useMemo(() => {
+    const r = { ...atributos } as Record<string, number>
+    for (const [k, v] of Object.entries(semPe)) if (v) r[k] = (r[k] ?? 0) - v
+    return r as typeof atributos
+  }, [atributos, semPe])
   const [charSkills, setCharSkills] = useState<Record<string, CharacterSkillRow>>({})
   const [roll, setRoll] = useState<RollResultData | null>(null)
   const [rightTab, setRightTab] = useState<'Combate' | 'Habilidades' | 'Rituais' | 'Inventário'>('Combate')
@@ -240,12 +247,14 @@ export default function AgenteTab({
 
         const porPericia: Record<string, number> = {}
         const porAlvo: Partial<Record<AlvoDeBonus, number>> = {}
+        const porAlvoSemPe: Partial<Record<AlvoDeBonus, number>> = {}
         for (const l of linhas) {
           // os que valem sempre entram direto; os condicionais so se a pessoa ligou
           for (const e of efeitosValendo(l.descricao, l.mods, l.ligados)) {
             const origem = origemDoItem(l.nome, e.valor, e.mod)
             if (e.pericias) for (const p of e.pericias) { porPericia[p] = (porPericia[p] ?? 0) + e.valor; (origemP[p] ??= []).push(origem) }
             if (e.alvo) { porAlvo[e.alvo] = (porAlvo[e.alvo] ?? 0) + e.valor; (origemF[e.alvo] ??= []).push(origem) }
+            if (e.alvo && e.semPe) porAlvoSemPe[e.alvo] = (porAlvoSemPe[e.alvo] ?? 0) + e.valor
           }
         }
         // Poderes com bônus fixo (Reflexos Defensivos: +2 nos testes de resistência), bug 08/10.
@@ -255,6 +264,7 @@ export default function AgenteTab({
         for (const [pericia, lista] of Object.entries(dosPoderes.origens)) (origemP[pericia] ??= []).push(...lista)
         setBonusDeItens(porPericia)
         setBonusDeFicha(porAlvo)
+        setSemPe(porAlvoSemPe)
         setOrigensPericia(origemP)
         setOrigensFicha(origemF)
       })
@@ -278,8 +288,9 @@ export default function AgenteTab({
   const derived = useMemo(() => {
     if (!classRow) return { maxPv: 0, maxPe: 0, maxSanity: 0, maxPd: 0 }
     const s = computeDerivedStats(classRow, atributos, character.nex_percent, poderes)
-    return { ...s, maxSanity: s.maxSanity - transcendeu * (classRow.sanity_per_nex ?? 0) }
-  }, [classRow, atributos, character.nex_percent, poderes, transcendeu])
+    const maxPe = computeDerivedStats(classRow, atributosDoPe, character.nex_percent, poderes).maxPe
+    return { ...s, maxPe, maxSanity: s.maxSanity - transcendeu * (classRow.sanity_per_nex ?? 0) }
+  }, [classRow, atributos, atributosDoPe, character.nex_percent, poderes, transcendeu])
 
   async function updateAttribute(key: keyof typeof character.attributes, value: number) {
     const attributes = { ...character.attributes, [key]: value }

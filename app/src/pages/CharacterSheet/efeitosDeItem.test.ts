@@ -15,7 +15,14 @@ describe('bonusDeFichaDaDescricao', () => {
   it('le bonus de atributo', () => {
     expect(bonusDeFichaDaDescricao(PUJANCA.effect)).toEqual([{ alvo: 'forca', valor: 1, condicao: '' }])
     expect(bonusDeFichaDaDescricao(DESTREZA.effect)).toEqual([{ alvo: 'agilidade', valor: 1, condicao: '' }])
-    expect(bonusDeFichaDaDescricao(CARISMA.effect)).toEqual([{ alvo: 'presenca', valor: 1, condicao: '' }])
+    expect(bonusDeFichaDaDescricao(CARISMA.effect)).toEqual([{ alvo: 'presenca', valor: 1, condicao: '', semPe: true }])
+  })
+
+  // Carisma dá +1 Presença mas não o PE que viria dela (bug 18/10).
+  it('Carisma aplicado no item marca o bonus como sem PE', () => {
+    const [e] = efeitosSempre(null, [CARISMA])
+    expect(e).toMatchObject({ alvo: 'presenca', valor: 1, semPe: true })
+    expect(efeitosSempre(null, [PUJANCA])[0].semPe).toBeUndefined()
   })
 
   // "ativa após 1 dia de uso" não é algo que o app saiba medir: vira liga/desliga.
