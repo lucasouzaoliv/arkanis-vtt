@@ -158,27 +158,30 @@ const animacaoDa = (c: Cone) => (c.animacao && c.animacao !== 'nenhuma' ? `luz-a
 
 // Escuridão (a da cena + as áreas pintadas) com os cones das lanternas recortando ela, e o
 // brilho de cada lanterna por cima. O mestre vê a escuridão mais clara, pra poder trabalhar.
-export function LuzesNoPalco({ mapa, souMestre, nivel, areas, cones, celula }: {
+export function LuzesNoPalco({ mapa, souMestre, nivel, areas, cones, celula, sobreTokens = false }: {
   mapa: { w: number; h: number }
   souMestre: boolean
   nivel: number // Nível de Escuridão da cena (0 a 1)
   areas: AreaEscura[]
   cones: Cone[]
   celula: { w: number; h: number }
+  // Por cima dos tokens (visão de jogador): ids próprios pra não colidir com a camada do mestre.
+  sobreTokens?: boolean
 }) {
   if (!areas.length && !nivel) return null
+  const sufixo = sobreTokens ? '-j' : ''
   const borrar = Math.max(celula.w, celula.h) * 0.25
   const temEscuro = areas.length > 0 || nivel > 0
   return (
-    <svg className="mesa-luzes" width={mapa.w} height={mapa.h} aria-hidden>
+    <svg className={`mesa-luzes${sobreTokens ? ' sobre-tokens' : ''}`} width={mapa.w} height={mapa.h} aria-hidden>
       <defs>
-        <filter id="luz-borda" x="-20%" y="-20%" width="140%" height="140%">
+        <filter id={`luz-borda${sufixo}`} x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation={borrar} />
         </filter>
         {cones.map((c) => (
           <g key={c.id}>
             {/* Na máscara: preto = luz (a escuridão some), mais forte perto do token. */}
-            <radialGradient id={`luz-m-${c.id}`} gradientUnits="userSpaceOnUse" cx={c.cx} cy={c.cy} r={c.raio}>
+            <radialGradient id={`luz-m-${c.id}${sufixo}`} gradientUnits="userSpaceOnUse" cx={c.cx} cy={c.cy} r={c.raio}>
               <stop offset="0" stopColor="#000" stopOpacity={c.forca} />
               <stop offset={c.forte} stopColor="#000" stopOpacity={c.forca} />
               <stop offset="1" stopColor="#000" stopOpacity="0" />
@@ -186,16 +189,16 @@ export function LuzesNoPalco({ mapa, souMestre, nivel, areas, cones, celula }: {
           </g>
         ))}
         {temEscuro && (
-          <mask id="luz-mascara" maskUnits="userSpaceOnUse" x={0} y={0} width={mapa.w} height={mapa.h}>
+          <mask id={`luz-mascara${sufixo}`} maskUnits="userSpaceOnUse" x={0} y={0} width={mapa.w} height={mapa.h}>
             <rect width={mapa.w} height={mapa.h} fill="#fff" />
-            <g filter="url(#luz-borda)">
-              {cones.map((c) => <path key={c.id} className={animacaoDa(c)} d={caminhoDoCone(c)} fill={`url(#luz-m-${c.id})`} />)}
+            <g filter={`url(#luz-borda${sufixo})`}>
+              {cones.map((c) => <path key={c.id} className={animacaoDa(c)} d={caminhoDoCone(c)} fill={`url(#luz-m-${c.id}${sufixo})`} />)}
             </g>
           </mask>
         )}
       </defs>
       {temEscuro && (
-        <g mask="url(#luz-mascara)" opacity={souMestre ? 0.55 : 1}>
+        <g mask={`url(#luz-mascara${sufixo})`} opacity={souMestre ? 0.55 : 1}>
           {nivel > 0 && <rect width={mapa.w} height={mapa.h} fill="#000" opacity={nivel * 0.92} />}
           {areas.map((a) => <rect key={a.id} x={a.x} y={a.y} width={a.width} height={a.height} fill="#000" />)}
         </g>

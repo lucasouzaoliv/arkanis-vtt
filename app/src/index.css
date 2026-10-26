@@ -18765,3 +18765,15 @@ label.janela-botao {
 .inv-campo-lido, .inv-campo .texto-formatado > textarea { min-height: 2.5em; overflow-y: auto; }
 .inv-campo .texto-formatado { min-height: 0; }
 .inv-campo.cresce { flex: 1 1 0; }
+
+/* Visão de jogador (26/10): a escuridão vai por cima dos tokens (mesmo nível, vem depois), e os
+   tokens do próprio jogador ficam por cima dela. */
+.mesa-luzes.sobre-tokens { z-index: 3; }
+.mesa-objeto.token.meu { z-index: 4; }
+
+/* Botão do mestre pra ver como jogador, e o aviso enquanto está vendo. */
+.mesa-visao-botao, .mesa-visao-jogador { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 20; display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(16, 15, 20, 0.85); color: #fff; font-size: 13px; }
+.mesa-visao-botao { opacity: 0.55; cursor: pointer; }
+.mesa-visao-botao:hover { opacity: 1; }
+.mesa-visao-jogador { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 6px 20px rgba(0, 0, 0, 0.5); }
+.mesa-visao-jogador button { padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); background: none; color: #fff; font-size: 12px; cursor: pointer; }

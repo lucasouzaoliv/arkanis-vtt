@@ -171,7 +171,12 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   const objetos = obj.objetos
   // Objeto "só na luz UV": o jogador só vê dentro da luz UV (vai numa camada à parte).
   // A lâmpada de uma Luz Ambiente sem imagem só o mestre vê (os jogadores só veem a luz).
-  const visiveis = objetos.filter((o) => souMestre || (o.layer !== 'mestre' && !o.so_uv && o.image_url !== IMAGEM_LUZ && o.image_url !== IMAGEM_EFEITO))
+  // Ver como jogador (pedido 26/10): o mestre vê a mesa como um jogador vê (escuridão por cima dos
+  // tokens, camada do mestre escondida); com o token de um personagem selecionado, como aquele personagem.
+  const [comoJogador, setComoJogador] = useState<{ personagens: string[]; nome: string | null } | null>(null)
+  const veTudo = souMestre && !comoJogador
+  const personagensDaVisao = comoJogador ? comoJogador.personagens : meusPersonagens
+  const visiveis = objetos.filter((o) => veTudo || (o.layer !== 'mestre' && !o.so_uv && o.image_url !== IMAGEM_LUZ && o.image_url !== IMAGEM_EFEITO))
 
   // Quem pode mexer em cada objeto: o mestre sempre; o jogador no próprio personagem ou
   // quando o mestre liberou (Configurar Propriedade). O banco confere de novo.
@@ -996,7 +1001,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   const celula = cena ? celulaDaGrade(cena, mapa) : { w: 100, h: 100 }
   const hex = grade?.grid_type === 'hexagono' ? ladrilhoHex(celula.w) : null
   // Lanternas ligadas dos tokens que essa pessoa vê.
-  const cones = [...luzesDoAmbiente(objetos, celula, souMestre), ...conesDosTokens(objetos, celula, souMestre)]
+  const cones = [...luzesDoAmbiente(objetos, celula, veTudo), ...conesDosTokens(objetos, celula, veTudo)]
   const caminhoUv = caminhoDaLuzUv(cones)
   const traco = grade ? tracoDaGrade(grade.grid_style, grade.grid_thickness) : undefined
   // Alças e giro: o mestre e o dono do token (12.8).
@@ -1070,11 +1075,12 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
             </svg>
           )}
 
-          {/* Escuridão (a da cena + as áreas pintadas) recortada pelas lanternas. */}
-          <LuzesNoPalco mapa={mapa} souMestre={souMestre} nivel={cena.darkness} areas={esc.areas} cones={cones} celula={celula} />
+          {/* Escuridão (a da cena + as áreas pintadas) recortada pelas lanternas. O mestre vê os tokens
+              por cima dela; o jogador não (vai depois dos tokens, mais abaixo). */}
+          {veTudo && <LuzesNoPalco mapa={mapa} souMestre nivel={cena.darkness} areas={esc.areas} cones={cones} celula={celula} />}
 
           {/* Só na luz UV: pros jogadores, aparece só onde a luz UV bate. */}
-          {!souMestre && caminhoUv && (
+          {!veTudo && caminhoUv && (
             <div className="mesa-uv" style={{ width: mapa.w, height: mapa.h, clipPath: `path('${caminhoUv}')` }} aria-hidden>
               {objetos.filter((o) => o.so_uv && o.layer !== 'mestre').map((o) => (
                 <div key={o.id} className="mesa-objeto" style={{ left: o.x, top: o.y, width: o.width, height: o.height, transform: `rotate(${o.rotation}deg)` }}>
@@ -1089,7 +1095,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
             .map((o) => (
               <div
                 key={o.id}
-                className={`mesa-objeto${selecionados.includes(o.id) ? ' selecionado' : ''}${focado === o.id ? ' focado' : ''}${o.layer !== 'mapa' ? ' token' : ''}${o.layer === 'mestre' ? ' camada-mestre' : ''}${podeMover(o) && !o.locked ? ' mexivel' : ''}${o.luz ? ' luz' : ''}${o.so_uv ? ' so-uv' : ''}${o.item_id ? ' interativo' : ''}`}
+                className={`mesa-objeto${selecionados.includes(o.id) ? ' selecionado' : ''}${focado === o.id ? ' focado' : ''}${o.layer !== 'mapa' ? ' token' : ''}${o.layer === 'mestre' ? ' camada-mestre' : ''}${!veTudo && o.layer !== 'mapa' && o.character_id !== null && personagensDaVisao.includes(o.character_id) ? ' meu' : ''}${podeMover(o) && !o.locked ? ' mexivel' : ''}${o.luz ? ' luz' : ''}${o.so_uv ? ' so-uv' : ''}${o.item_id ? ' interativo' : ''}`}
                 style={{ left: o.x, top: o.y, width: o.width, height: o.height, transform: `rotate(${o.rotation}deg)`, ['--borda' as string]: `${2 / vista.escala}px`, ['--px' as string]: `${1 / vista.escala}px` }}
                 onPointerDown={(e) => pegarObjeto(e, o)}
                 onPointerEnter={() => (sobre.current = o.id)}
@@ -1117,6 +1123,10 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
                 })()}
               </div>
             ))}
+
+          {/* Jogador (ou o mestre vendo como jogador): a escuridão cobre também os tokens, então só
+              aparece o que a luz pega; os tokens do próprio jogador ficam por cima (bug 26/10). */}
+          {!veTudo && <LuzesNoPalco mapa={mapa} souMestre={false} nivel={cena.darkness} areas={esc.areas} cones={cones} celula={celula} sobreTokens />}
 
           {/* Alças de tamanho e a bolinha de girar, por cima de tudo (12.8) */}
           {unico && !unico.locked && (
@@ -1242,6 +1252,27 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
       {cena?.weather && <EfeitoClimatico key={cena.weather} clima={cena.weather} cor={cena.weather_cor} />}
       {soltando && <div className="mesa-soltar">{cena?.background_url ? 'Solte pra colocar a imagem na cena' : 'Solte pra usar como fundo da cena'}</div>}
       {aviso && !soltando && <div className="mesa-soltar" role="status">{aviso}</div>}
+      {souMestre && cena && (
+        comoJogador ? (
+          <div className="mesa-visao-jogador" role="status" onPointerDown={(e) => e.stopPropagation()}>
+            <FontAwesomeIcon icon={faEye} /> Vendo como {comoJogador.nome ?? 'jogador'}
+            <button type="button" onClick={() => setComoJogador(null)}>Voltar à visão do mestre</button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="mesa-visao-botao"
+            onPointerDown={(e) => e.stopPropagation()}
+            title="Ver a mesa como um jogador vê. Com o token de um personagem selecionado, como aquele personagem."
+            onClick={() => {
+              const o = objetos.find((x) => selecionados.includes(x.id) && x.character_id)
+              setComoJogador(o ? { personagens: [o.character_id!], nome: o.name || null } : { personagens: [], nome: null })
+            }}
+          >
+            <FontAwesomeIcon icon={faEye} /> Ver como jogador
+          </button>
+        )
+      )}
       {configLanterna && (
         <p className="mesa-desenho-aviso" role="status">
           Configurar Lanterna: <kbd>Clique + Arraste</kbd> partindo da lanterna do token, na direção da luz; o tamanho da seta é até onde a luz vai · <kbd>Esc</kbd> cancela
