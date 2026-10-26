@@ -18777,3 +18777,27 @@ label.janela-botao {
 .mesa-visao-botao:hover { opacity: 1; }
 .mesa-visao-jogador { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 6px 20px rgba(0, 0, 0, 0.5); }
 .mesa-visao-jogador button { padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); background: none; color: #fff; font-size: 12px; cursor: pointer; }
+
+/* Perfil (bug 26/10, cor clara como rosa): os quadros somavam a cor duas vezes e o texto claro sumia;
+   agora levam uma camada escura com o tom da cor por baixo, então qualquer cor fica legível. E a cor
+   do fundo vai na página toda (antes só nos cantos, e o meio ficava uma mancha preta). */
+.profile-vignette {
+  background:
+    radial-gradient(circle at 0% 0%, var(--vignette-color, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 100% 0%, var(--vignette-color, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 0% 100%, var(--vignette-color, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 100% 100%, var(--vignette-color, transparent) 0%, transparent 45%),
+    color-mix(in srgb, var(--vignette-color, var(--bg)) 22%, var(--bg));
+}
+.profile-characters,
+.profile-actions {
+  background: linear-gradient(rgba(14, 12, 18, 0.62), rgba(14, 12, 18, 0.62)), var(--profile-tint, var(--bg-panel));
+}
+.character-card {
+  background: linear-gradient(rgba(14, 12, 18, 0.55), rgba(14, 12, 18, 0.55)), var(--profile-tint, var(--bg-card));
+}
+.character-card-historia {
+  color: var(--text);
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
