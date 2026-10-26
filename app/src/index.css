@@ -18756,3 +18756,12 @@ label.janela-botao {
 .ameaca-condicoes.compacto .ameaca-condicao > span { display: none; }
 .ameaca-condicoes.compacto .ameaca-condicoes-mais { width: 18px; height: 18px; font-size: 9px; }
 .ficha-ameaca-motivo { color: var(--text-dim); font-size: 11px; }
+
+/* Investigação (bug 26/10): texto comprido esticava a coluna além da pasta (a linha da grade crescia
+   com o conteúdo), o quadro passava por cima do de baixo e não dava pra rolar. Agora a linha tem a
+   altura da pasta e cada quadro rola por dentro. */
+.inv-pasta-grid { grid-template-rows: minmax(0, 1fr); }
+.inv-pasta-coluna { min-height: 0; }
+.inv-campo-lido, .inv-campo .texto-formatado > textarea { min-height: 2.5em; overflow-y: auto; }
+.inv-campo .texto-formatado { min-height: 0; }
+.inv-campo.cresce { flex: 1 1 0; }
