@@ -96,7 +96,7 @@ export type CharacterRecord = {
   } | null
 }
 
-const TABS = ['Agente', 'Investigação', 'Afinidade', 'Progressão', 'Interlúdio', 'Regras Extras'] as const
+const TABS = ['Agente', 'Arquivos', 'Afinidade', 'Progressão', 'Interlúdio', 'Regras Extras'] as const
 
 const ELEMENTO_NOMES: Record<string, string> = {
   sangue: 'Sangue',
@@ -244,7 +244,7 @@ export default function CharacterSheet() {
           }}
         />
       )}
-      {tab === 'Investigação' && (
+      {tab === 'Arquivos' && (
         <InvestigacaoTab character={character} originName={originName} className={className} />
       )}
       {tab === 'Progressão' && (

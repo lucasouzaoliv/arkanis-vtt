@@ -125,7 +125,7 @@ export default function InvestigacaoTab({ character, originName, className }: { 
           className={`inv-pasta-aba${activePage === null ? ' ativa' : ''}`}
           onClick={() => setActivePage(null)}
         >
-          Pessoal
+          Arquivo Pessoal
         </button>
         {pages.map((p) => (
           <button
