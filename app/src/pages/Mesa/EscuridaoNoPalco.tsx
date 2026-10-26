@@ -170,6 +170,9 @@ export function LuzesNoPalco({ mapa, souMestre, nivel, areas, cones, celula, sob
 }) {
   if (!areas.length && !nivel) return null
   const sufixo = sobreTokens ? '-j' : ''
+  // A escuridão vale na mesa toda, não só em cima da imagem de fundo: mapa colocado por cima e
+  // maior que o fundo, ou área pintada pra fora dele, ficavam cortados no retângulo do fundo (bug 26/10).
+  const fora = { x: -mapa.w * 3, y: -mapa.h * 3, width: mapa.w * 7, height: mapa.h * 7 }
   const borrar = Math.max(celula.w, celula.h) * 0.25
   const temEscuro = areas.length > 0 || nivel > 0
   return (
@@ -189,8 +192,8 @@ export function LuzesNoPalco({ mapa, souMestre, nivel, areas, cones, celula, sob
           </g>
         ))}
         {temEscuro && (
-          <mask id={`luz-mascara${sufixo}`} maskUnits="userSpaceOnUse" x={0} y={0} width={mapa.w} height={mapa.h}>
-            <rect width={mapa.w} height={mapa.h} fill="#fff" />
+          <mask id={`luz-mascara${sufixo}`} maskUnits="userSpaceOnUse" {...fora}>
+            <rect {...fora} fill="#fff" />
             <g filter={`url(#luz-borda${sufixo})`}>
               {cones.map((c) => <path key={c.id} className={animacaoDa(c)} d={caminhoDoCone(c)} fill={`url(#luz-m-${c.id}${sufixo})`} />)}
             </g>
@@ -199,7 +202,7 @@ export function LuzesNoPalco({ mapa, souMestre, nivel, areas, cones, celula, sob
       </defs>
       {temEscuro && (
         <g mask={`url(#luz-mascara${sufixo})`} opacity={souMestre ? 0.55 : 1}>
-          {nivel > 0 && <rect width={mapa.w} height={mapa.h} fill="#000" opacity={nivel * 0.92} />}
+          {nivel > 0 && <rect {...fora} fill="#000" opacity={nivel * 0.92} />}
           {areas.map((a) => <rect key={a.id} x={a.x} y={a.y} width={a.width} height={a.height} fill="#000" />)}
         </g>
       )}
