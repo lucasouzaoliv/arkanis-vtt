@@ -60,7 +60,7 @@ type Gesto =
 
 // Centro da mesa: a cena com imagem, grade, objetos/tokens, escuridão, ambiente e clima.
 // Arrastar com o botão direito move o mapa (o esquerdo faz a caixa de seleção), a rodinha dá zoom.
-export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto }: {
+export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva }: {
   cena: Cena | null
   souMestre: boolean
   userId: string
@@ -116,6 +116,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   // Token arrastado da Biblioteca de Tokens.
   onColocarDaBiblioteca?: (token: { url: string; nome: string }, ponto: { x: number; y: number }) => void
   onGuardarPosicionaveis?: (itens: Pick<Posicionavel, 'categoria' | 'name' | 'url' | 'dados'>[]) => void
+  // Camada em que o mestre está trabalhando (painel da sessão, 27/10): só ela seleciona e mexe.
+  camadaAtiva?: Camada
 }) {
   const palcoRef = useRef<HTMLDivElement>(null)
   const [mapa, setMapa] = useState(MAPA_PADRAO)
@@ -182,13 +184,15 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   // quando o mestre liberou (Configurar Propriedade). O banco confere de novo.
   const podeMover = useCallback(
     (o: ObjetoCena) =>
-      souMestre ||
+      (souMestre && (!camadaAtiva || o.layer === camadaAtiva)) ||
       (!o.locked && o.layer !== 'mestre' &&
         ((o.character_id !== null && meusPersonagens.includes(o.character_id)) ||
           o.move_permission === 'todos' ||
           (o.move_permission === 'jogadores' && o.movable_by.includes(userId)))),
-    [souMestre, meusPersonagens, userId],
+    [souMestre, meusPersonagens, userId, camadaAtiva],
   )
+  // Trocou de camada: a seleção da outra some.
+  useEffect(() => setSelecionados([]), [camadaAtiva])
 
   // Tamanho real da imagem de fundo.
   useEffect(() => {
@@ -499,11 +503,9 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   }
 
   function pegarObjeto(e: React.PointerEvent, o: ObjetoCena) {
-    // Botão direito no objeto é só pro menu dele, não move o mapa.
-    if (e.button === 2) {
-      e.stopPropagation()
-      return
-    }
+    // Botão direito: segurar e arrastar move a câmera (mesmo em cima de imagem travada); clicar e
+    // soltar abre o menu do objeto (pedido 27/10). Por isso o clique segue pro palco.
+    if (e.button === 2) return
     // Configurando a lanterna: o clique vai pro palco (começa a seta em cima do token).
     if (configLanterna) return
     // Item interativo: o jogador clica e abre a interação (o mestre usa o duplo clique ou o menu).
@@ -778,6 +780,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   function menuDoObjeto(e: React.MouseEvent, o: ObjetoCena) {
     e.preventDefault()
     e.stopPropagation()
+    if (panouComDireito.current) return
     if (!selecionados.includes(o.id) && podeMover(o)) setSelecionados([o.id])
     abrirMenu(e.clientX, e.clientY, o)
   }

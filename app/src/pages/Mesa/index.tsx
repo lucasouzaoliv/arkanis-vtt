@@ -52,7 +52,7 @@ import CriarCombate, { type AtorDoCombate } from './CriarCombate'
 import EditorAmeaca, { carregarParaEditar, criaturaVazia, type CriaturaEditavel } from './EditorAmeaca'
 import { useCombate, type Combate } from './useCombate'
 import type { Combatente } from './combate'
-import type { Cena, ObjetoCena } from './cenas'
+import type { Camada, Cena, ObjetoCena } from './cenas'
 import { useFps, useSessaoMesa } from './useSessaoMesa'
 import { autoria, resumoDaMensagem, textoPuro, type Mensagem, type ModoEnvio } from './chat'
 import { enviarImagemDoChat, useChat } from './useChat'
@@ -119,6 +119,8 @@ export default function Mesa() {
   const [celularAberto, setCelularAberto] = useState(false)
   // Jump scare (16/10): a central do mestre e o susto que está na tela agora.
   const [centralSustos, setCentralSustos] = useState(false)
+  // Camada em que o mestre mexe (27/10): só os objetos dela selecionam e se movem.
+  const [camadaAtiva, setCamadaAtiva] = useState<Camada>('token')
   const [susto, setSusto] = useState<SustoDisparado | null>(null)
   const [categoria, setCategoria] = useState<CategoriaEsquerda>('tokens')
   const [ferramenta, setFerramenta] = useState('selecionar')
@@ -776,6 +778,7 @@ export default function Mesa() {
       <PalcoCena
         cena={cenas.atual}
         souMestre={souMestre}
+        camadaAtiva={souMestre ? camadaAtiva : undefined}
         userId={userId ?? ''}
         nomeUsuario={eu?.personagem || eu?.nomeConta || 'Alguém'}
         meusPersonagens={eu?.personagemId ? [eu.personagemId] : []}
@@ -1520,7 +1523,7 @@ export default function Mesa() {
         <Link className="mesa-ficha-celular" to={`/personagem/${eu.personagemId}`}>Abrir minha ficha</Link>
       )}
 
-      <PainelSessao conectados={online} latencia={latencia} fps={fps} />
+      <PainelSessao conectados={online} latencia={latencia} fps={fps} camada={souMestre ? camadaAtiva : undefined} onCamada={setCamadaAtiva} />
     </main>
     </ImagensMostradas>
     </QuemVeContexto.Provider>
