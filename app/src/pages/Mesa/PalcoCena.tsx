@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   faArrowDownWideShort, faArrowUpWideShort, faBullseye, faCopy, faCrosshairs, faLayerGroup, faLock, faLockOpen, faObjectGroup,
-  faObjectUngroup, faPaste, faLightbulb, faEye, faBriefcase, faHandPointer, faHandHolding, faSquarePlus, faIdCard, faImages, faRotateLeft, faRotateRight, faShieldHalved, faSlidersH, faTowerBroadcast, faTrash, faUpDown, faLeftRight, faUserGear, faPenToSquare, faSun, faFire,
+  faObjectUngroup, faNoteSticky, faPaste, faLightbulb, faEye, faBriefcase, faHandPointer, faHandHolding, faSquarePlus, faIdCard, faImages, faRotateLeft, faRotateRight, faShieldHalved, faSlidersH, faTowerBroadcast, faTrash, faUpDown, faLeftRight, faUserGear, faPenToSquare, faSun, faFire,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import EfeitoClimatico from './EfeitoClimatico'
@@ -32,7 +32,7 @@ import { useDesenhoNoPalco } from './DesenhosNoPalco'
 import { useSomNoPalco } from './SonsNoPalco'
 import { BrilhoDasLanternas, LuzesNoPalco, useEscuridaoNoPalco } from './EscuridaoNoPalco'
 import { useEscuridao } from './useEscuridao'
-import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, caminhoDoCone, coneDaLanterna, conesDosTokens, IMAGEM_LUZ, LANTERNAS, luzCompleta, luzesDoAmbiente, temLuzAmbiente, type AjusteLanterna, type Lanterna, type LuzAmbiente } from './luz'
+import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, caminhoDoCone, coneDaLanterna, conesDosTokens, IMAGEM_LUZ, IMAGEM_NOTA, LANTERNAS, luzCompleta, luzesDoAmbiente, temLuzAmbiente, type AjusteLanterna, type Lanterna, type LuzAmbiente } from './luz'
 import ConfigurarLuz from './ConfigurarLuz'
 import ConfigurarEfeito from './ConfigurarEfeito'
 import EfeitosNoPalco from './EfeitosNoPalco'
@@ -139,6 +139,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   const gesto = useRef<Gesto | null>(null)
   // Token embaixo do mouse: o M mira nele (qualquer um mira tokens alheios).
   const sobre = useRef<string | null>(null)
+  // Último objeto apertado com o esquerdo: o duplo clique chega no palco (ponteiro preso) e vale ele.
+  const tocado = useRef<string | null>(null)
   // Token de outra pessoa clicado: fica "focado" (contorno leve), pra saber em quem o M vai mirar.
   const [focado, setFocado] = useState<string | null>(null)
   // Medir Distância (12.13): pontos fixos + onde o mouse está. "aberta" = ainda medindo
@@ -249,6 +251,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   // Configurar Lanterna: token sendo configurado e a seta que a pessoa está desenhando.
   const [configLanterna, setConfigLanterna] = useState<string | null>(null)
   // Configurar Luz / Efeito: o objeto e como estava ao abrir (fechar sem salvar volta pra isso).
+  // Anotação do mestre sendo escrita (KAN-123).
+  const [notaEditando, setNotaEditando] = useState<string | null>(null)
   const [configLuz, setConfigLuzBruto] = useState<{ id: string; original: ObjetoCena['luz_ajuste'] } | null>(null)
   const [configEfeito, setConfigEfeitoBruto] = useState<{ id: string; original: ObjetoCena['efeito'] } | null>(null)
   const setConfigLuz = (id: string | null) => setConfigLuzBruto(id ? { id, original: objetos.find((x) => x.id === id)?.luz_ajuste ?? null } : null)
@@ -484,6 +488,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   function comecarNoMapa(e: React.PointerEvent<HTMLDivElement>) {
     if (e.button !== 0 && e.button !== 2) return
     panouComDireito.current = false
+    if (!(e.target as Element).closest?.('.mesa-objeto')) tocado.current = null
     // Configurar Lanterna: o arraste desenha a seta (da lanterna na direção da luz).
     if (configLanterna && e.button === 0) {
       const p = pontoNoMapa(e.clientX, e.clientY)
@@ -515,6 +520,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   }
 
   function pegarObjeto(e: React.PointerEvent, o: ObjetoCena) {
+    if (e.button === 0) tocado.current = o.id
     // Botão direito: segurar e arrastar move a câmera (mesmo em cima de imagem travada); clicar e
     // soltar abre o menu do objeto (pedido 27/10). Por isso o clique segue pro palco.
     if (e.button === 2) return
@@ -880,7 +886,17 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
 
   // Duplo clique abre a configuração do que é: item (loja, documento…) → ficha do item; personagem →
   // ficha; o resto (mestre) → Configurar Propriedade. Jogador sem ser dono do item: interage.
+  // Anotação do mestre (KAN-123): bilhete na camada do mestre, 3×2 quadrados, já abre pra escrever.
+  async function criarNota(p: Ponto) {
+    if (!cena) return
+    const w = Math.round(celula.w * 3)
+    const h = Math.round(celula.h * 2)
+    const novo = await obj.criar({ scene_id: cena.id, campaign_id: cena.campaign_id, image_url: IMAGEM_NOTA, name: 'Anotação', nota: '', layer: 'mestre', x: Math.round(p.x - w / 2), y: Math.round(p.y - h / 2), width: w, height: h })
+    if (novo) setNotaEditando(novo.id)
+  }
+
   function duploClique(o: ObjetoCena) {
+    if (souMestre && o.nota != null) return setNotaEditando(o.id)
     if (o.item_id && podeEditar(o)) onEditarItem?.(o.item_id)
     else if (o.item_id) onInteragir?.(o, celula)
     else if (o.actor_id) onAbrirFicha(o.actor_id)
@@ -960,6 +976,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
         ...(souMestre
           ? [
               { tipo: 'linha' } as ItemMenu,
+              ...(!o ? [{ rotulo: 'Adicionar Anotação', icone: faNoteSticky, onClick: () => criarNota(menu.mapa) } as ItemMenu] : []),
               { rotulo: 'Colar', icone: faPaste, desativado: !copiados.current.length, onClick: () => colar(menu.mapa) } as ItemMenu,
               ...historicoItens,
             ]
@@ -1069,7 +1086,13 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
       onPointerDown={comecarNoMapa}
       onPointerMove={mover}
       onPointerUp={(e) => terminar(e)}
-      onDoubleClick={() => desenho.aoDuploClique() || som.aoDuploClique()}
+      onDoubleClick={() => {
+        if (desenho.aoDuploClique() || som.aoDuploClique() || configLanterna) return
+        // Clicar no objeto prende o ponteiro no palco, então o duplo clique chega aqui: vale o
+        // objeto que foi apertado (anotação, ficha, luz…).
+        const o = tocado.current ? objetos.find((x) => x.id === tocado.current) : undefined
+        if (o) duploClique(o)
+      }}
       onPointerCancel={() => (gesto.current = null)}
       // Perdeu o mouse no meio de arrastar o mapa (janela, menu…): o arraste acaba, não fica preso.
       onLostPointerCapture={() => {
@@ -1156,7 +1179,26 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
                   duploClique(o)
                 }}
               >
-                <img src={o.image_url} alt={o.name ?? ''} draggable={false} style={{ transform: `scale(${o.flip_h ? -1 : 1}, ${o.flip_v ? -1 : 1})` }} />
+                {o.nota != null ? (
+                  // Anotação do mestre (KAN-123): o bilhete no lugar da imagem; duplo clique escreve.
+                  notaEditando === o.id ? (
+                    <textarea
+                      className="mesa-nota editando"
+                      autoFocus
+                      defaultValue={o.nota}
+                      onFocus={(e) => e.target.setSelectionRange(e.target.value.length, e.target.value.length)}
+                      placeholder="Escreva a anotação…"
+                      style={{ fontSize: Math.max(14, celula.h * 0.32) }}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Escape') (e.target as HTMLTextAreaElement).blur() }}
+                      onBlur={(e) => { setNotaEditando(null); if (e.target.value !== o.nota) obj.alterarVarios({ [o.id]: { nota: e.target.value } }) }}
+                    />
+                  ) : (
+                    <div className="mesa-nota" style={{ fontSize: Math.max(14, celula.h * 0.32) }}>{o.nota || 'Anotação vazia (duplo clique pra escrever)'}</div>
+                  )
+                ) : (
+                  <img src={o.image_url} alt={o.name ?? ''} draggable={false} style={{ transform: `scale(${o.flip_h ? -1 : 1}, ${o.flip_v ? -1 : 1})` }} />
+                )}
                 {o.locked && selecionados.includes(o.id) && <FontAwesomeIcon icon={faLock} className="mesa-objeto-trava" style={{ fontSize: 16 / vista.escala }} />}
                 {(() => {
                   // Mira em cima do token marcado: a minha mais forte; a dos outros mais apagada, com o nome.

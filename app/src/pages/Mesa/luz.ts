@@ -224,3 +224,6 @@ export function setaNoAlcance(a: { x: number; y: number }, b: { x: number; y: nu
     metros: Math.round(quadrados * metrosPorQuadrado * 10) / 10,
   }
 }
+
+// Marca das anotações do mestre (KAN-123): não aparece (o bilhete vai no lugar), só preenche image_url.
+export const IMAGEM_NOTA = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"/>')
