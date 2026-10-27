@@ -112,3 +112,12 @@ describe('medir a lanterna (27/10)', () => {
     expect(setaNoAlcance({ x: 0, y: 0 }, { x: 10, y: 0 }, 'comum', celula, 1.5).quadrados).toBe(1)
   })
 })
+
+describe('bateria da lanterna (KAN-114)', () => {
+  it('sem bateria não acende; falhando pisca', () => {
+    const t = { ...token, lanterna: 'comum' as const }
+    expect(conesDosTokens([{ ...t, lanterna_estado: 'sem_bateria' }], celula, false)).toEqual([])
+    expect(conesDosTokens([{ ...t, lanterna_estado: 'falhando' }], celula, false)[0].animacao).toBe('falhando')
+    expect(conesDosTokens([t], celula, false)[0].animacao).toBeUndefined()
+  })
+})

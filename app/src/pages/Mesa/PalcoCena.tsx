@@ -752,12 +752,33 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
       { rotulo: `${!o.lanterna ? '✓ ' : ''}Desligada`, onClick: () => aplicar(null) },
       ...LANTERNAS.map((l) => ({ rotulo: `${o.lanterna === l.id ? '✓ ' : ''}${l.rotulo}`, onClick: () => aplicar(l.id) })),
     ]
+    // Bateria (KAN-114): o mestre faz falhar, acaba com ela (pisca um pouco e apaga) ou troca.
+    const estado = o.lanterna_estado ?? null
+    const bateria: ItemMenu[] = !o.lanterna ? [] : souMestre
+      ? [
+          { tipo: 'linha' },
+          estado
+            ? { rotulo: estado === 'sem_bateria' ? 'Trocar a bateria' : 'Parar de falhar', onClick: () => mudarBateria(o, null) }
+            : { rotulo: 'Fazer falhar (piscar)', onClick: () => mudarBateria(o, 'falhando') },
+          ...(estado !== 'sem_bateria' ? [{ rotulo: 'Acabar a bateria', onClick: () => acabarBateria(o) }] : []),
+        ]
+      : estado === 'sem_bateria' ? [{ tipo: 'linha' }, { rotulo: 'Sem bateria', desativado: true, onClick: () => {} }] : []
     return {
       tipo: 'sub', rotulo: 'Lanterna', icone: faLightbulb,
       itens: o.lanterna_ajuste
-        ? [{ rotulo: 'Editar Lanterna', onClick: configurar }, { tipo: 'linha' }, ...escolher]
-        : [{ rotulo: 'Configurar Lanterna', onClick: configurar }, ...(o.lanterna ? [{ tipo: 'linha' } as ItemMenu, escolher[0]] : [])],
+        ? [{ rotulo: 'Editar Lanterna', onClick: configurar }, { tipo: 'linha' }, ...escolher, ...bateria]
+        : [{ rotulo: 'Configurar Lanterna', onClick: configurar }, ...(o.lanterna ? [{ tipo: 'linha' } as ItemMenu, escolher[0]] : []), ...bateria],
     }
+  }
+
+  function mudarBateria(o: ObjetoCena, estado: ObjetoCena['lanterna_estado']) {
+    obj.alterarVarios({ [o.id]: { lanterna_estado: estado } })
+  }
+
+  // Acabar a bateria: falha por uns segundos e apaga, pra mesa toda ver a luz morrendo.
+  function acabarBateria(o: ObjetoCena) {
+    mudarBateria(o, 'falhando')
+    window.setTimeout(() => mudarBateria(o, 'sem_bateria'), 2500)
   }
 
   // Guarda a seta; se a lanterna estava desligada, já liga a comum.

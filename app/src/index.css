@@ -18812,3 +18812,23 @@ label.janela-botao {
 .mesa-sessao-camadas button.ativa { background: var(--accent-bg); border-color: var(--accent); color: #fff; }
 /* Camadas em cima do painel da sessão, fora da caixa (pedido 27/10). */
 .mesa-sessao-camadas { position: absolute; left: 0; bottom: calc(100% + 6px); margin: 0; padding: 4px; gap: 4px; background: var(--mesa-painel); border: 1px solid var(--mesa-borda); border-radius: 5px; }
+
+/* Lanterna falhando (KAN-114, 27/10): pisca de um jeito irregular, quase apagando. */
+.luz-anim-falhando {
+  animation: luz-falhando 1.7s steps(1, end) infinite;
+}
+
+@keyframes luz-falhando {
+  0%, 100% { opacity: 1; }
+  8% { opacity: 0.15; }
+  11% { opacity: 0.9; }
+  27% { opacity: 1; }
+  31% { opacity: 0.05; }
+  34% { opacity: 0.7; }
+  38% { opacity: 0.1; }
+  44% { opacity: 1; }
+  71% { opacity: 0.35; }
+  74% { opacity: 1; }
+  88% { opacity: 0; }
+  92% { opacity: 0.85; }
+}

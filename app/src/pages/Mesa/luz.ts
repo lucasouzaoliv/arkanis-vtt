@@ -28,7 +28,7 @@ export type Cone = {
   forte: number
   cor: string
   brilho: number // opacidade do brilho por cima
-  animacao?: AnimacaoLuz
+  animacao?: AnimacaoLuz | 'falhando'
 }
 
 export const COR_DA_LANTERNA: Record<Lanterna, string> = { comum: '#ffe9b8', uv: '#9b4dff' }
@@ -52,6 +52,7 @@ type TokenDaLanterna = Pick<ObjetoCena, 'id' | 'x' | 'y' | 'width' | 'height' | 
   flip_h?: boolean
   flip_v?: boolean
   lanterna_ajuste?: AjusteLanterna | null
+  lanterna_estado?: 'falhando' | 'sem_bateria' | null
 }
 
 const RAD = Math.PI / 180
@@ -101,7 +102,10 @@ export function coneDaLanterna(o: TokenDaLanterna, tipo: Lanterna, celula: { w: 
     const a = l.angulo - meia + (2 * meia * i) / passos
     pontos.push({ x: arred(cx + Math.cos(a) * raio), y: arred(cy + Math.sin(a) * raio) })
   }
-  return { id: o.id, tipo, cx, cy, raio, pontos, forca: FORMA_DA_LANTERNA[tipo].forca, forte: 0.6, cor: COR_DA_LANTERNA[tipo], brilho: 0.3 }
+  return {
+    id: o.id, tipo, cx, cy, raio, pontos, forca: FORMA_DA_LANTERNA[tipo].forca, forte: 0.6, cor: COR_DA_LANTERNA[tipo], brilho: 0.3,
+    ...(o.lanterna_estado === 'falhando' ? { animacao: 'falhando' as const } : {}),
+  }
 }
 
 const arred = (n: number) => Math.round(n * 10) / 10
@@ -110,14 +114,14 @@ export function caminhoDoCone(c: Pick<Cone, 'pontos'>): string {
   return `M${c.pontos.map((p) => `${p.x} ${p.y}`).join('L')}Z`
 }
 
-// Os cones que valem: dos tokens com lanterna ligada que essa pessoa vê.
+// Os cones que valem: dos tokens com lanterna ligada (e com bateria) que essa pessoa vê.
 export function conesDosTokens(
   objetos: (TokenDaLanterna & Pick<ObjetoCena, 'layer'> & { lanterna?: Lanterna | null })[],
   celula: { w: number; h: number },
   souMestre: boolean,
 ): Cone[] {
   return objetos
-    .filter((o) => o.lanterna && o.layer !== 'mapa' && (souMestre || o.layer !== 'mestre'))
+    .filter((o) => o.lanterna && o.lanterna_estado !== 'sem_bateria' && o.layer !== 'mapa' && (souMestre || o.layer !== 'mestre'))
     .map((o) => coneDaLanterna(o, o.lanterna as Lanterna, celula))
 }
 
