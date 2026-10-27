@@ -67,6 +67,7 @@ import { useAnunciarAlvos } from '../../lib/miraDaMesa'
 import { postarAtaque } from './acoesDeMira'
 import CelularNaMesa from '../Celular/CelularNaMesa'
 import { CentralDeSustos, SustoNaTela } from './CentralDeSustos'
+import GeradorDeNpc from './GeradorDeNpc'
 import { useCanalDeSustos, type SustoDisparado } from './dadosDosSustos'
 import { ImagensMostradas } from './mostrarImagem'
 import type { AcaoAtaque, Alvo, AtaqueDaAcao } from './mira'
@@ -120,6 +121,7 @@ export default function Mesa() {
   const [celularAberto, setCelularAberto] = useState(false)
   // Jump scare (16/10): a central do mestre e o susto que está na tela agora.
   const [centralSustos, setCentralSustos] = useState(false)
+  const [geradorNpc, setGeradorNpc] = useState(false)
   // Camada em que o mestre mexe (27/10): só os objetos dela selecionam e se movem.
   const [camadaAtiva, setCamadaAtiva] = useState<Camada>('token')
   const [susto, setSusto] = useState<SustoDisparado | null>(null)
@@ -910,6 +912,7 @@ export default function Mesa() {
           {/* Celular antes de Configurações e Recolher (pedido da Millie, 14/10). */}
           <BotaoIcone id="celular" rotulo={souMestre ? 'Central dos celulares' : 'Celular'} lado="direita" ativo={celularAberto} onClick={() => setCelularAberto((v) => !v)} />
           {souMestre && <BotaoIcone id="sustos" rotulo="Central dos sustos" lado="direita" ativo={centralSustos} onClick={() => setCentralSustos((v) => !v)} />}
+          {souMestre && <BotaoIcone id="npc" rotulo="Gerador de NPC" lado="direita" ativo={geradorNpc} onClick={() => setGeradorNpc((v) => !v)} />}
           <BarraIcones lado="direita" itens={ABAS_DIREITA.filter((a) => a.id === 'config')} ativo={recolhida ? null : aba} onEscolher={escolherAba} />
           <BotaoIcone id="recolher" rotulo={recolhida ? 'Expandir' : 'Recolher'} lado="direita" onClick={() => setRecolhida((v) => !v)} />
           {!chatAberto && <ModosEnvio vertical modo={modo} onMudar={mudarModo} />}
@@ -1521,6 +1524,7 @@ export default function Mesa() {
           onFechar={() => setCentralSustos(false)}
         />
       )}
+      {souMestre && geradorNpc && <GeradorDeNpc onCriar={(n) => { setGeradorNpc(false); void criarNPC(n.nome, null) }} onFechar={() => setGeradorNpc(false)} />}
       {susto && <SustoNaTela key={susto.id} susto={susto} onAcabou={() => setSusto(null)} />}
 
       <CelularNaMesa

@@ -4,6 +4,7 @@ import {
   faBookOpen,
   faMobileScreen,
   faGhost,
+  faUserSecret,
   faCircle,
   faHeadphones,
   faVolumeHigh,
@@ -54,6 +55,7 @@ export const ICONES: Record<string, ReactNode> = {
   recolher: fa(faCaretRight),
   celular: fa(faMobileScreen),
   sustos: fa(faGhost),
+  npc: fa(faUserSecret),
   // Barra esquerda: categorias e ferramentas
   tokens: fa(faUser),
   desenho: fa(faPencil),
