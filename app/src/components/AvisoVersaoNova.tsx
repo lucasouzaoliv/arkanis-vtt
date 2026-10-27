@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 // Saiu versão nova do site com a aba aberta (pedido da Millie, 08/10: os amigos ficavam com a
 // versão velha e os bugs já corrigidos continuavam). A cada poucos minutos confere o arquivo
 // principal do site; se mudou, mostra um aviso com o botão de atualizar.
-const INTERVALO = 3 * 60_000
+const INTERVALO = 60_000 // 1 min (era 3, demorava; 27/10)
 
 function scriptAtual(html: string): string | null {
   return /\/assets\/index-[\w-]+\.js/.exec(html)?.[0] ?? null
