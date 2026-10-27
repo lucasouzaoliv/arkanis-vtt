@@ -991,9 +991,15 @@ export default function Mesa() {
                 onSoltarAtor={(c, id) => combate.adicionarAtor(c, id)}
                 condicoesDe={(c) => {
                   const a = c.actor_id ? atores.atores.find((x) => x.id === c.actor_id) : undefined
-                  return a?.creature_id ? { condicoes: a.condicoes ?? [], personalizadas: a.condicoes_personalizadas } : null
+                  return a?.creature_id ? { condicoes: a.condicoes ?? [], personalizadas: a.condicoes_personalizadas } : combate.condicoesDaFicha(c)
                 }}
-                onMudarCondicoes={(c, condicoes, condicoes_personalizadas) => c.actor_id && atores.salvar(c.actor_id, { condicoes, condicoes_personalizadas })}
+                onMudarCondicoes={(c, condicoes, condicoes_personalizadas) => {
+                  const a = c.actor_id ? atores.atores.find((x) => x.id === c.actor_id) : undefined
+                  if (a?.creature_id) atores.salvar(a.id, { condicoes, condicoes_personalizadas })
+                  else if (c.character_id) void supabase.from('characters').update({ conditions: condicoes, condicoes_personalizadas }).eq('id', c.character_id)
+                }}
+                duracoesDe={combate.duracoesDe}
+                onDuracao={(c, nome, v) => combate.marcarDuracao(c, nome, v)}
               />
             ) : aba === 'personagens' ? (
               <PainelPersonagens

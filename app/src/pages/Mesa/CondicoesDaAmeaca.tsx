@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faHourglassHalf, faPlus, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../../lib/supabase'
 import { CONDITION_ESCALATION } from '../../lib/rules'
 import ConditionsModal, { CUSTOM_ICONS } from '../CharacterSheet/ConditionsModal'
@@ -30,12 +30,22 @@ function carregarCatalogo() {
 
 // Condições e efeitos de uma ameaça na mesa (18/10): a mesma janela de escolher da ficha de
 // personagem; o que mexe em dados e Defesa vale sozinho nos testes dela e quando miram nela.
-export default function CondicoesDaAmeaca({ condicoes, personalizadas, podeEditar, compacto = false, onMudar }: {
+// Duração no combate (KAN-121): clicar na ampulheta passa por sem duração → 1, 2, 3 rodadas →
+// até o fim da cena → sem duração.
+const CICLO: (number | 'cena' | null)[] = [null, 1, 2, 3, 'cena']
+export function proximaDuracao(atual: number | 'cena' | undefined): number | 'cena' | null {
+  const i = atual === undefined ? 0 : atual === 'cena' ? 4 : Math.min(3, atual)
+  return CICLO[(i + 1) % CICLO.length]
+}
+
+export default function CondicoesDaAmeaca({ condicoes, personalizadas, podeEditar, compacto = false, onMudar, duracoes, onDuracao }: {
   condicoes: string[]
   personalizadas: unknown
   podeEditar: boolean
   compacto?: boolean
   onMudar?: (condicoes: string[], personalizadas: CondicaoPersonalizada[]) => void
+  duracoes?: Record<string, number | 'cena'>
+  onDuracao?: (nome: string, valor: number | 'cena' | null) => void
 }) {
   const [escolhendo, setEscolhendo] = useState(false)
   const [info, setInfo] = useState<Record<string, { icone: string; descricao: string }>>({})
@@ -54,6 +64,7 @@ export default function CondicoesDaAmeaca({ condicoes, personalizadas, podeEdita
   }
 
   function tirar(nome: string) {
+    if (duracoes?.[nome] !== undefined) onDuracao?.(nome, null)
     onMudar?.(condicoes.filter((c) => c !== nome), proprias.filter((c) => c.nome !== nome))
   }
 
@@ -77,6 +88,16 @@ export default function CondicoesDaAmeaca({ condicoes, personalizadas, podeEdita
             <span key={nome} className="ameaca-condicao" title={propria?.descricao ?? info[nome]?.descricao ?? nome}>
               <img src={icone} alt="" />
               <span>{nome}</span>
+              {(onDuracao || duracoes?.[nome] !== undefined) && (() => {
+                const d = duracoes?.[nome]
+                const texto = d === undefined ? '' : d === 'cena' ? 'cena' : `${d}r`
+                const dica = d === undefined ? 'Sem duração' : d === 'cena' ? 'Até o fim da cena' : `Mais ${d} ${d === 1 ? 'rodada' : 'rodadas'}`
+                return onDuracao ? (
+                  <button type="button" className={`ameaca-condicao-duracao${d !== undefined ? ' marcada' : ''}`} aria-label={`Duração de ${nome}: ${dica}`} title={`${dica} · clique pra mudar`} onClick={() => onDuracao(nome, proximaDuracao(d))}>
+                    <FontAwesomeIcon icon={faHourglassHalf} />{texto}
+                  </button>
+                ) : <span className="ameaca-condicao-duracao marcada" title={dica}><FontAwesomeIcon icon={faHourglassHalf} />{texto}</span>
+              })()}
               {podeEditar && (
                 <button type="button" aria-label={`Tirar ${nome}`} onClick={() => tirar(nome)}><FontAwesomeIcon icon={faXmark} /></button>
               )}

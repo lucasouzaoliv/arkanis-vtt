@@ -6,6 +6,13 @@ import { variacoesDaCriatura } from './atores'
 import { lerCondicoesPersonalizadas } from '../CharacterSheet/efeitosEscolhidos'
 import { penalidadeDeCondicoes, rotuloComCondicoes } from '../CharacterSheet/condicoes'
 
+export type TimerCondicao = { id: string; combat_id: string; campaign_id: string; combatant_id: string; condicao: string; ate_rodada: number | null }
+
+// Rodadas que faltam (no mínimo 1 até vencer no turno de quem está com ela).
+export function rodadasRestantes(ateRodada: number, rodada: number): number {
+  return Math.max(1, ateRodada - rodada)
+}
+
 export type Combate = {
   id: string
   campaign_id: string
@@ -36,9 +43,11 @@ type FichaBarras = {
   max_sanity_override: number | null
   max_pe_override?: number | null
   pv_death_marks: number | null
+  conditions?: string[] | null
+  condicoes_personalizadas?: unknown
 }
 
-const CAMPOS_FICHA = 'id, name, avatar_url, attributes, nex_percent, class_id, current_pv, current_pe, current_sanity, max_pv_override, max_pe_override, max_sanity_override, pv_death_marks'
+const CAMPOS_FICHA = 'id, name, avatar_url, attributes, nex_percent, class_id, current_pv, current_pe, current_sanity, max_pv_override, max_pe_override, max_sanity_override, pv_death_marks, conditions, condicoes_personalizadas'
 
 type FichaIniciativa = { id: string; user_id: string; name: string | null; avatar_url: string | null; attributes: unknown; conditions: unknown; condicoes_personalizadas?: unknown }
 
@@ -56,6 +65,8 @@ export function useCombate(campanhaId: string | undefined) {
   // Nomes dos poderes de cada ficha: os que crescem com o NEX mudam o PV/PE máximo.
   const [poderesDe, setPoderesDe] = useState<Record<string, string[]>>({})
   const [classes, setClasses] = useState<Record<string, Parameters<typeof computeDerivedStats>[0]>>({})
+  // Condições com duração (KAN-121): o banco tira sozinho quando vence.
+  const [timers, setTimers] = useState<TimerCondicao[]>([])
 
   const carregarFichas = useCallback(async () => {
     if (!campanhaId) return
@@ -87,6 +98,7 @@ export function useCombate(campanhaId: string | undefined) {
     supabase.from('combats').select('*').eq('campaign_id', campanhaId).order('created_at').then(({ data }) => setCombates((data ?? []) as Combate[]))
     supabase.from('combatants').select('*').eq('campaign_id', campanhaId).then(({ data }) => setCombatentes((data ?? []) as Combatente[]))
     carregarFichas()
+    supabase.from('combat_condition_timers').select('*').eq('campaign_id', campanhaId).then(({ data }) => setTimers((data ?? []) as TimerCondicao[]))
 
     const filtro = `campaign_id=eq.${campanhaId}`
     const canal = supabase
@@ -104,6 +116,12 @@ export function useCombate(campanhaId: string | undefined) {
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'combatants' }, (p) => {
         const id = (p.old as { id?: string }).id
         if (id) setCombatentes((l) => l.filter((c) => c.id !== id))
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'combat_condition_timers', filter: filtro }, (p) => setTimers((l) => trocar(l, p.new as TimerCondicao)))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'combat_condition_timers', filter: filtro }, (p) => setTimers((l) => trocar(l, p.new as TimerCondicao)))
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'combat_condition_timers' }, (p) => {
+        const id = (p.old as { id?: string }).id
+        if (id) setTimers((l) => l.filter((t) => t.id !== id))
       })
       // Vida/PE/Sanidade mudaram na ficha de alguém: a barra acompanha.
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'characters', filter: filtro }, (p) => {
@@ -134,6 +152,31 @@ export function useCombate(campanhaId: string | undefined) {
       mortes: f.pv_death_marks ?? 0,
     }
   }
+
+  // Condições da ficha de quem luta (jogador/NPC), pra aparecerem na ordem do combate.
+  function condicoesDaFicha(c: Combatente): { condicoes: string[]; personalizadas: unknown } | null {
+    const f = c.character_id ? fichas[c.character_id] : undefined
+    return f ? { condicoes: Array.isArray(f.conditions) ? f.conditions : [], personalizadas: f.condicoes_personalizadas } : null
+  }
+
+  // Quanto falta de cada condição marcada: rodadas, ou 'cena'.
+  function duracoesDe(c: Combatente): Record<string, number | 'cena'> {
+    return Object.fromEntries(timers.filter((t) => t.combatant_id === c.id).map((t) => [t.condicao, t.ate_rodada == null ? 'cena' : rodadasRestantes(t.ate_rodada, ativo?.rodada ?? 1)]))
+  }
+
+  // null tira a duração (a condição fica até alguém tirar).
+  const marcarDuracao = useCallback(async (c: Combatente, condicao: string, valor: number | 'cena' | null) => {
+    if (!campanhaId) return
+    const rodada = combates.find((x) => x.id === c.combat_id)?.rodada ?? 1
+    if (valor === null) {
+      setTimers((l) => l.filter((t) => !(t.combatant_id === c.id && t.condicao === condicao)))
+      await supabase.from('combat_condition_timers').delete().eq('combatant_id', c.id).eq('condicao', condicao)
+      return
+    }
+    const linha = { combat_id: c.combat_id, campaign_id: campanhaId, combatant_id: c.id, condicao, ate_rodada: valor === 'cena' ? null : rodada + valor }
+    const { data } = await supabase.from('combat_condition_timers').upsert(linha, { onConflict: 'combatant_id,condicao' }).select().single()
+    if (data) setTimers((l) => trocar(l, data as TimerCondicao))
+  }, [campanhaId, combates])
 
   const excluir = useCallback(async (id: string) => {
     setCombates((l) => l.filter((c) => c.id !== id))
@@ -337,5 +380,5 @@ export function useCombate(campanhaId: string | undefined) {
     await supabase.from('combatants').delete().eq('id', combatenteId)
   }, [])
 
-  return { combates, ativo, ordem, barras, criar, salvar, excluir, iniciar, entrarAmeacas, adicionarAtor, encerrar, passar, remover }
+  return { combates, ativo, ordem, barras, condicoesDaFicha, duracoesDe, marcarDuracao, criar, salvar, excluir, iniciar, entrarAmeacas, adicionarAtor, encerrar, passar, remover }
 }

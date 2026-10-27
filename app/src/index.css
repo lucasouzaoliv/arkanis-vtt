@@ -18832,3 +18832,9 @@ label.janela-botao {
   88% { opacity: 0; }
   92% { opacity: 0.85; }
 }
+
+/* Duração da condição no combate (KAN-121): ampulheta com quanto falta (2r, cena). */
+.ameaca-condicao .ameaca-condicao-duracao { display: inline-flex; align-items: center; gap: 2px; padding: 0 2px; font-size: 10px; color: var(--text-dim); }
+.ameaca-condicao .ameaca-condicao-duracao.marcada { color: var(--text-h); }
+.ameaca-condicao button.ameaca-condicao-duracao:hover { color: #fff; }
+.ameaca-condicoes.compacto .ameaca-condicao > span.ameaca-condicao-duracao { display: inline-flex; }

@@ -11,7 +11,7 @@ import type { CondicaoPersonalizada } from '../CharacterSheet/efeitosEscolhidos'
 
 // Aba Encontros de Combate (12.4). Sem combate rodando: a lista dos combates salvos
 // (Nome + VD + Iniciar). Rodando: a ordem de iniciativa, os turnos e a rodada.
-export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo, ordem, vidaDe, barras, meusPersonagens, onCriar, onEditar, onExcluir, onIniciar, onEncerrar, onAdicionar, onPassar, onRemover, onAbrir, onSoltarAtor, condicoesDe, onMudarCondicoes }: {
+export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo, ordem, vidaDe, barras, meusPersonagens, onCriar, onEditar, onExcluir, onIniciar, onEncerrar, onAdicionar, onPassar, onRemover, onAbrir, onSoltarAtor, condicoesDe, onMudarCondicoes, duracoesDe, onDuracao }: {
   souMestre: boolean
   combates: Combate[]
   vdDoCombate: (c: Combate) => number
@@ -35,6 +35,9 @@ export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo,
   // Condições das ameaças (18/10): o mestre põe e tira direto na ordem de iniciativa.
   condicoesDe?: (c: Combatente) => { condicoes: string[]; personalizadas: unknown } | null
   onMudarCondicoes?: (c: Combatente, condicoes: string[], personalizadas: CondicaoPersonalizada[]) => void
+  // Duração das condições (KAN-121): quanto falta e, pro mestre, mudar.
+  duracoesDe?: (c: Combatente) => Record<string, number | 'cena'>
+  onDuracao?: (c: Combatente, condicao: string, valor: number | 'cena' | null) => void
 }) {
   // Soltar um personagem da aba Personagens em cima do combate coloca ele no combate (mestre).
   const soltavel = (c: Combate) =>
@@ -138,9 +141,21 @@ export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo,
                   {c.tipo === 'jogador' && b && desmaiado(b.pv) && <Caveiras marcas={b.mortes ?? 0} className="combate-caveiras" />}
                 </span>
               </button>
-              {souMestre && c.tipo !== 'jogador' && (() => {
+              {(() => {
+                // Ameaça: só o mestre vê e mexe. Jogador/NPC: todo mundo vê as da ficha e quanto falta.
                 const cond = condicoesDe?.(c)
-                return cond ? <CondicoesDaAmeaca compacto condicoes={cond.condicoes} personalizadas={cond.personalizadas} podeEditar={!!onMudarCondicoes} onMudar={(l, p) => onMudarCondicoes?.(c, l, p)} /> : null
+                if (!cond || (!souMestre && (c.tipo !== 'jogador' || !cond.condicoes.length))) return null
+                return (
+                  <CondicoesDaAmeaca
+                    compacto
+                    condicoes={cond.condicoes}
+                    personalizadas={cond.personalizadas}
+                    podeEditar={souMestre && !!onMudarCondicoes}
+                    onMudar={(l, p) => onMudarCondicoes?.(c, l, p)}
+                    duracoes={duracoesDe?.(c)}
+                    onDuracao={souMestre && onDuracao ? (nome, v) => onDuracao(c, nome, v) : undefined}
+                  />
+                )
               })()}
               <span className="combate-iniciativa" title="Iniciativa">{c.iniciativa}</span>
               {souMestre && c.tipo !== 'jogador' && ((vida && vida[0] <= 0) || (b && b.pv[0] <= 0)) && (
