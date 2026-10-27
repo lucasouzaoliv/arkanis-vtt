@@ -27,6 +27,7 @@ import type { MiraDeAlguem } from './useMira'
 import { medir, noCentro, textoDaDistancia, type Ponto } from './regua'
 import { faixaDaDistancia, faixasDoAlcance, raioDaFaixa, type Alcance } from './alcance'
 import { distanciaEmMetros } from './interacao'
+import { passouDoDeslocamento } from './movimento'
 import { useDesenhoNoPalco } from './DesenhosNoPalco'
 import { useSomNoPalco } from './SonsNoPalco'
 import { BrilhoDasLanternas, LuzesNoPalco, useEscuridaoNoPalco } from './EscuridaoNoPalco'
@@ -62,7 +63,7 @@ type Gesto =
 
 // Centro da mesa: a cena com imagem, grade, objetos/tokens, escuridão, ambiente e clima.
 // Arrastar com o botão direito move o mapa (o esquerdo faz a caixa de seleção), a rodinha dá zoom.
-export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [] }: {
+export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null }: {
   cena: Cena | null
   souMestre: boolean
   userId: string
@@ -122,6 +123,10 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   camadaAtiva?: Camada
   // Alcances do sistema (KAN-115): círculos em volta de quem ataca, com a ferramenta de alvos.
   alcances?: Alcance[]
+  // Movimento contado (KAN-120): deslocamento do token (metros) e o turno do combate rodando
+  // (muda = zera o que cada um andou).
+  deslocamentoDe?: (o: ObjetoCena) => number | null
+  turnoDoCombate?: string | null
 }) {
   const palcoRef = useRef<HTMLDivElement>(null)
   const [mapa, setMapa] = useState(MAPA_PADRAO)
@@ -146,6 +151,9 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
     return { ...cena!, grid_size: cel.w, grid_altura: cel.h }
   }
   const ultimoEnvio = useRef(0)
+  // Metros que cada token andou neste turno do combate (zera quando o turno passa).
+  const andadoNoTurno = useRef<Record<string, number>>({})
+  useEffect(() => { andadoNoTurno.current = {} }, [turnoDoCombate])
   // Arrastar com o botão direito move o mapa; aí o menu não abre.
   const panouComDireito = useRef(false)
   const [caixa, setCaixa] = useState<{ a: { x: number; y: number }; b: { x: number; y: number } } | null>(null)
@@ -696,6 +704,11 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
         return
       }
       if (!g.dx && !g.dy) return
+      if (turnoDoCombate && g.ids.length === 1 && cena) {
+        const id = g.ids[0]
+        const o = objetos.find((x) => x.id === id)
+        if (o) andadoNoTurno.current[id] = (andadoNoTurno.current[id] ?? 0) + medir([{ x: g.inicio[id].x + o.width / 2, y: g.inicio[id].y + o.height / 2 }, { x: g.inicio[id].x + g.dx + o.width / 2, y: g.inicio[id].y + g.dy + o.height / 2 }], gradeDaRegua()).total
+      }
       if (souMestre) {
         // volta pro início e grava pelo histórico (desfazer devolve pra cá)
         historico.current = registrar(historico.current, {
@@ -1258,6 +1271,34 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
                     </g>
                   )
                 })}
+              </svg>
+            )
+          })()}
+
+          {/* Movimento contado (KAN-120): arrastando um token, a linha de onde saiu e os metros; no
+              combate, o total do turno contra o deslocamento (vermelho quando passa). */}
+          {cena && (() => {
+            const g = gesto.current
+            if (g?.tipo !== 'mover' || g.ids.length !== 1 || (!g.dx && !g.dy)) return null
+            const o = objetos.find((x) => x.id === g.ids[0])
+            if (!o || o.layer === 'mapa') return null
+            const de = { x: g.inicio[o.id].x + o.width / 2, y: g.inicio[o.id].y + o.height / 2 }
+            const ate = { x: o.x + o.width / 2, y: o.y + o.height / 2 }
+            const agora = medir([de, ate], gradeDaRegua()).total
+            const desloc = deslocamentoDe?.(o) ?? null
+            const total = turnoDoCombate ? Math.round(((andadoNoTurno.current[o.id] ?? 0) + agora) * 10) / 10 : null
+            const passou = total !== null && passouDoDeslocamento(total, desloc)
+            const px = 1 / vista.escala
+            return (
+              <svg className={`mesa-regua mesa-movimento${passou ? ' passou' : ''}`} width={mapa.w} height={mapa.h} aria-hidden>
+                <line x1={de.x} y1={de.y} x2={ate.x} y2={ate.y} stroke="#000" strokeWidth={7 * px} opacity={0.55} />
+                <line x1={de.x} y1={de.y} x2={ate.x} y2={ate.y} stroke={passou ? '#ff6b6b' : '#e8e8ec'} strokeWidth={3 * px} strokeDasharray={`${8 * px} ${5 * px}`} />
+                <circle cx={de.x} cy={de.y} r={5 * px} fill="#e8e8ec" stroke="#000" strokeWidth={1.5 * px} />
+                <text x={ate.x + o.width / 2 + 10 * px} y={ate.y} fontSize={17 * px} className="mesa-regua-total">
+                  {textoDaDistancia(agora, cena)}
+                  {total !== null && total !== agora ? ` · ${textoDaDistancia(total, cena)} no turno` : ''}
+                  {total !== null && desloc !== null ? ` / ${textoDaDistancia(desloc, cena)}` : ''}
+                </text>
               </svg>
             )
           })()}

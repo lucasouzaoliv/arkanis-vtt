@@ -8,7 +8,7 @@ const CAMPOS =
 const CAMPOS_PASTA = 'id, campaign_id, parent_id, name, color, sort_mode, sort, created_at'
 
 export type FichaResumo = { id: string; user_id: string; avatar_url: string | null; hidden_from_others: boolean; editable_by_others: boolean }
-export type CriaturaResumo = { id: string; name: string; vd: number | null; image_url: string | null; tipo_criatura: string | null; tamanho: string | null; pv_maximo?: number | null }
+export type CriaturaResumo = { id: string; name: string; vd: number | null; image_url: string | null; tipo_criatura: string | null; tamanho: string | null; pv_maximo?: number | null; deslocamento?: string | null }
 
 function trocar<T extends { id: string }>(lista: T[], item: T): T[] {
   return lista.some((x) => x.id === item.id) ? lista.map((x) => (x.id === item.id ? item : x)) : [...lista, item]
@@ -29,7 +29,7 @@ export function useAtores(campanhaId: string | undefined) {
       setFichas((f) => ({ ...f, ...Object.fromEntries((data ?? []).map((c) => [c.id, c as FichaResumo])) }))
     }
     if (idsCriatura.length) {
-      const { data } = await supabase.from('creatures').select('id, name, vd, image_url, tipo_criatura, tamanho, pv_maximo').in('id', idsCriatura)
+      const { data } = await supabase.from('creatures').select('id, name, vd, image_url, tipo_criatura, tamanho, pv_maximo, deslocamento').in('id', idsCriatura)
       setCriaturas((c) => ({ ...c, ...Object.fromEntries((data ?? []).map((x) => [x.id, x as CriaturaResumo])) }))
     }
   }, [])

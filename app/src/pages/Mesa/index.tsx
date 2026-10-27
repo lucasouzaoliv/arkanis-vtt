@@ -62,6 +62,7 @@ import ModosEnvio from './ModosEnvio'
 import ChatMensagem from './ChatMensagem'
 import { QuemVeContexto } from './AcaoNoChat'
 import { useMira } from './useMira'
+import { metrosDoDeslocamento } from './movimento'
 import { useAnunciarAlvos } from '../../lib/miraDaMesa'
 import { postarAtaque } from './acoesDeMira'
 import CelularNaMesa from '../Celular/CelularNaMesa'
@@ -824,6 +825,14 @@ export default function Mesa() {
           const a = o.actor_id ? atores.atores.find((x) => x.id === o.actor_id) : undefined
           return !!a && nivelNoAtor(a) === 'dono'
         }}
+        deslocamentoDe={(o) => {
+          // Ameaça: o do bestiário; personagem (jogador/NPC): 9 m do livro.
+          const a = o.actor_id ? atores.atores.find((x) => x.id === o.actor_id) : undefined
+          const cr = a?.creature_id ? atores.criaturas[a.creature_id] : undefined
+          if (cr) return metrosDoDeslocamento(cr.deslocamento)
+          return o.character_id || a?.character_id ? 9 : null
+        }}
+        turnoDoCombate={combate.ativo ? `${combate.ativo.id}:${combate.ativo.rodada}:${combate.ativo.turno_atual}` : null}
         pedidoPaleta={pedidoPaleta}
         pedidoLimpar={pedidoLimpar}
         combates={combate.combates}
