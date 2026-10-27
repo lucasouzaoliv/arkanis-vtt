@@ -18810,3 +18810,5 @@ label.janela-botao {
 .mesa-sessao-camadas button { width: 26px; height: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--mesa-borda); border-radius: 4px; background: rgba(255, 255, 255, 0.04); color: var(--text-dim); font-size: 12px; cursor: pointer; }
 .mesa-sessao-camadas button:hover { color: #fff; }
 .mesa-sessao-camadas button.ativa { background: var(--accent-bg); border-color: var(--accent); color: #fff; }
+/* Camadas em cima do painel da sessão, fora da caixa (pedido 27/10). */
+.mesa-sessao-camadas { position: absolute; left: 0; bottom: calc(100% + 6px); margin: 0; padding: 4px; gap: 4px; background: var(--mesa-painel); border: 1px solid var(--mesa-borda); border-radius: 5px; }
