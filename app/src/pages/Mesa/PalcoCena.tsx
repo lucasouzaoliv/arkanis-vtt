@@ -25,6 +25,8 @@ import { guardarObjeto, type Posicionavel } from './posicionaveis'
 import type { Variacao } from './atores'
 import type { MiraDeAlguem } from './useMira'
 import { medir, noCentro, textoDaDistancia, type Ponto } from './regua'
+import { faixaDaDistancia, faixasDoAlcance, raioDaFaixa, type Alcance } from './alcance'
+import { distanciaEmMetros } from './interacao'
 import { useDesenhoNoPalco } from './DesenhosNoPalco'
 import { useSomNoPalco } from './SonsNoPalco'
 import { BrilhoDasLanternas, LuzesNoPalco, useEscuridaoNoPalco } from './EscuridaoNoPalco'
@@ -60,7 +62,7 @@ type Gesto =
 
 // Centro da mesa: a cena com imagem, grade, objetos/tokens, escuridão, ambiente e clima.
 // Arrastar com o botão direito move o mapa (o esquerdo faz a caixa de seleção), a rodinha dá zoom.
-export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva }: {
+export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [] }: {
   cena: Cena | null
   souMestre: boolean
   userId: string
@@ -118,6 +120,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   onGuardarPosicionaveis?: (itens: Pick<Posicionavel, 'categoria' | 'name' | 'url' | 'dados'>[]) => void
   // Camada em que o mestre está trabalhando (painel da sessão, 27/10): só ela seleciona e mexe.
   camadaAtiva?: Camada
+  // Alcances do sistema (KAN-115): círculos em volta de quem ataca, com a ferramenta de alvos.
+  alcances?: Alcance[]
 }) {
   const palcoRef = useRef<HTMLDivElement>(null)
   const [mapa, setMapa] = useState(MAPA_PADRAO)
@@ -1215,6 +1219,48 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
           <EfeitosNoPalco objetos={visiveis.filter((o) => o.efeito)} celula={celula} />
           {som.camada}
           {escuro.camada}
+
+          {/* Alcance visível (KAN-115): com a ferramenta de alvos, os círculos de curto/médio/longo/
+              extremo em volta de quem ataca (o token selecionado; o jogador, o dele) e a distância
+              até cada alvo marcado. */}
+          {cena && ferramenta === 'alvos' && (() => {
+            const daMesa = (o: ObjetoCena) => o.layer !== 'mapa'
+            const meus = objetos.filter((o) => daMesa(o) && o.character_id && meusPersonagens.includes(o.character_id))
+            const sel = objetos.find((o) => daMesa(o) && selecionados.includes(o.id) && (souMestre || meus.includes(o)))
+            const de = sel ?? (souMestre ? null : meus[0] ?? null)
+            if (!de) return null
+            const mpq = cena.grid_distance || 1.5
+            const px = 1 / vista.escala
+            const cx = de.x + de.width / 2
+            const cy = de.y + de.height / 2
+            return (
+              <svg className="mesa-regua mesa-alcance" width={mapa.w} height={mapa.h} aria-hidden>
+                {faixasDoAlcance(alcances).map((f) => {
+                  const r = raioDaFaixa(de, f.metros, celula, mpq)
+                  return (
+                    <g key={f.id}>
+                      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#000" strokeWidth={4 * px} opacity={0.45} />
+                      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e8e8ec" strokeWidth={1.5 * px} strokeDasharray={`${8 * px} ${6 * px}`} />
+                      <text x={cx} y={cy - r - 6 * px} fontSize={13 * px} className="mesa-regua-trecho">{f.rotulo} · {textoDaDistancia(f.metros, cena)}</text>
+                    </g>
+                  )
+                })}
+                {meusAlvos.map((id) => {
+                  const t = objetos.find((o) => o.id === id)
+                  if (!t || t.id === de.id) return null
+                  const m = distanciaEmMetros(de, t, celula, mpq)
+                  return (
+                    <g key={id}>
+                      <line x1={cx} y1={cy} x2={t.x + t.width / 2} y2={t.y + t.height / 2} stroke="#e8e8ec" strokeWidth={1.5 * px} opacity={0.7} />
+                      <text x={t.x + t.width / 2} y={t.y + t.height + 18 * px} fontSize={15 * px} className="mesa-regua-trecho">
+                        {textoDaDistancia(m, cena)} · {faixaDaDistancia(m, alcances)}
+                      </text>
+                    </g>
+                  )
+                })}
+              </svg>
+            )
+          })()}
 
           {/* Réguas: a minha e a de quem mais estiver medindo (12.13). */}
           {cena && (() => {

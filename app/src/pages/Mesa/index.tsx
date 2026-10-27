@@ -779,6 +779,7 @@ export default function Mesa() {
         cena={cenas.atual}
         souMestre={souMestre}
         camadaAtiva={souMestre ? camadaAtiva : undefined}
+        alcances={sistemaDe(campanha.system).alcances}
         userId={userId ?? ''}
         nomeUsuario={eu?.personagem || eu?.nomeConta || 'Alguém'}
         meusPersonagens={eu?.personagemId ? [eu.personagemId] : []}
