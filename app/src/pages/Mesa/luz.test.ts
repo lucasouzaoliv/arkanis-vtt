@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ajusteDaSeta, caminhoDaLuzUv, coneDaLanterna, conesDosTokens, lanternaNoMapa, luzDoObjeto, luzesDoAmbiente, temLuzAmbiente } from './luz'
+import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, coneDaLanterna, conesDosTokens, lanternaNoMapa, luzDoObjeto, luzesDoAmbiente, temLuzAmbiente } from './luz'
 
 const token = { id: 't', x: 0, y: 0, width: 100, height: 100, rotation: 0, layer: 'token' as const }
 const celula = { w: 100, h: 100 }
@@ -94,5 +94,21 @@ describe('Luz Ambiente', () => {
     const l = { ...objeto, layer: 'mestre' as const, luz: true }
     expect(luzesDoAmbiente([l], celula, false)).toHaveLength(0)
     expect(luzesDoAmbiente([l], celula, true)).toHaveLength(1)
+  })
+})
+
+describe('medir a lanterna (27/10)', () => {
+  it('a luz anda de quadrado em quadrado e mostra os metros', () => {
+    const r = setaNoAlcance({ x: 0, y: 0 }, { x: 580, y: 0 }, 'comum', celula, 1.5)
+    expect(r).toEqual({ b: { x: 600, y: 0 }, quadrados: 6, metros: 9 })
+    const o = { ...token, x: -50, y: -50 }
+    const c = coneDaLanterna({ ...o, lanterna_ajuste: ajusteDaSeta(o, { x: 0, y: 0 }, r.b) }, 'comum', celula)
+    expect(c.raio).toBeCloseTo(600)
+  })
+  it('a UV conta a luz dela (vai menos que a seta) e no mínimo 1 quadrado', () => {
+    const r = setaNoAlcance({ x: 0, y: 0 }, { x: 0, y: 500 }, 'uv', celula, 1.5)
+    expect(r.quadrados).toBe(4)
+    expect(r.b.y).toBeCloseTo(500)
+    expect(setaNoAlcance({ x: 0, y: 0 }, { x: 10, y: 0 }, 'comum', celula, 1.5).quadrados).toBe(1)
   })
 })

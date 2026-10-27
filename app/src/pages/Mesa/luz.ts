@@ -203,3 +203,20 @@ export function luzesDoAmbiente(objetos: ObjetoComLuz[], celula: { w: number; h:
 
 // Lâmpada que marca uma Luz Ambiente sem imagem (só o mestre vê; os jogadores só veem a luz).
 export const IMAGEM_LUZ = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#1c1d24" fill-opacity="0.85" stroke="#ffd9a0" stroke-width="4"/><path d="M50 20a20 20 0 0 0-12 36c3 2.5 4 5 4 8h16c0-3 1-5.5 4-8a20 20 0 0 0-12-36z" fill="#ffd9a0"/><rect x="42" y="68" width="16" height="5" rx="2" fill="#ffd9a0"/><rect x="44" y="76" width="12" height="5" rx="2" fill="#ffd9a0"/></svg>')
+
+// Medir a lanterna enquanto desenha a seta (pedido da Millie, 27/10): a luz anda de quadrado em
+// quadrado da grade e mostra quantos metros alcança (no Ordem, a lanterna ilumina 9 m).
+// Devolve a ponta da seta já encaixada e o alcance da luz em quadrados e em metros.
+export function setaNoAlcance(a: { x: number; y: number }, b: { x: number; y: number }, tipo: Lanterna, celula: { w: number; h: number }, metrosPorQuadrado: number): { b: { x: number; y: number }; quadrados: number; metros: number } {
+  const lado = Math.max(celula.w, celula.h)
+  const comprimento = Math.hypot(b.x - a.x, b.y - a.y)
+  const rel = ALCANCE_RELATIVO[tipo]
+  const quadrados = Math.max(1, Math.round((comprimento * rel) / lado))
+  const novo = (quadrados * lado) / rel
+  const k = comprimento ? novo / comprimento : 0
+  return {
+    b: { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k },
+    quadrados,
+    metros: Math.round(quadrados * metrosPorQuadrado * 10) / 10,
+  }
+}

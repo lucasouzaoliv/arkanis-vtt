@@ -29,7 +29,7 @@ import { useDesenhoNoPalco } from './DesenhosNoPalco'
 import { useSomNoPalco } from './SonsNoPalco'
 import { BrilhoDasLanternas, LuzesNoPalco, useEscuridaoNoPalco } from './EscuridaoNoPalco'
 import { useEscuridao } from './useEscuridao'
-import { ajusteDaSeta, caminhoDaLuzUv, caminhoDoCone, coneDaLanterna, conesDosTokens, IMAGEM_LUZ, LANTERNAS, luzCompleta, luzesDoAmbiente, temLuzAmbiente, type AjusteLanterna, type Lanterna, type LuzAmbiente } from './luz'
+import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, caminhoDoCone, coneDaLanterna, conesDosTokens, IMAGEM_LUZ, LANTERNAS, luzCompleta, luzesDoAmbiente, temLuzAmbiente, type AjusteLanterna, type Lanterna, type LuzAmbiente } from './luz'
 import ConfigurarLuz from './ConfigurarLuz'
 import ConfigurarEfeito from './ConfigurarEfeito'
 import EfeitosNoPalco from './EfeitosNoPalco'
@@ -583,7 +583,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   }
 
   function mover(e: React.PointerEvent<HTMLDivElement>) {
-    if (seta) setSeta({ ...seta, b: pontoNoMapa(e.clientX, e.clientY) })
+    if (seta) setSeta({ ...seta, b: pontaDaSeta(seta.a, pontoNoMapa(e.clientX, e.clientY)) })
     desenho.aoMover(e)
     som.aoMover(e)
     escuro.aoMover(e)
@@ -639,11 +639,18 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
     }
   }
 
+  // A ponta da seta da lanterna encaixa pra luz alcançar um número inteiro de quadrados (27/10).
+  function pontaDaSeta(a: Ponto, p: Ponto): Ponto {
+    const o = objetos.find((x) => x.id === configLanterna)
+    if (!o || Math.hypot(p.x - a.x, p.y - a.y) < 5) return p
+    return setaNoAlcance(a, p, o.lanterna ?? 'comum', celula, cena?.grid_distance || 1.5).b
+  }
+
   async function terminar(e?: React.PointerEvent) {
     if (seta && configLanterna) {
       const o = objetos.find((x) => x.id === configLanterna)
       setSeta(null)
-      const fim = e ? pontoNoMapa(e.clientX, e.clientY) : seta.b
+      const fim = e ? pontaDaSeta(seta.a, pontoNoMapa(e.clientX, e.clientY)) : seta.b
       if (o && Math.hypot(fim.x - seta.a.x, fim.y - seta.a.y) > 5) {
         salvarAjusteDaLanterna(o, ajusteDaSeta(o, seta.a, fim))
         setConfigLanterna(null)
@@ -1234,7 +1241,17 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
                 const o = objetos.find((x) => x.id === configLanterna)
                 if (!o || Math.hypot(seta.b.x - seta.a.x, seta.b.y - seta.a.y) < 5) return null
                 const c = coneDaLanterna({ ...o, lanterna_ajuste: ajusteDaSeta(o, seta.a, seta.b) }, o.lanterna ?? 'comum', celula)
-                return <path d={caminhoDoCone(c)} fill="rgba(255,233,184,0.12)" stroke="#ffe9b8" strokeWidth={1.5 / vista.escala} strokeDasharray={`${6 / vista.escala} ${4 / vista.escala}`} />
+                const m = setaNoAlcance(seta.a, seta.b, o.lanterna ?? 'comum', celula, cena?.grid_distance || 1.5)
+                const px = 1 / vista.escala
+                return (
+                  <>
+                    <path d={caminhoDoCone(c)} fill="rgba(255,233,184,0.12)" stroke="#ffe9b8" strokeWidth={1.5 * px} strokeDasharray={`${6 * px} ${4 * px}`} />
+                    {/* Até onde a luz vai, em metros (pela grade da cena). */}
+                    <text x={seta.b.x + 12 * px} y={seta.b.y - 12 * px} fontSize={17 * px} className="mesa-regua-total">
+                      {cena ? textoDaDistancia(m.metros, cena) : ''} · {m.quadrados} {m.quadrados === 1 ? 'quadrado' : 'quadrados'}
+                    </text>
+                  </>
+                )
               })()}
               <line x1={seta.a.x} y1={seta.a.y} x2={seta.b.x} y2={seta.b.y} stroke="#ffe9b8" strokeWidth={3 / vista.escala} markerEnd="url(#seta-lanterna-ponta)" />
               <circle cx={seta.a.x} cy={seta.a.y} r={5 / vista.escala} fill="#ffe9b8" />
@@ -1278,7 +1295,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
       )}
       {configLanterna && (
         <p className="mesa-desenho-aviso" role="status">
-          Configurar Lanterna: <kbd>Clique + Arraste</kbd> partindo da lanterna do token, na direção da luz; o tamanho da seta é até onde a luz vai · <kbd>Esc</kbd> cancela
+          Configurar Lanterna: <kbd>Clique + Arraste</kbd> partindo da lanterna do token, na direção da luz; o tamanho da seta é até onde a luz vai (anda de quadrado em quadrado e mostra os metros) · <kbd>Esc</kbd> cancela
         </p>
       )}
 
