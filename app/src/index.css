@@ -19013,11 +19013,11 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .pista-foto { padding: 12px 10px 8px; background: #fbfbf6; }
 .pista-foto img { display: block; width: 100%; height: 130px; object-fit: cover; filter: sepia(0.25) contrast(1.05); pointer-events: none; }
 .pista-foto .pista-texto, .pista-foto textarea.pista-texto { margin-top: 6px; min-height: 24px; text-align: center; color: #222; font-family: 'Caveat', cursive; font-size: 20px; }
-.pista-documento { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; padding: 24px 10px 14px; border: 0; background: linear-gradient(#ece0c2, #dfcfa5); color: #3a2d1a; font-family: 'Special Elite', 'Courier New', monospace; font-size: 14px; cursor: pointer; }
-.pista-documento svg { font-size: 26px; color: #7a6640; }
+.pista-doc-abrir { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; padding: 24px 10px 14px; border: 0; background: linear-gradient(#ece0c2, #dfcfa5); color: #3a2d1a; font-family: 'Special Elite', 'Courier New', monospace; font-size: 14px; cursor: pointer; }
+.pista-doc-abrir svg { font-size: 26px; color: #7a6640; }
 .pista-acoes { position: absolute; z-index: 3; top: -12px; right: -12px; display: none; gap: 4px; }
 .pista:hover .pista-acoes { display: flex; }
-.pista-acoes button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(16, 16, 20, 0.92); color: #e8e8ec; cursor: pointer; font-size: 11px; }
+.pista-acoes button { box-sizing: border-box; display: grid; place-items: center; padding: 0; margin: 0; line-height: 1; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(16, 16, 20, 0.92); color: #e8e8ec; cursor: pointer; font-size: 11px; }
 .pista-acoes button:hover { color: #ffd27a; }
 .quadro-barbantes { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
 .quadro-barbante-fio { fill: none; stroke: #c0121b; stroke-width: 2.5; stroke-linecap: round; }

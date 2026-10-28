@@ -64,6 +64,12 @@ export function JanelaDocumentos({ documentos, souMestre, userId, onAbrir, onNov
   )
 }
 
+// Abre do lado da lista de Documentos (no mesmo lugar, uma tampava a outra e parecia que não fechava).
+function posicaoDoEditor() {
+  const lista = Math.max(16, (window.innerWidth - 420) / 2 - 160)
+  return { x: Math.max(16, Math.min(window.innerWidth - 540, lista + 436)), y: 80 }
+}
+
 // Editor do mestre: salva sozinho um instante depois de parar de digitar.
 export function EditorDeDocumento({ documento, onSalvar, onVer, onEnviarImagem, onFechar }: {
   documento: Documento
@@ -91,7 +97,7 @@ export function EditorDeDocumento({ documento, onSalvar, onVer, onEnviarImagem, 
     if (Object.keys(pendente.current).length) onSalvar(pendente.current)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <Janela titulo="Editar Documento" icone={faPen} largura={520} onFechar={onFechar}>
+    <Janela titulo="Editar Documento" icone={faPen} largura={520} inicial={posicaoDoEditor()} onFechar={onFechar}>
       <div className="janela-form documento-editor">
         <label className="janela-campo">
           <span className="janela-rotulo">Título</span>

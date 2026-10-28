@@ -152,7 +152,7 @@ export default function QuadroDePistas({ q, onAbrirDocumento, onEnviarImagem, on
               <span className="pista-tachinha" aria-hidden />
               {p.tipo === 'foto' && p.imagem_url && <img src={p.imagem_url} alt="" draggable={false} />}
               {p.tipo === 'documento' && (
-                <button type="button" className="pista-documento" onClick={() => { if (!ligando && !arrastou.current && p.documento_id) onAbrirDocumento(p.documento_id) }} title="Ler o documento">
+                <button type="button" className="pista-doc-abrir" onClick={() => { if (!ligando && !arrastou.current && p.documento_id) onAbrirDocumento(p.documento_id) }} title="Ler o documento">
                   <FontAwesomeIcon icon={faFileLines} />
                   <span>{p.texto || 'Documento'}</span>
                 </button>
@@ -170,7 +170,7 @@ export default function QuadroDePistas({ q, onAbrirDocumento, onEnviarImagem, on
                 <p className="pista-texto">{p.texto || (p.tipo === 'nota' ? 'Duplo clique pra escrever' : '')}</p>
               ))}
               {!ligando && (
-                <span className="pista-acoes">
+                <span className="pista-acoes" style={{ transform: `rotate(${-p.rotacao}deg)` }}>
                   {p.tipo !== 'documento' && <button type="button" title="Escrever" onClick={() => setEditando(p.id)}><FontAwesomeIcon icon={faPen} /></button>}
                   <button type="button" title="Tirar do quadro" onClick={() => q.excluir(p.id)}><FontAwesomeIcon icon={faTrash} /></button>
                 </span>
