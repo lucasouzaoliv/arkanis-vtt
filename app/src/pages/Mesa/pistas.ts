@@ -1,7 +1,7 @@
 // Quadro de pistas (KAN-117, pedido da Millie 27/10): mural de cortiça da campanha com notas,
 // fotos e documentos presos por tachinha e ligados por barbante. Regras puras, testadas.
 
-export type TipoPista = 'nota' | 'foto' | 'documento'
+export type TipoPista = 'nota' | 'foto' | 'documento' | 'item'
 
 export type Pista = {
   id: string
@@ -11,6 +11,8 @@ export type Pista = {
   texto: string
   imagem_url: string | null
   documento_id: string | null
+  // Item da aba Itens (texto e imagem_url guardam como ele era quando foi preso).
+  item_id: string | null
   x: number
   y: number
   rotacao: number
@@ -19,7 +21,7 @@ export type Pista = {
 
 export type Barbante = { id: string; campaign_id: string; de: string; para: string; created_at: string }
 
-export const LARGURA_PISTA: Record<TipoPista, number> = { nota: 170, foto: 170, documento: 150 }
+export const LARGURA_PISTA: Record<TipoPista, number> = { nota: 170, foto: 170, documento: 150, item: 150 }
 
 // A tachinha fica no meio, em cima do papel: é dali que sai o barbante.
 export function tachinha(p: Pick<Pista, 'tipo' | 'x' | 'y'>): { x: number; y: number } {

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faArrowDownAZ, faArrowDown19, faBriefcase, faClone, faFloppyDisk, faFolder, faFolderOpen, faFolderPlus, faFolderTree, faMagnifyingGlass, faPenToSquare,
-  faPlus, faTrash, faUserGear,
+  faPlus, faThumbtack, faTrash, faUserGear,
 } from '@fortawesome/free-solid-svg-icons'
 import Janela, { Campo } from './Janela'
 import MenuContexto, { type ItemMenu } from './MenuContexto'
@@ -18,6 +18,8 @@ type Acoes = {
   onAbrir: (i: ItemMesa) => void
   onPropriedade: (i: ItemMesa) => void
   onDuplicar: (i: ItemMesa) => void
+  // Prende o item no quadro de pistas (qualquer um que vê o item).
+  onPrender?: (i: ItemMesa) => void
   onExcluir: (i: ItemMesa) => void
   onCriar: (pasta: string | null) => void
   onCriarPasta: (pai: string | null) => void
@@ -54,6 +56,7 @@ export default function PainelItens({ souMestre, userId, itens, pastas, acoes }:
       itens: [
         { rotulo: nivel === 'dono' ? 'Editar' : 'Ver', icone: faPenToSquare, onClick: () => acoes.onAbrir(i) },
         ...itensDeImagem(imagem, i.image_url, i.name),
+        ...(acoes.onPrender ? [{ rotulo: 'Prender no Quadro de Pistas', icone: faThumbtack, onClick: () => acoes.onPrender?.(i) } as ItemMenu] : []),
         ...(souMestre
           ? [
               { rotulo: 'Configurar Propriedade', icone: faUserGear, onClick: () => acoes.onPropriedade(i) } as ItemMenu,
@@ -85,7 +88,8 @@ export default function PainelItens({ souMestre, userId, itens, pastas, acoes }:
         <button
           type="button"
           className="ator-linha item-linha"
-          draggable={souMestre}
+          // Mestre arrasta pro mapa; todo mundo pode arrastar pro quadro de pistas.
+          draggable={!limitado}
           onDragStart={(e) => {
             e.dataTransfer.setData(TIPO_ARRASTO_ITEM, i.id)
             e.dataTransfer.effectAllowed = 'copy'

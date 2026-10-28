@@ -38,7 +38,7 @@ import { IMAGEM_EFEITO } from './efeitos'
 import JanelaInteracao from './JanelaInteracao'
 import DadosNaTela from './DadosNaTela'
 import { useItens } from './useItens'
-import { nivelNoItem } from './itens'
+import { nivelNoItem, type ItemMesa } from './itens'
 import { usePosicionaveis } from './usePosicionaveis'
 import { caixaNoPonto, CATEGORIAS_POSICIONAVEIS, ehImagem, type CategoriaPosicionavel, type Posicionavel } from './posicionaveis'
 import { tamanhoInicial, type Pasta } from './cenas'
@@ -583,6 +583,20 @@ export default function Mesa() {
     else avisar('Não deu pra pegar esse documento.', true)
   }
 
+  // Item preso no quadro de pistas pelo botão direito na aba Itens.
+  function prenderItem(i: ItemMesa) {
+    if (!pistas.pistas.some((p) => p.item_id === i.id)) {
+      pistas.criar({ tipo: 'item', item_id: i.id, texto: i.name, imagem_url: i.image_url, x: Math.round(60 + Math.random() * 400), y: Math.round(60 + Math.random() * 220) })
+    }
+    setQuadroAberto(true)
+  }
+
+  function abrirItemDoQuadro(id: string) {
+    const i = itens.itens.find((x) => x.id === id)
+    if (i && nivelNoItem(i, userId ?? '', souMestre) !== 'limitado') setItensAbertos((l) => (l.includes(id) ? l : [...l, id]))
+    else avisar('Você não tem acesso a esse item.', true)
+  }
+
   function abrirDocumento(id: string) {
     const d = docs.documentos.find((x) => x.id === id)
     if (d && podeLer(d, userId ?? '', souMestre)) setDocLendo(d)
@@ -1088,6 +1102,7 @@ export default function Mesa() {
                   onAbrir: (i) => setItensAbertos((l) => (l.includes(i.id) ? l : [...l, i.id])),
                   onPropriedade: (i) => setPropriedadeItem(i.id),
                   onDuplicar: (i) => itens.duplicar(i),
+                  onPrender: prenderItem,
                   onExcluir: (i) => window.confirm(`Excluir o item "${i.name}"?`) && itens.excluir(i.id),
                   onCriar: (pasta) => setCriandoItem({ pasta }),
                   onCriarPasta: (pai) => setPastaItem({ pai }),
@@ -1599,7 +1614,9 @@ export default function Mesa() {
       {quadroAberto && (
         <QuadroDePistas
           q={pistas}
+          itens={itens.itens}
           onAbrirDocumento={abrirDocumento}
+          onAbrirItem={abrirItemDoQuadro}
           onEnviarImagem={(f) => (userId ? enviarArquivoDoDiario(userId, f) : Promise.resolve(null))}
           onFechar={() => setQuadroAberto(false)}
         />
