@@ -18879,15 +18879,48 @@ textarea.mesa-nota.editando { resize: none; outline: 2px solid var(--mesa-destaq
 .loucura.enlouquecendo .loucura-vinheta { animation: loucura-coracao 1.15s ease-in-out infinite; }
 .loucura-sombra { position: absolute; width: 0; height: 0; transform: rotate(var(--giro)); }
 .loucura-sombra svg { position: absolute; left: 0; top: calc(-60px * var(--tam)); width: calc(420px * var(--tam)); height: calc(120px * var(--tam)); fill: #050208; opacity: 0.9; filter: blur(4px); transform-origin: 0 50%; animation: loucura-rastejar 7s ease-in-out infinite; }
-.loucura-olhos { position: absolute; display: flex; gap: 9px; transform: translate(-50%, -50%); animation: loucura-olhar 5.2s ease-in-out both; }
-.loucura.enlouquecendo .loucura-olhos { animation-duration: 10.4s; }
-.loucura-olhos i { display: block; width: 11px; height: 5px; border-radius: 50%; background: #f3ecd2; box-shadow: 0 0 8px 2px rgba(255, 236, 190, 0.5); animation: loucura-piscar 3.1s ease-in-out infinite; }
 @keyframes loucura-respirar { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.04); opacity: 1; } }
 @keyframes loucura-coracao { 0%, 30%, 100% { transform: scale(1.03); } 12% { transform: scale(0.97); } 22% { transform: scale(1); } }
 @keyframes loucura-rastejar { 0%, 100% { transform: translateX(-90%) scaleY(0.8) rotate(-5deg); } 45% { transform: translateX(-22%) scaleY(1.1) rotate(5deg); } 62% { transform: translateX(-30%) scaleY(0.9) rotate(-3deg); } }
-@keyframes loucura-olhar { 0% { opacity: 0; } 20%, 75% { opacity: 0.9; } 100% { opacity: 0; } }
-@keyframes loucura-piscar { 0%, 44%, 52%, 100% { transform: scaleY(1); } 48% { transform: scaleY(0.1); } }
 @media (prefers-reduced-motion: reduce) { .loucura *, .loucura-vinheta { animation: none !important; } }
+/* Olho no escuro: abre devagar, olha pros lados aos trancos, pisca e fecha. */
+.loucura-olho { position: absolute; transform: translate(-50%, -50%) rotate(var(--giro)); filter: drop-shadow(0 0 14px rgba(150, 0, 0, 0.55)); animation: loucura-olho-surgir 7s ease-in-out both; }
+.loucura-olho::before { content: ""; position: absolute; inset: -60% -30%; border-radius: 50%; background: radial-gradient(ellipse, rgba(0, 0, 0, 0.85) 30%, transparent 70%); z-index: -1; }
+.loucura-olho svg { display: block; width: 100%; overflow: visible; }
+.loucura-olho-palpebra { transform-origin: 80px 40px; animation: loucura-olho-abrir 7s ease-in-out both; }
+.loucura-olho-iris { animation: loucura-olho-espiar 7s steps(1, end) both; }
+.loucura-olho-pupila { fill: #000; transform-origin: 80px 40px; animation: loucura-olho-pupila 7s ease-in-out both; }
+.loucura-olho-veia { fill: none; stroke: #9b0f0f; stroke-width: 1.3; stroke-linecap: round; opacity: 0.85; }
+.loucura-olho-borda { fill: none; stroke: #070102; stroke-width: 5; stroke-linejoin: round; }
+@keyframes loucura-olho-surgir { 0% { opacity: 0; } 12%, 86% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes loucura-olho-abrir { 0%, 6% { transform: scaleY(0.04); } 22% { transform: scaleY(1); } 54% { transform: scaleY(1); } 57% { transform: scaleY(0.05); } 60%, 84% { transform: scaleY(1); } 96%, 100% { transform: scaleY(0.04); } }
+@keyframes loucura-olho-espiar { 0%, 30% { transform: translate(0, 0); } 31% { transform: translate(-22px, 2px); } 44% { transform: translate(18px, -3px); } 62% { transform: translate(0, 4px); } 74% { transform: translate(-10px, 0); } }
+@keyframes loucura-olho-pupila { 0%, 40% { transform: scaleX(1); } 50% { transform: scaleX(2.6); } 70%, 100% { transform: scaleX(0.7); } }
+.loucura.enlouquecendo .loucura-olho, .loucura.enlouquecendo .loucura-olho-palpebra, .loucura.enlouquecendo .loucura-olho-iris, .loucura.enlouquecendo .loucura-olho-pupila { animation-duration: 5s; }
+/* Sangue escorrendo do alto da tela. */
+.loucura-sangue { position: absolute; left: 0; right: 0; top: 0; height: 100%; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
+.loucura-sangue-borda { position: absolute; left: 0; top: 0; width: 100%; height: 26px; fill: #5e0306; }
+.loucura-gota { position: absolute; top: 10px; height: 0; border-radius: 0 0 999px 999px; background: linear-gradient(90deg, #3d0002, #8d0b0e 38%, #c3262a 50%, #6b0407); animation: loucura-escorrer 14s cubic-bezier(0.55, 0, 0.8, 0.6) infinite; }
+.loucura-gota::after { content: ""; position: absolute; left: 50%; bottom: -3px; width: 170%; aspect-ratio: 1 / 1.2; transform: translateX(-50%); border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%; background: radial-gradient(circle at 35% 35%, #c3262a, #6b0407 70%); }
+@keyframes loucura-escorrer { 0% { height: 0; opacity: 1; } 75% { height: var(--comp); opacity: 1; } 100% { height: var(--comp); opacity: 0; } }
+/* Garras: três arranhões rasgam a tela e vão sumindo. */
+.loucura-garra { position: absolute; height: 60px; transform: translate(-50%, -50%) rotate(var(--giro)); }
+.loucura-garra svg { position: absolute; height: 20px; overflow: visible; clip-path: inset(0 100% 0 0); animation: loucura-rasgar 4.2s ease-out both; filter: drop-shadow(0 0 6px rgba(180, 0, 0, 0.6)); }
+.loucura-garra-fundo { fill: #0b0002; }
+.loucura-garra-carne { fill: #9e0b12; }
+@keyframes loucura-rasgar { 0% { clip-path: inset(0 100% 0 0); opacity: 1; } 5% { clip-path: inset(0 0 0 0); opacity: 1; } 60% { opacity: 0.95; } 100% { clip-path: inset(0 0 0 0); opacity: 0; } }
+/* Machucado: borda vermelha batendo com o coração, sangue na "lente"; desmaiado, quase tudo preto. */
+.ferida { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.ferida-vinheta { position: absolute; inset: -6%; animation: ferida-pulso 1.4s ease-in-out infinite; }
+.ferida-mancha { position: absolute; transform: translate(-50%, -50%); opacity: 0; animation: ferida-respingo 0.5s ease-out forwards; }
+.ferida-mancha svg { display: block; width: 100%; height: 100%; fill: #7a0207; opacity: 0.82; filter: blur(1.5px) drop-shadow(0 0 3px rgba(60, 0, 0, 0.8)); }
+.ferida-mancha i { position: absolute; left: 47%; top: 55%; width: 7px; border-radius: 0 0 6px 6px; background: linear-gradient(#7a0207, rgba(122, 2, 7, 0.6)); filter: blur(1px); transform-origin: top; animation: ferida-escorrer 9s ease-in both; }
+.ferida-desmaio { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(20, 0, 0, 0.82), #000 70%); animation: ferida-desmaio 5s ease-in-out infinite; }
+@keyframes ferida-pulso { 0%, 34%, 100% { opacity: 0.75; transform: scale(1.03); } 10% { opacity: 1; transform: scale(0.98); } 22% { opacity: 0.9; transform: scale(1); } }
+@keyframes ferida-respingo { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+@keyframes ferida-escorrer { 0% { transform: scaleY(0); } 100% { transform: scaleY(1); } }
+@keyframes ferida-desmaio { 0%, 100% { opacity: 0.96; } 50% { opacity: 0.86; } }
+@media (prefers-reduced-motion: reduce) { .ferida * { animation: none !important; } .ferida-mancha { opacity: 1; } }
 .mesa-moldes text { fill: #f4f4f6; paint-order: stroke; stroke: #000; stroke-width: 0.25em; font-family: 'Signika', var(--sans); font-weight: 700; }
 .mesa-moldes-barra button { white-space: nowrap; }
 

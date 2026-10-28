@@ -890,7 +890,7 @@ export default function Mesa() {
         onEsconderDocumento={souMestre ? esconderDocumento : undefined}
         onAcharDocumento={acharDocumento}
         onAbrirDocumento={abrirDocumento}
-        sanidadeDe={(id) => combate.barras({ character_id: id })?.san ?? null}
+        barrasDe={(id) => combate.barras({ character_id: id })}
         turnoDoCombate={combate.ativo ? `${combate.ativo.id}:${combate.ativo.rodada}:${combate.ativo.turno_atual}` : null}
         pedidoPaleta={pedidoPaleta}
         pedidoLimpar={pedidoLimpar}

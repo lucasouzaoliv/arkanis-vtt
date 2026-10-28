@@ -111,7 +111,7 @@ export function JanelaInterface({ onFechar }: { onFechar: () => void }) {
         <Grupo titulo="Efeitos na Tela">
           <label className="janela-check">
             <input type="checkbox" checked={loucura} onChange={(e) => mudarLoucura(e.target.checked)} />
-            Sanidade baixa mexe na tela (o mapa derrete, sombras nas bordas)
+            Sanidade e vida baixas mexem na tela (escurece, sangra, borra, o mapa derrete)
           </label>
         </Grupo>
         <Rodape onRedefinir={() => { setLoucura(true); setEscala(INTERFACE_PADRAO.escala); salvarInterface(INTERFACE_PADRAO) }} />
