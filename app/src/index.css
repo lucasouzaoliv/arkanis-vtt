@@ -18891,3 +18891,139 @@ textarea.mesa-nota.editando { resize: none; outline: 2px solid var(--mesa-destaq
 @media (prefers-reduced-motion: reduce) { .loucura *, .loucura-vinheta { animation: none !important; } }
 .mesa-moldes text { fill: #f4f4f6; paint-order: stroke; stroke: #000; stroke-width: 0.25em; font-family: 'Signika', var(--sans); font-weight: 700; }
 .mesa-moldes-barra button { white-space: nowrap; }
+
+/* Documentos encontráveis (KAN-118): a lista, o editor e o papel na tela. */
+.documentos-dica { margin: 0 0 4px; }
+.documentos-vazio { margin: 6px 0; color: var(--mesa-creme-dim); font-size: 0.9rem; }
+.documentos-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow: auto; }
+.documentos-item { display: flex; align-items: center; gap: 4px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); border-left: 3px solid #c9b07a; }
+.documentos-item.estilo-jornal { border-left-color: #b9b4a6; }
+.documentos-item.estilo-relatorio { border-left-color: #b3121a; }
+.documentos-item.estilo-diario { border-left-color: #7d9cc4; }
+.documentos-item.estilo-bilhete { border-left-color: #e0cf9a; }
+.documentos-abrir { flex: 1; min-width: 0; text-align: left; background: none; border: 0; color: inherit; padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; font: inherit; }
+.documentos-abrir:hover .documentos-titulo { text-decoration: underline; }
+.documentos-titulo { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.documentos-sub { font-size: 0.8rem; color: var(--mesa-creme-dim); }
+.documentos-acoes { display: flex; gap: 2px; padding-right: 6px; }
+.documentos-acoes button { min-width: 28px; height: 28px; border-radius: 6px; border: 0; background: transparent; color: var(--mesa-creme-dim); cursor: pointer; font: inherit; font-size: 0.8rem; }
+.documentos-acoes button:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.documentos-acoes button.ativo { color: #ffd27a; }
+.documentos-acoes button.perigo { color: #ff8a8a; padding: 0 6px; }
+.documento-editor-texto { display: flex; flex-direction: column; gap: 4px; }
+.documento-editor-texto textarea { width: 100%; resize: vertical; min-height: 160px; }
+.documento-editor-imagem { display: flex; gap: 6px; }
+.documento-editor-imagem input { flex: 1; }
+
+.documento-fundo { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px 16px; background: rgba(5, 4, 8, 0.8); backdrop-filter: blur(3px); animation: documento-fundo 0.25s ease-out; }
+.documento-papel { position: relative; box-sizing: border-box; width: min(640px, 92vw); max-height: 78vh; overflow: auto; padding: 48px 56px; color: #2b2116; box-shadow: 0 24px 70px rgba(0, 0, 0, 0.75); animation: documento-chegar 0.4s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.documento-titulo { margin: 0 0 18px; color: inherit; font-family: inherit; }
+.documento-texto p { margin: 0 0 1em; white-space: pre-wrap; }
+.documento-assinatura { margin: 24px 0 0; text-align: right; font-family: 'Caveat', cursive; font-size: 30px; }
+.documento-imagem { margin: 0 0 20px; text-align: center; }
+.documento-imagem img { max-width: 100%; max-height: 300px; border: 8px solid #fbfaf4; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35); transform: rotate(1.5deg); }
+.documento-botoes { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+@keyframes documento-fundo { from { opacity: 0; } }
+@keyframes documento-chegar { from { opacity: 0; transform: translateY(30px) rotate(-3deg) scale(0.96); } }
+
+/* Carta: papel amarelado e manchado, escrita à mão. */
+.documento-papel.estilo-carta {
+  font-family: 'Caveat', cursive; font-size: 25px; line-height: 1.35;
+  background: radial-gradient(circle at 12% 18%, rgba(150, 105, 45, 0.2), transparent 38%), radial-gradient(circle at 88% 80%, rgba(120, 80, 30, 0.22), transparent 42%), linear-gradient(#f2e7c9, #e4d2a6);
+  box-shadow: inset 0 0 70px rgba(120, 80, 30, 0.4), 0 24px 70px rgba(0, 0, 0, 0.75);
+  rotate: -0.6deg;
+}
+.estilo-carta .documento-titulo { font-size: 32px; font-weight: 600; }
+
+/* Recorte de jornal: papel cinzento, manchete e duas colunas. */
+.documento-papel.estilo-jornal {
+  font-family: 'Old Standard TT', 'Times New Roman', serif; font-size: 15px; line-height: 1.45; color: #1d1b17;
+  background: linear-gradient(rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.06)), #e8e3d3;
+  padding: 32px 40px;
+  clip-path: polygon(0 1%, 4% 0, 9% 1.2%, 15% 0.2%, 22% 1%, 30% 0, 38% 1.1%, 47% 0.3%, 55% 1%, 63% 0, 72% 1.2%, 80% 0.2%, 88% 1%, 95% 0, 100% 1%, 99.4% 50%, 100% 99%, 93% 100%, 85% 98.9%, 76% 100%, 66% 99%, 55% 100%, 44% 98.8%, 33% 100%, 22% 99%, 11% 100%, 3% 98.9%, 0 100%, 0.6% 50%);
+}
+.documento-jornal-cabeca { margin: 0 0 14px; padding: 6px 0; border-top: 3px double #1d1b17; border-bottom: 3px double #1d1b17; text-align: center; font-weight: 700; font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase; }
+.estilo-jornal .documento-titulo { font-size: 34px; line-height: 1.1; text-align: center; font-weight: 700; }
+.estilo-jornal .documento-texto { columns: 2; column-gap: 26px; column-rule: 1px solid rgba(0, 0, 0, 0.25); text-align: justify; hyphens: auto; }
+.estilo-jornal .documento-imagem img { border: 0; box-shadow: none; transform: none; filter: grayscale(1) contrast(1.15); }
+
+/* Relatório da Ordem: máquina de escrever e carimbo vermelho. */
+.documento-papel.estilo-relatorio {
+  font-family: 'Special Elite', 'Courier New', monospace; font-size: 15px; line-height: 1.6;
+  background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(220, 214, 196, 0.3)), #efebdf;
+}
+.documento-relatorio-cabeca { position: relative; display: flex; justify-content: space-between; margin: 0 0 22px; padding-bottom: 10px; border-bottom: 2px solid #2b2116; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; }
+.documento-carimbo { position: absolute; right: 0; top: 34px; padding: 4px 12px; border: 3px solid rgba(179, 18, 26, 0.8); border-radius: 4px; color: rgba(179, 18, 26, 0.8); font-style: normal; font-size: 22px; letter-spacing: 0.12em; rotate: -12deg; mix-blend-mode: multiply; }
+.estilo-relatorio .documento-titulo { padding-right: 190px; font-size: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
+.estilo-relatorio .documento-imagem img { filter: sepia(0.3); }
+.estilo-relatorio .documento-assinatura { font-size: 26px; }
+
+/* Página de diário: papel pautado, margem vermelha. */
+.documento-papel.estilo-diario {
+  font-family: 'Caveat', cursive; font-size: 24px; line-height: 32px; color: #1f2a44;
+  padding: 32px 40px 32px 82px;
+  background: linear-gradient(90deg, transparent 60px, rgba(200, 60, 60, 0.5) 60px, rgba(200, 60, 60, 0.5) 62px, transparent 62px), repeating-linear-gradient(#faf7ec 0 31px, #b9c8dc 31px 32px);
+  background-attachment: local;
+}
+.estilo-diario .documento-titulo { font-size: 30px; line-height: 32px; margin: 0 0 32px; }
+.estilo-diario .documento-texto p { margin: 0 0 32px; }
+
+/* Bilhete: pedaço de papel rasgado. */
+.documento-papel.estilo-bilhete {
+  width: min(400px, 90vw); padding: 36px 34px;
+  font-family: 'Caveat', cursive; font-size: 27px; line-height: 1.3;
+  background: linear-gradient(160deg, #f5eed8, #e8dcb8);
+  clip-path: polygon(0 3%, 7% 0, 15% 2%, 26% 0, 38% 3%, 49% 1%, 61% 3%, 72% 0, 84% 2%, 93% 0, 100% 2%, 98% 30%, 100% 62%, 98% 100%, 86% 97%, 72% 100%, 58% 97%, 44% 100%, 30% 97%, 16% 100%, 4% 97%, 1% 70%, 2% 35%);
+  rotate: 2deg;
+}
+.estilo-bilhete .documento-titulo { font-size: 30px; }
+
+@media (max-width: 600px) {
+  .documento-papel { padding: 32px 24px; }
+  .estilo-jornal .documento-texto { columns: 1; }
+  .documento-papel.estilo-diario { padding-left: 56px; background: linear-gradient(90deg, transparent 40px, rgba(200, 60, 60, 0.5) 40px, rgba(200, 60, 60, 0.5) 42px, transparent 42px), repeating-linear-gradient(#faf7ec 0 31px, #b9c8dc 31px 32px); }
+}
+
+/* Quadro de pistas (KAN-117): cortiça na moldura de madeira, papéis presos, barbante vermelho. */
+.quadro-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 0 0 8px; }
+.quadro-dica { flex: 1; min-width: 200px; font-size: 0.8rem; color: var(--mesa-creme-dim); }
+.quadro-barbante-icone { display: inline-block; width: 14px; height: 3px; border-radius: 2px; background: #d11a22; rotate: -25deg; }
+.quadro-barbante-botao.ativo { background: rgba(196, 22, 28, 0.28); color: #ffc2c2; }
+.quadro-nova-foto { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 0 8px; }
+.quadro-nova-foto input { flex: 1; min-width: 140px; }
+.quadro {
+  position: relative; height: min(66vh, 620px); overflow: hidden; cursor: grab; touch-action: none;
+  border: 10px solid #4a2e18; border-radius: 4px;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.55), 0 0 0 1px #2d1b0d;
+  background-color: #a9794a;
+  background-image: radial-gradient(rgba(70, 40, 15, 0.38) 1px, transparent 1.6px), radial-gradient(rgba(255, 220, 170, 0.2) 1px, transparent 1.8px), radial-gradient(rgba(60, 30, 10, 0.3) 1.6px, transparent 2.3px);
+  background-size: 7px 7px, 11px 11px, 17px 17px;
+}
+.quadro:active { cursor: grabbing; }
+.quadro.ligando { cursor: crosshair; }
+.quadro-mundo { position: absolute; left: 0; top: 0; }
+.quadro-vazio { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 20px; text-align: center; pointer-events: none; color: rgba(255, 244, 225, 0.9); font-family: 'Caveat', cursive; font-size: 26px; text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6); }
+.pista { position: absolute; box-sizing: border-box; box-shadow: 0 7px 14px rgba(0, 0, 0, 0.45); cursor: grab; user-select: none; }
+.quadro.ligando .pista { cursor: pointer; }
+.pista.escolhida { outline: 3px solid #ffd27a; outline-offset: 3px; }
+.pista-tachinha { position: absolute; z-index: 2; top: 2px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff9a9a, #c4161c 55%, #6e0a0d); box-shadow: 1px 3px 4px rgba(0, 0, 0, 0.55); }
+.pista-texto { margin: 0; white-space: pre-wrap; word-break: break-word; }
+textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 100%; min-height: 90px; padding: 2px; resize: none; background: transparent; border: 1px dashed rgba(0, 0, 0, 0.35); outline: none; font: inherit; color: inherit; }
+.pista-nota { min-height: 120px; padding: 24px 12px 14px; background: linear-gradient(#f8eba8, #efdc86); color: #2b2410; font-family: 'Caveat', cursive; font-size: 22px; line-height: 1.2; }
+.pista-nota .pista-texto:empty, .pista-nota p.pista-texto { min-height: 60px; }
+.pista-foto { padding: 12px 10px 8px; background: #fbfbf6; }
+.pista-foto img { display: block; width: 100%; height: 130px; object-fit: cover; filter: sepia(0.25) contrast(1.05); pointer-events: none; }
+.pista-foto .pista-texto, .pista-foto textarea.pista-texto { margin-top: 6px; min-height: 24px; text-align: center; color: #222; font-family: 'Caveat', cursive; font-size: 20px; }
+.pista-documento { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; padding: 24px 10px 14px; border: 0; background: linear-gradient(#ece0c2, #dfcfa5); color: #3a2d1a; font-family: 'Special Elite', 'Courier New', monospace; font-size: 14px; cursor: pointer; }
+.pista-documento svg { font-size: 26px; color: #7a6640; }
+.pista-acoes { position: absolute; z-index: 3; top: -12px; right: -12px; display: none; gap: 4px; }
+.pista:hover .pista-acoes { display: flex; }
+.pista-acoes button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(16, 16, 20, 0.92); color: #e8e8ec; cursor: pointer; font-size: 11px; }
+.pista-acoes button:hover { color: #ffd27a; }
+.quadro-barbantes { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.quadro-barbante-fio { fill: none; stroke: #c0121b; stroke-width: 2.5; stroke-linecap: round; }
+.quadro-barbante-sombra { fill: none; stroke: rgba(0, 0, 0, 0.35); stroke-width: 3; transform: translate(2px, 5px); }
+.quadro-barbante-toque { fill: none; stroke: transparent; stroke-width: 14; }
+.quadro.ligando .quadro-barbante-toque { pointer-events: stroke; cursor: pointer; }
+.quadro.ligando .quadro-barbante:hover .quadro-barbante-fio { stroke: #ff6262; stroke-dasharray: 6 4; }
+.quadro-barbante-fio.previa { stroke-dasharray: 6 5; opacity: 0.85; }

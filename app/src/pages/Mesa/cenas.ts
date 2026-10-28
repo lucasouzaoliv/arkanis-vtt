@@ -254,6 +254,7 @@ export type ObjetoCena = {
   luz?: boolean // Luz Ambiente (12.6): clareia o que está embaixo
   lanterna?: 'comum' | 'uv' | null // lanterna do token, ligada (pedido da Millie, 05/10)
   lanterna_estado?: 'falhando' | 'sem_bateria' | null // bateria: pisca ou apagou (KAN-114, 27/10)
+  documento_id?: string | null // documento escondido aqui (KAN-118): o jogador clica e acha
   nota?: string | null // anotação do mestre presa no mapa (KAN-123): mostra o bilhete no lugar da imagem
   so_uv?: boolean // pros jogadores, só aparece na luz UV
   lanterna_ajuste?: { ox: number; oy: number; angulo: number } | null // Configurar Lanterna (seta)

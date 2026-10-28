@@ -68,6 +68,11 @@ import { postarAtaque } from './acoesDeMira'
 import CelularNaMesa from '../Celular/CelularNaMesa'
 import { CentralDeSustos, SustoNaTela } from './CentralDeSustos'
 import GeradorDeNpc from './GeradorDeNpc'
+import { EditorDeDocumento, JanelaDocumentos, LeitorDeDocumento } from './JanelaDocumentos'
+import { IMAGEM_DOCUMENTO, podeLer, type Documento } from './documentos'
+import { useDocumentos } from './useDocumentos'
+import QuadroDePistas from './QuadroDePistas'
+import { usePistas } from './usePistas'
 import { useCanalDeSustos, type SustoDisparado } from './dadosDosSustos'
 import { ImagensMostradas } from './mostrarImagem'
 import type { AcaoAtaque, Alvo, AtaqueDaAcao } from './mira'
@@ -122,6 +127,11 @@ export default function Mesa() {
   // Jump scare (16/10): a central do mestre e o susto que está na tela agora.
   const [centralSustos, setCentralSustos] = useState(false)
   const [geradorNpc, setGeradorNpc] = useState(false)
+  // Documentos encontráveis (KAN-118) e Quadro de pistas (KAN-117).
+  const [janelaDocumentos, setJanelaDocumentos] = useState(false)
+  const [docEditando, setDocEditando] = useState<string | null>(null)
+  const [docLendo, setDocLendo] = useState<Documento | null>(null)
+  const [quadroAberto, setQuadroAberto] = useState(false)
   // Camada em que o mestre mexe (27/10): só os objetos dela selecionam e se movem.
   const [camadaAtiva, setCamadaAtiva] = useState<Camada>('token')
   const [susto, setSusto] = useState<SustoDisparado | null>(null)
@@ -249,6 +259,8 @@ export default function Mesa() {
   const [fichasAbertas, setFichasAbertas] = useState<string[]>([])
   const [tokenDasVariacoes, setTokenDasVariacoes] = useState<string | null>(null)
   const combate = useCombate(pronta?.campanha.id)
+  const docs = useDocumentos(pronta?.campanha.id, userId ?? '', !!pronta && pronta.campanha.owner_id === userId, (d) => setDocLendo(d))
+  const pistas = usePistas(pronta?.campanha.id)
   const [montandoCombate, setMontandoCombate] = useState<{ editando?: Combate; adicionarEm?: Combate } | null>(null)
   const [vdDe, setVdDe] = useState<Record<string, number | null>>({})
   const idsAmeacas = [...new Set(combate.combates.flatMap((c) => c.ameacas))].sort().join(',')
@@ -551,6 +563,32 @@ export default function Mesa() {
   // ---- Itens na mesa (KAN-53) ----
 
   // Item arrastado da aba Itens: entra no tamanho da imagem dele (sem imagem, um quadrado da grade).
+  // ---- Documentos encontráveis (KAN-118) ----
+
+  // Mestre: o papel do documento entra no mapa, do tamanho de um quadrado.
+  async function esconderDocumento(documentoId: string, ponto: { x: number; y: number }) {
+    const d = docs.documentos.find((x) => x.id === documentoId)
+    const atual = cenas.atual
+    if (!d || !atual) return
+    await objetos.criar({
+      scene_id: atual.id, campaign_id: campanha.id, name: d.titulo || 'Documento', image_url: IMAGEM_DOCUMENTO, documento_id: d.id, layer: 'token',
+      ...(await caixaLimitada(ponto, atual.grid_size, atual.grid_size)),
+    })
+  }
+
+  // Jogador clicou no papel: acha e abre.
+  async function acharDocumento(o: ObjetoCena) {
+    const d = await docs.achar(o.id)
+    if (d) setDocLendo(d)
+    else avisar('Não deu pra pegar esse documento.', true)
+  }
+
+  function abrirDocumento(id: string) {
+    const d = docs.documentos.find((x) => x.id === id)
+    if (d && podeLer(d, userId ?? '', souMestre)) setDocLendo(d)
+    else avisar('Só quem achou esse documento consegue ler.', true)
+  }
+
   async function colocarItem(itemId: string, ponto: { x: number; y: number }) {
     const i = itens.itens.find((x) => x.id === itemId)
     const atual = cenas.atual
@@ -834,6 +872,10 @@ export default function Mesa() {
           if (cr) return metrosDoDeslocamento(cr.deslocamento)
           return o.character_id || a?.character_id ? 9 : null
         }}
+        documentos={souMestre ? docs.documentos.map((d) => ({ id: d.id, titulo: d.titulo })) : []}
+        onEsconderDocumento={souMestre ? esconderDocumento : undefined}
+        onAcharDocumento={acharDocumento}
+        onAbrirDocumento={abrirDocumento}
         sanidadeDe={(id) => combate.barras({ character_id: id })?.san ?? null}
         turnoDoCombate={combate.ativo ? `${combate.ativo.id}:${combate.ativo.rodada}:${combate.ativo.turno_atual}` : null}
         pedidoPaleta={pedidoPaleta}
@@ -913,6 +955,8 @@ export default function Mesa() {
           {/* Celular antes de Configurações e Recolher (pedido da Millie, 14/10). */}
           <BotaoIcone id="celular" rotulo={souMestre ? 'Central dos celulares' : 'Celular'} lado="direita" ativo={celularAberto} onClick={() => setCelularAberto((v) => !v)} />
           {souMestre && <BotaoIcone id="sustos" rotulo="Central dos sustos" lado="direita" ativo={centralSustos} onClick={() => setCentralSustos((v) => !v)} />}
+          <BotaoIcone id="pistas" rotulo="Quadro de pistas" lado="direita" ativo={quadroAberto} onClick={() => setQuadroAberto((v) => !v)} />
+          <BotaoIcone id="documentos" rotulo="Documentos" lado="direita" ativo={janelaDocumentos} onClick={() => setJanelaDocumentos((v) => !v)} />
           {souMestre && <BotaoIcone id="npc" rotulo="Gerador de NPC" lado="direita" ativo={geradorNpc} onClick={() => setGeradorNpc((v) => !v)} />}
           <BarraIcones lado="direita" itens={ABAS_DIREITA.filter((a) => a.id === 'config')} ativo={recolhida ? null : aba} onEscolher={escolherAba} />
           <BotaoIcone id="recolher" rotulo={recolhida ? 'Expandir' : 'Recolher'} lado="direita" onClick={() => setRecolhida((v) => !v)} />
@@ -1523,6 +1567,53 @@ export default function Mesa() {
           onDisparar={dispararSusto}
           onTestar={(s) => setSusto(s)}
           onFechar={() => setCentralSustos(false)}
+        />
+      )}
+      {janelaDocumentos && (
+        <JanelaDocumentos
+          documentos={docs.documentos}
+          souMestre={souMestre}
+          userId={userId ?? ''}
+          onAbrir={setDocLendo}
+          onNovo={async () => { const d = await docs.criar(); if (d) setDocEditando(d.id) }}
+          onEditar={(d) => setDocEditando(d.id)}
+          onExcluir={(d) => docs.excluir(d.id)}
+          onRevelar={(d, v) => docs.salvar(d.id, { revelado_todos: v })}
+          onFechar={() => setJanelaDocumentos(false)}
+        />
+      )}
+      {souMestre && docEditando && (() => {
+        const d = docs.documentos.find((x) => x.id === docEditando)
+        if (!d) return null
+        return (
+          <EditorDeDocumento
+            key={d.id}
+            documento={d}
+            onSalvar={(c) => docs.salvar(d.id, c)}
+            onVer={() => setDocLendo(docs.documentos.find((x) => x.id === d.id) ?? d)}
+            onEnviarImagem={(f) => (userId ? enviarArquivoDoDiario(userId, f) : Promise.resolve(null))}
+            onFechar={() => setDocEditando(null)}
+          />
+        )
+      })()}
+      {quadroAberto && (
+        <QuadroDePistas
+          q={pistas}
+          onAbrirDocumento={abrirDocumento}
+          onEnviarImagem={(f) => (userId ? enviarArquivoDoDiario(userId, f) : Promise.resolve(null))}
+          onFechar={() => setQuadroAberto(false)}
+        />
+      )}
+      {docLendo && (
+        <LeitorDeDocumento
+          key={docLendo.id}
+          documento={docs.documentos.find((x) => x.id === docLendo.id) ?? docLendo}
+          onPrender={pistas.pistas.some((p) => p.documento_id === docLendo.id) ? undefined : () => {
+            pistas.criar({ tipo: 'documento', documento_id: docLendo.id, texto: docLendo.titulo, x: Math.round(60 + Math.random() * 400), y: Math.round(60 + Math.random() * 220) })
+            setDocLendo(null)
+            setQuadroAberto(true)
+          }}
+          onFechar={() => setDocLendo(null)}
         />
       )}
       {souMestre && geradorNpc && <GeradorDeNpc onCriar={(n) => { setGeradorNpc(false); void criarNPC(n.nome, null) }} onFechar={() => setGeradorNpc(false)} />}

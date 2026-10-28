@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   faArrowDownWideShort, faArrowUpWideShort, faBullseye, faCopy, faCrosshairs, faLayerGroup, faLock, faLockOpen, faObjectGroup,
-  faObjectUngroup, faNoteSticky, faPaste, faLightbulb, faEye, faBriefcase, faHandPointer, faHandHolding, faSquarePlus, faIdCard, faImages, faRotateLeft, faRotateRight, faShieldHalved, faSlidersH, faTowerBroadcast, faTrash, faUpDown, faLeftRight, faUserGear, faPenToSquare, faSun, faFire,
+  faObjectUngroup, faNoteSticky, faFileLines, faPaste, faLightbulb, faEye, faBriefcase, faHandPointer, faHandHolding, faSquarePlus, faIdCard, faImages, faRotateLeft, faRotateRight, faShieldHalved, faSlidersH, faTowerBroadcast, faTrash, faUpDown, faLeftRight, faUserGear, faPenToSquare, faSun, faFire,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import EfeitoClimatico from './EfeitoClimatico'
@@ -66,7 +66,7 @@ type Gesto =
 
 // Centro da mesa: a cena com imagem, grade, objetos/tokens, escuridão, ambiente e clima.
 // Arrastar com o botão direito move o mapa (o esquerdo faz a caixa de seleção), a rodinha dá zoom.
-export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null, sanidadeDe }: {
+export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null, sanidadeDe, documentos = [], onEsconderDocumento, onAcharDocumento, onAbrirDocumento }: {
   cena: Cena | null
   souMestre: boolean
   userId: string
@@ -132,6 +132,11 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   turnoDoCombate?: string | null
   // Sanidade do personagem (atual, máximo), pra tela derreter com ela baixa (KAN-116).
   sanidadeDe?: (characterId: string) => [number, number | null] | null
+  // Documentos encontráveis (KAN-118): o mestre esconde no mapa; o jogador clica no papel e acha.
+  documentos?: { id: string; titulo: string }[]
+  onEsconderDocumento?: (documentoId: string, ponto: { x: number; y: number }) => void
+  onAcharDocumento?: (o: ObjetoCena) => void
+  onAbrirDocumento?: (documentoId: string) => void
 }) {
   const palcoRef = useRef<HTMLDivElement>(null)
   const [mapa, setMapa] = useState(MAPA_PADRAO)
@@ -541,6 +546,12 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
     if (e.button === 2) return
     // Configurando a lanterna: o clique vai pro palco (começa a seta em cima do token).
     if (configLanterna) return
+    // Documento escondido (KAN-118): o jogador clica no papel e acha.
+    if (e.button === 0 && o.documento_id && !souMestre && ferramenta !== 'alvos' && ferramenta !== 'medir' && ferramenta !== 'molde') {
+      e.stopPropagation()
+      onAcharDocumento?.(o)
+      return
+    }
     // Item interativo: o jogador clica e abre a interação (o mestre usa o duplo clique ou o menu).
     if (e.button === 0 && o.item_id && !souMestre && ferramenta !== 'alvos' && ferramenta !== 'medir' && ferramenta !== 'molde') {
       e.stopPropagation()
@@ -912,6 +923,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   }
 
   function duploClique(o: ObjetoCena) {
+    if (o.documento_id) return onAbrirDocumento?.(o.documento_id)
     if (souMestre && o.nota != null) return setNotaEditando(o.id)
     if (o.item_id && podeEditar(o)) onEditarItem?.(o.item_id)
     else if (o.item_id) onInteragir?.(o, celula)
@@ -993,6 +1005,11 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
           ? [
               { tipo: 'linha' } as ItemMenu,
               ...(!o ? [{ rotulo: 'Adicionar Anotação', icone: faNoteSticky, onClick: () => criarNota(menu.mapa) } as ItemMenu] : []),
+              ...(!o && onEsconderDocumento
+                ? [documentos.length
+                    ? ({ tipo: 'sub', rotulo: 'Esconder Documento', icone: faFileLines, itens: documentos.map((d) => ({ rotulo: d.titulo || 'Sem título', onClick: () => onEsconderDocumento(d.id, menu.mapa) })) } as ItemMenu)
+                    : ({ rotulo: 'Esconder Documento (crie um em Documentos)', icone: faFileLines, desativado: true, onClick: () => {} } as ItemMenu)]
+                : []),
               { rotulo: 'Colar', icone: faPaste, desativado: !copiados.current.length, onClick: () => colar(menu.mapa) } as ItemMenu,
               ...historicoItens,
             ]
