@@ -834,6 +834,7 @@ export default function Mesa() {
           if (cr) return metrosDoDeslocamento(cr.deslocamento)
           return o.character_id || a?.character_id ? 9 : null
         }}
+        sanidadeDe={(id) => combate.barras({ character_id: id })?.san ?? null}
         turnoDoCombate={combate.ativo ? `${combate.ativo.id}:${combate.ativo.rodada}:${combate.ativo.turno_atual}` : null}
         pedidoPaleta={pedidoPaleta}
         pedidoLimpar={pedidoLimpar}

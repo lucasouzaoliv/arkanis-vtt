@@ -137,7 +137,7 @@ export function useCombate(campanhaId: string | undefined) {
   const ativo = combates.find((c) => c.ativo) ?? null
   const ordem = useMemo(() => (ativo ? ordemDeIniciativa(combatentes.filter((c) => c.combat_id === ativo.id)) : []), [ativo, combatentes])
 
-  function barras(c: Combatente): Barras | null {
+  function barras(c: Pick<Combatente, 'character_id'>): Barras | null {
     if (!c.character_id) return null
     const f = fichas[c.character_id]
     if (!f) return null

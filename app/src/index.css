@@ -18851,3 +18851,43 @@ label.janela-botao {
 .mesa-nota { position: absolute; inset: 0; box-sizing: border-box; padding: 0.5em 0.6em; overflow: hidden; white-space: pre-wrap; word-break: break-word; line-height: 1.3; color: #2b2410; background: #f3e39a; border: 1px solid #c9b55a; border-radius: 3px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); font-family: 'Signika', var(--sans); }
 textarea.mesa-nota.editando { resize: none; outline: 2px solid var(--mesa-destaque, #ffd27a); font: inherit; font-family: 'Signika', var(--sans); }
 .mesa-objeto.camada-mestre:has(> .mesa-nota) { opacity: 1; }
+
+/* Moldes de área (KAN-119). */
+.mesa-moldes { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.mesa-molde-area { fill: rgba(255, 128, 64, 0.18); stroke: #ff9a5c; stroke-linejoin: round; }
+.mesa-molde.previa .mesa-molde-area { stroke-dasharray: 6 4; }
+.mesa-molde.selecionado .mesa-molde-area { fill: rgba(255, 128, 64, 0.28); stroke: #ffd27a; }
+.mesa-moldes.ativo .mesa-molde-area { pointer-events: visiblePainted; cursor: move; }
+.mesa-molde-origem { fill: #ff9a5c; }
+.mesa-molde-pego { fill: rgba(255, 128, 64, 0.12); stroke: #ff9a5c; }
+.mesa-molde-rotulo { text-anchor: middle; }
+.mesa-molde-acoes { display: flex; gap: 4px; justify-content: center; width: 120px; pointer-events: auto; }
+.mesa-molde-acoes button { width: 30px; height: 30px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(16, 16, 20, 0.92); color: #e8e8ec; cursor: pointer; display: grid; place-items: center; }
+.mesa-molde-acoes button:hover:not(:disabled) { background: #2a2a32; color: #ffd27a; }
+.mesa-molde-acoes button:disabled { opacity: 0.4; cursor: default; }
+.mesa-moldes-barra { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: 10px; background: rgba(16, 16, 20, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4); }
+.mesa-moldes-barra button { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 7px; border: 0; background: transparent; color: #c8c8d0; font: inherit; font-size: 13px; cursor: pointer; }
+.mesa-moldes-barra button svg { width: 16px; height: 16px; fill: currentColor; }
+.mesa-moldes-barra button:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+.mesa-moldes-barra button.ativo { background: rgba(255, 154, 92, 0.2); color: #ffb98a; }
+.mesa-moldes-dica { font-size: 12px; color: #8a8a94; padding: 0 8px; white-space: nowrap; }
+
+/* Sanidade mexendo na tela (KAN-116). */
+.mesa-loucura { position: absolute; inset: 0; }
+.loucura { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.loucura-defs { position: absolute; }
+.loucura-vinheta { position: absolute; inset: -6%; animation: loucura-respirar 6s ease-in-out infinite; }
+.loucura.enlouquecendo .loucura-vinheta { animation: loucura-coracao 1.15s ease-in-out infinite; }
+.loucura-sombra { position: absolute; width: 0; height: 0; transform: rotate(var(--giro)); }
+.loucura-sombra svg { position: absolute; left: 0; top: calc(-60px * var(--tam)); width: calc(420px * var(--tam)); height: calc(120px * var(--tam)); fill: #050208; opacity: 0.9; filter: blur(4px); transform-origin: 0 50%; animation: loucura-rastejar 7s ease-in-out infinite; }
+.loucura-olhos { position: absolute; display: flex; gap: 9px; transform: translate(-50%, -50%); animation: loucura-olhar 5.2s ease-in-out both; }
+.loucura.enlouquecendo .loucura-olhos { animation-duration: 10.4s; }
+.loucura-olhos i { display: block; width: 11px; height: 5px; border-radius: 50%; background: #f3ecd2; box-shadow: 0 0 8px 2px rgba(255, 236, 190, 0.5); animation: loucura-piscar 3.1s ease-in-out infinite; }
+@keyframes loucura-respirar { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.04); opacity: 1; } }
+@keyframes loucura-coracao { 0%, 30%, 100% { transform: scale(1.03); } 12% { transform: scale(0.97); } 22% { transform: scale(1); } }
+@keyframes loucura-rastejar { 0%, 100% { transform: translateX(-90%) scaleY(0.8) rotate(-5deg); } 45% { transform: translateX(-22%) scaleY(1.1) rotate(5deg); } 62% { transform: translateX(-30%) scaleY(0.9) rotate(-3deg); } }
+@keyframes loucura-olhar { 0% { opacity: 0; } 20%, 75% { opacity: 0.9; } 100% { opacity: 0; } }
+@keyframes loucura-piscar { 0%, 44%, 52%, 100% { transform: scaleY(1); } 48% { transform: scaleY(0.1); } }
+@media (prefers-reduced-motion: reduce) { .loucura *, .loucura-vinheta { animation: none !important; } }
+.mesa-moldes text { fill: #f4f4f6; paint-order: stroke; stroke: #000; stroke-width: 0.25em; font-family: 'Signika', var(--sans); font-weight: 700; }
+.mesa-moldes-barra button { white-space: nowrap; }

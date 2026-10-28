@@ -25,6 +25,7 @@ import {
   faPencil,
   faPuzzlePiece,
   faRuler,
+  faShapes,
   faSuitcase,
   faUser,
 } from '@fortawesome/free-solid-svg-icons'
@@ -63,6 +64,7 @@ export const ICONES: Record<string, ReactNode> = {
   selecionar: fa(faExpand),
   alvos: fa(faBullseye),
   medir: fa(faRuler),
+  molde: fa(faShapes),
   'desenho-selecionar': fa(faExpand),
   retangulo: fa(faSquare),
   elipse: fa(faCircle),

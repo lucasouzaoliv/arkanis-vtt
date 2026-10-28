@@ -46,16 +46,17 @@ export function nomesDasFontes(c: ConfigCampanha | null | undefined): string[] {
 }
 
 // ---- Interface do usuário (no navegador de cada um) ----
-export type PreferenciasInterface = { escala: number }
+// loucura: a tela derrete com a SAN baixa (KAN-116); dá pra desligar (enjoo).
+export type PreferenciasInterface = { escala: number; loucura: boolean }
 
-export const INTERFACE_PADRAO: PreferenciasInterface = { escala: 1 }
+export const INTERFACE_PADRAO: PreferenciasInterface = { escala: 1, loucura: true }
 
 const CHAVE_INTERFACE = 'arkanis-interface'
 
 export function lerInterface(): PreferenciasInterface {
   try {
     const p = { ...INTERFACE_PADRAO, ...JSON.parse(localStorage.getItem(CHAVE_INTERFACE) ?? '{}') }
-    return { escala: Math.min(1.4, Math.max(0.75, Number(p.escala) || 1)) }
+    return { escala: Math.min(1.4, Math.max(0.75, Number(p.escala) || 1)), loucura: p.loucura !== false }
   } catch {
     return INTERFACE_PADRAO
   }
@@ -68,6 +69,7 @@ export function salvarInterface(p: PreferenciasInterface) {
     // sem armazenamento: vale só até recarregar
   }
   aplicarInterface(p)
+  window.dispatchEvent(new Event('arkanis-interface'))
 }
 
 // Escala da interface: o tamanho base da fonte (tudo em rem acompanha; o mapa não muda).

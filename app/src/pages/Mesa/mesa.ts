@@ -41,6 +41,7 @@ export const FERRAMENTAS: Record<CategoriaEsquerda, { id: string; rotulo: string
     { id: 'selecionar', rotulo: 'Selecionar Tokens' },
     { id: 'alvos', rotulo: 'Selecionar Alvos' },
     { id: 'medir', rotulo: 'Medir Distância' },
+    { id: 'molde', rotulo: 'Moldes de Área' },
   ],
   desenho: [
     { id: 'desenho-selecionar', rotulo: 'Selecionar Desenhos' },

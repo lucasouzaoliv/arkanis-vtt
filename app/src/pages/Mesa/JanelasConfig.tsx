@@ -91,9 +91,14 @@ function Grupo({ titulo, children }: { titulo: string; children: ReactNode }) {
 // ---- Interface de Usuário ----
 export function JanelaInterface({ onFechar }: { onFechar: () => void }) {
   const [escala, setEscala] = useState(lerInterface().escala)
+  const [loucura, setLoucura] = useState(lerInterface().loucura)
   const mudar = (v: number) => {
     setEscala(v)
-    salvarInterface({ escala: v })
+    salvarInterface({ escala: v, loucura })
+  }
+  const mudarLoucura = (v: boolean) => {
+    setLoucura(v)
+    salvarInterface({ escala, loucura: v })
   }
   return (
     <Janela titulo="Configuração da Interface do Usuário" icone={faSwatchbook} largura={520} onFechar={onFechar}>
@@ -103,7 +108,13 @@ export function JanelaInterface({ onFechar }: { onFechar: () => void }) {
             <Deslizante rotulo="Escala da Interface" valor={escala} min={0.75} max={1.4} passo={0.05} onMudar={mudar} />
           </Campo>
         </Grupo>
-        <Rodape onRedefinir={() => mudar(INTERFACE_PADRAO.escala)} />
+        <Grupo titulo="Efeitos na Tela">
+          <label className="janela-check">
+            <input type="checkbox" checked={loucura} onChange={(e) => mudarLoucura(e.target.checked)} />
+            Sanidade baixa mexe na tela (o mapa derrete, sombras nas bordas)
+          </label>
+        </Grupo>
+        <Rodape onRedefinir={() => { setLoucura(true); setEscala(INTERFACE_PADRAO.escala); salvarInterface(INTERFACE_PADRAO) }} />
       </div>
     </Janela>
   )

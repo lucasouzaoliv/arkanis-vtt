@@ -32,6 +32,9 @@ import { useDesenhoNoPalco } from './DesenhosNoPalco'
 import { useSomNoPalco } from './SonsNoPalco'
 import { BrilhoDasLanternas, LuzesNoPalco, useEscuridaoNoPalco } from './EscuridaoNoPalco'
 import { useEscuridao } from './useEscuridao'
+import { useMoldesNoPalco } from './MoldesNoPalco'
+import LoucuraNaTela, { filtroDaLoucura, useLoucuraLigada } from './LoucuraNaTela'
+import { intensidadeDaLoucura } from './sanidade'
 import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, caminhoDoCone, coneDaLanterna, conesDosTokens, IMAGEM_LUZ, IMAGEM_NOTA, LANTERNAS, luzCompleta, luzesDoAmbiente, temLuzAmbiente, type AjusteLanterna, type Lanterna, type LuzAmbiente } from './luz'
 import ConfigurarLuz from './ConfigurarLuz'
 import ConfigurarEfeito from './ConfigurarEfeito'
@@ -63,7 +66,7 @@ type Gesto =
 
 // Centro da mesa: a cena com imagem, grade, objetos/tokens, escuridão, ambiente e clima.
 // Arrastar com o botão direito move o mapa (o esquerdo faz a caixa de seleção), a rodinha dá zoom.
-export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null }: {
+export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null, sanidadeDe }: {
   cena: Cena | null
   souMestre: boolean
   userId: string
@@ -127,6 +130,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   // (muda = zera o que cada um andou).
   deslocamentoDe?: (o: ObjetoCena) => number | null
   turnoDoCombate?: string | null
+  // Sanidade do personagem (atual, máximo), pra tela derreter com ela baixa (KAN-116).
+  sanidadeDe?: (characterId: string) => [number, number | null] | null
 }) {
   const palcoRef = useRef<HTMLDivElement>(null)
   const [mapa, setMapa] = useState(MAPA_PADRAO)
@@ -192,6 +197,10 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   const [comoJogador, setComoJogador] = useState<{ personagens: string[]; nome: string | null } | null>(null)
   const veTudo = souMestre && !comoJogador
   const personagensDaVisao = comoJogador ? comoJogador.personagens : meusPersonagens
+  // Sanidade baixa (KAN-116): só na visão do jogador (o mestre vê no Ver como jogador do personagem).
+  const loucuraLigada = useLoucuraLigada()
+  const sanDaVisao = !veTudo && personagensDaVisao[0] ? sanidadeDe?.(personagensDaVisao[0]) : null
+  const loucura = loucuraLigada && sanDaVisao ? intensidadeDaLoucura(sanDaVisao[0], sanDaVisao[1]) : 0
   const visiveis = objetos.filter((o) => veTudo || (o.layer !== 'mestre' && !o.so_uv && o.image_url !== IMAGEM_LUZ && o.image_url !== IMAGEM_EFEITO))
 
   // Quem pode mexer em cada objeto: o mestre sempre; o jogador no próprio personagem ou
@@ -269,6 +278,12 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
     return () => window.removeEventListener('keydown', cancelar)
   }, [configLanterna])
   const escuro = useEscuridaoNoPalco({ cena, ferramenta, souMestre, esc, pontoNoMapa, escala: vista.escala, pedidoLimpar: pedidoLimparEscuridao })
+  // Moldes de área (KAN-119): pegam os tokens que o jogador vê (não luz, efeito nem anotação).
+  const moldes = useMoldesNoPalco({
+    cena, ferramenta, souMestre, userId, pontoNoMapa, escala: vista.escala, celula: cena ? celulaDaGrade(cena, mapa) : { w: 100, h: 100 },
+    tokens: visiveis.filter((o) => o.layer === 'token' && !o.efeito && o.nota == null && o.image_url !== IMAGEM_LUZ),
+    meusAlvos, onAlternarAlvo,
+  })
   const som = useSomNoPalco({ cena, ferramenta, userId, souMestre, sons, pontoNoMapa, escala: vista.escala, ouvintes, pedidoPaleta: pedidoPaletaSom, pedidoLimpar: pedidoLimparSom })
 
   // ---- Aplicar mudanças (com desfazer) ----
@@ -394,7 +409,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
       if (e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable="true"]')) return
-      if (desenho.aoTeclar(e) || som.aoTeclar(e) || escuro.aoTeclar(e)) {
+      if (desenho.aoTeclar(e) || som.aoTeclar(e) || escuro.aoTeclar(e) || moldes.aoTeclar(e)) {
         e.preventDefault()
         return
       }
@@ -448,7 +463,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
     }
     window.addEventListener('keydown', tecla)
     return () => window.removeEventListener('keydown', tecla)
-  }, [desenho, som, focado, regua, obj, userId, nomeUsuario, selecionados, souMestre, objetos, visiveis, cena?.grid_size, podeMover, moverPor, eliminar, excluirComoDono, copiar, colar, desfazer, refazer, onAlternarAlvo, onLimparAlvos])
+  }, [desenho, som, moldes, focado, regua, obj, userId, nomeUsuario, selecionados, souMestre, objetos, visiveis, cena?.grid_size, podeMover, moverPor, eliminar, excluirComoDono, copiar, colar, desfazer, refazer, onAlternarAlvo, onLimparAlvos])
 
   // Rodinha: zoom no ponto do mouse; com Shift ou Ctrl em cima de algo selecionado, gira (12.13).
   useEffect(() => {
@@ -496,7 +511,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
       palcoRef.current?.setPointerCapture(e.pointerId)
       return
     }
-    if (desenho.aoApertar(e) || som.aoApertar(e) || escuro.aoApertar(e)) return
+    if (desenho.aoApertar(e) || som.aoApertar(e) || escuro.aoApertar(e) || moldes.aoApertar(e)) return
     if (e.button === 0 && ferramenta === 'medir') {
       if (!cena) return
       const p = noCentro(pontoNoMapa(e.clientX, e.clientY), gradeDaRegua())
@@ -527,13 +542,13 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
     // Configurando a lanterna: o clique vai pro palco (começa a seta em cima do token).
     if (configLanterna) return
     // Item interativo: o jogador clica e abre a interação (o mestre usa o duplo clique ou o menu).
-    if (e.button === 0 && o.item_id && !souMestre && ferramenta !== 'alvos' && ferramenta !== 'medir') {
+    if (e.button === 0 && o.item_id && !souMestre && ferramenta !== 'alvos' && ferramenta !== 'medir' && ferramenta !== 'molde') {
       e.stopPropagation()
       onInteragir?.(o, celula)
       return
     }
     // Medindo: o token não pega o clique, a régua começa ali.
-    if (e.button === 0 && (ferramenta === 'medir' || desenho.ativo || som.ativo)) return
+    if (e.button === 0 && (ferramenta === 'medir' || ferramenta === 'molde' || desenho.ativo || som.ativo)) return
     // Ferramenta Selecionar Alvos: clicar no token mira nele (12.13).
     if (e.button === 0 && ferramenta === 'alvos') {
       e.stopPropagation()
@@ -605,6 +620,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
     desenho.aoMover(e)
     som.aoMover(e)
     escuro.aoMover(e)
+    moldes.aoMover(e)
     if (regua?.aberta && cena) {
       const atual = noCentro(pontoNoMapa(e.clientX, e.clientY), gradeDaRegua())
       if (atual.x !== regua.atual.x || atual.y !== regua.atual.y) {
@@ -675,7 +691,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
       }
       return
     }
-    if (desenho.aoSoltar(e) || som.aoSoltar(e) || escuro.aoSoltar(e)) return
+    if (desenho.aoSoltar(e) || som.aoSoltar(e) || escuro.aoSoltar(e) || moldes.aoSoltar()) return
     const g = gesto.current
     gesto.current = null
     if (!g) return
@@ -1117,6 +1133,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
       onDrop={soltar}
     >
       {cena ? (
+        <div className="mesa-loucura" style={loucura ? { filter: filtroDaLoucura(loucura) } : undefined}>
         <div
           className="mesa-mundo"
           style={{
@@ -1274,6 +1291,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
           <EfeitosNoPalco objetos={visiveis.filter((o) => o.efeito)} celula={celula} />
           {som.camada}
           {escuro.camada}
+          {moldes.camada}
 
           {/* Alcance visível (KAN-115): com a ferramenta de alvos, os círculos de curto/médio/longo/
               extremo em volta de quem ataca (o token selecionado; o jogador, o dele) e a distância
@@ -1414,12 +1432,14 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
             </span>
           ))}
         </div>
+        </div>
       ) : (
         <p className="mesa-palco-vazio">{souMestre ? 'Nenhuma cena ativa. Crie uma na aba Cenas ou arraste uma imagem pra cá.' : 'Nenhuma cena ativa'}</p>
       )}
       {/* Filtro de iluminação: uma luz colorida por cima do mapa inteiro (lua de sangue, luz verde…). */}
       {cena?.filtro_cor && <div className="mesa-filtro-luz" style={{ background: cena.filtro_cor, opacity: cena.filtro_intensidade }} aria-hidden />}
       {cena?.weather && <EfeitoClimatico key={cena.weather} clima={cena.weather} cor={cena.weather_cor} />}
+      {cena && loucura > 0 && <LoucuraNaTela intensidade={loucura} />}
       {soltando && <div className="mesa-soltar">{cena?.background_url ? 'Solte pra colocar a imagem na cena' : 'Solte pra usar como fundo da cena'}</div>}
       {aviso && !soltando && <div className="mesa-soltar" role="status">{aviso}</div>}
       {souMestre && cena && (
@@ -1460,6 +1480,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
         {desenho.janelas}
         {som.janelas}
         {escuro.janelas}
+        {moldes.barra}
       </div>
 
       {(() => {
