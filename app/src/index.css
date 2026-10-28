@@ -18861,10 +18861,9 @@ textarea.mesa-nota.editando { resize: none; outline: 2px solid var(--mesa-destaq
 .mesa-molde-origem { fill: #ff9a5c; }
 .mesa-molde-pego { fill: rgba(255, 128, 64, 0.12); stroke: #ff9a5c; }
 .mesa-molde-rotulo { text-anchor: middle; }
-.mesa-molde-acoes { display: flex; gap: 4px; justify-content: center; width: 120px; pointer-events: auto; }
-.mesa-molde-acoes button { width: 30px; height: 30px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(16, 16, 20, 0.92); color: #e8e8ec; cursor: pointer; display: grid; place-items: center; }
-.mesa-molde-acoes button:hover:not(:disabled) { background: #2a2a32; color: #ffd27a; }
-.mesa-molde-acoes button:disabled { opacity: 0.4; cursor: default; }
+.mesa-molde-acoes { position: absolute; z-index: 4; display: flex; gap: 4px; padding: 3px; border-radius: 9px; background: rgba(16, 16, 20, 0.92); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45); transform-origin: 0 0; pointer-events: auto; white-space: nowrap; }
+.mesa-molde-acoes button { box-sizing: border-box; display: grid; place-items: center; width: 28px; height: 28px; margin: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #e8e8ec; font-size: 13px; line-height: 1; cursor: pointer; }
+.mesa-molde-acoes button:hover { background: rgba(255, 255, 255, 0.1); color: #ffd27a; }
 .mesa-moldes-barra { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: 10px; background: rgba(16, 16, 20, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4); }
 .mesa-moldes-barra button { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 7px; border: 0; background: transparent; color: #c8c8d0; font: inherit; font-size: 13px; cursor: pointer; }
 .mesa-moldes-barra button svg { width: 16px; height: 16px; fill: currentColor; }

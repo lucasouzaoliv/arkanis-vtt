@@ -172,40 +172,54 @@ export function useMoldesNoPalco({ cena, ferramenta, souMestre, userId, pontoNoM
         <text x={r.x} y={r.y - 10 * px} fontSize={14 * px} className="mesa-regua-total mesa-molde-rotulo">
           {nomeDoMolde(m)}{pegos.length ? ` · ${pegos.length} ${pegos.length === 1 ? 'pego' : 'pegos'}` : ''}
         </text>
-        {sel && salvo && (
-          <foreignObject x={r.x - 60 * px} y={r.y - 4 * px} width={120 * px} height={34 * px} overflow="visible">
-            <div className="mesa-molde-acoes" style={{ transform: `scale(${px})`, transformOrigin: '0 0' }} onPointerDown={(e) => e.stopPropagation()} onPointerUp={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                title="Marcar quem foi pego como alvo"
-                disabled={!pegos.length}
-                onClick={() => {
-                  const novos = pegos.filter((id) => !meusAlvos.includes(id))
-                  if (novos.length) onAlternarAlvo(novos)
-                }}
-              >
-                <FontAwesomeIcon icon={faBullseye} />
-              </button>
-              {podeMexer(salvo) && (
-                <button type="button" title="Tirar o molde (Delete)" onClick={() => { dados.excluir([salvo.id]); setSelecionado(null) }}>
-                  <FontAwesomeIcon icon={faTrash} />
-                </button>
-              )}
-              <button type="button" title="Fechar" onClick={() => setSelecionado(null)}>
-                <FontAwesomeIcon icon={faXmark} />
-              </button>
-            </div>
-          </foreignObject>
-        )}
       </g>
     )
   }
 
+  // Botões do molde escolhido: fora do SVG (dentro dele o navegador desenhava torto e borrado com zoom).
+  const escolhido = ativo ? dados.moldes.find((m) => m.id === selecionado) : undefined
+  const acoes = escolhido ? (() => {
+    const pegos = pegosPeloMolde(escolhido, tokens, celula, mpq)
+    const r = rotuloDoMolde(escolhido, celula, mpq)
+    return (
+      <div
+        className="mesa-molde-acoes"
+        style={{ left: r.x, top: r.y - 2 * px, transform: `scale(${px}) translateX(-50%)` }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+      >
+        {pegos.length > 0 && (
+          <button
+            type="button"
+            title="Marcar quem foi pego como alvo"
+            onClick={() => {
+              const novos = pegos.filter((id) => !meusAlvos.includes(id))
+              if (novos.length) onAlternarAlvo(novos)
+            }}
+          >
+            <FontAwesomeIcon icon={faBullseye} />
+          </button>
+        )}
+        {podeMexer(escolhido) && (
+          <button type="button" title="Tirar o molde (Delete)" onClick={() => { dados.excluir([escolhido.id]); setSelecionado(null) }}>
+            <FontAwesomeIcon icon={faTrash} />
+          </button>
+        )}
+        <button type="button" title="Fechar" onClick={() => setSelecionado(null)}>
+          <FontAwesomeIcon icon={faXmark} />
+        </button>
+      </div>
+    )
+  })() : null
+
   const camada = cena && (dados.moldes.length || previa) ? (
-    <svg className={`mesa-moldes${ativo ? ' ativo' : ''}`} aria-hidden={!ativo}>
-      {dados.moldes.map((m) => desenhar(m, m.id, m))}
-      {previa && desenhar(previa, 'previa')}
-    </svg>
+    <>
+      <svg className={`mesa-moldes${ativo ? ' ativo' : ''}`} aria-hidden={!ativo}>
+        {dados.moldes.map((m) => desenhar(m, m.id, m))}
+        {previa && desenhar(previa, 'previa')}
+      </svg>
+      {acoes}
+    </>
   ) : null
 
   const meus = dados.moldes.filter(podeMexer)
