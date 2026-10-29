@@ -16,18 +16,6 @@ export function filtroDaVisao(l: Loucura, f: Ferimento): string | undefined {
   return partes.length ? partes.join(' ') : undefined
 }
 
-// Sorteio que não muda entre renderizações (as manchas e as gotas ficam no mesmo lugar).
-function sorteador(semente: number) {
-  let a = semente >>> 0
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0
-    let t = a
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
 // Sombras que rastejam das bordas pra dentro: lado, posição (%), atraso e duração (s).
 const SOMBRAS: { lado: 'cima' | 'baixo' | 'esquerda' | 'direita'; pos: number; atraso: number; dur: number; tam: number }[] = [
   { lado: 'esquerda', pos: 22, atraso: 0, dur: 7, tam: 1 },
@@ -157,63 +145,29 @@ export default function LoucuraNaTela({ loucura }: { loucura: Loucura }) {
 
 // ---- Machucado: a visão sangra e borra; desmaiado, quase tudo preto ----
 
-type Mancha = { x: number; y: number; tam: number; giro: number; d: string; escorre: number }
-
-// Mancha de sangue: um borrão irregular com respingos em volta.
-function desenharMancha(r: () => number): string {
-  const pontos = 14
-  let d = ''
-  for (let k = 0; k <= pontos; k++) {
-    const a = (k / pontos) * Math.PI * 2
-    const raio = 26 + r() * 14
-    const x = 50 + Math.cos(a) * raio
-    const y = 50 + Math.sin(a) * raio
-    d += k === 0 ? `M${x.toFixed(1)} ${y.toFixed(1)}` : `L${x.toFixed(1)} ${y.toFixed(1)}`
-  }
-  d += 'Z'
-  for (let k = 0; k < 7; k++) {
-    const a = r() * Math.PI * 2
-    const dist = 42 + r() * 10
-    const raio = 1.5 + r() * 4
-    const x = 50 + Math.cos(a) * dist
-    const y = 50 + Math.sin(a) * dist
-    d += `M${(x + raio).toFixed(1)} ${y.toFixed(1)}a${raio.toFixed(1)} ${raio.toFixed(1)} 0 1 0 ${(-2 * raio).toFixed(1)} 0a${raio.toFixed(1)} ${raio.toFixed(1)} 0 1 0 ${(2 * raio).toFixed(1)} 0Z`
-  }
-  return d
-}
-
-// Sempre nas bordas e nos cantos, nunca no meio da visão.
-const MANCHAS: Mancha[] = (() => {
-  const r = sorteador(29)
-  return Array.from({ length: 9 }, () => {
-    const canto = r() < 0.5
-    const x = canto ? (r() < 0.5 ? r() * 14 : 86 + r() * 14) : 8 + r() * 84
-    const y = canto ? 6 + r() * 88 : r() < 0.5 ? r() * 12 : 88 + r() * 12
-    return { x, y, tam: 70 + r() * 110, giro: r() * 360, d: desenharMancha(r), escorre: 30 + r() * 80 }
-  })
-})()
+// Moldura de sangue da referência da Millie (28/10): o meio é transparente. Com pouca ferida ela fica
+// grande (só a beirada aparece) e meio apagada; perto do zero fecha na tela inteira, igual à imagem.
+const MOLDURA_SANGUE = '/efeitos/visao-ferida.webp'
 
 export function FerimentoNaTela({ ferimento }: { ferimento: Ferimento }) {
   const i = Math.max(0, Math.min(1, ferimento.intensidade))
+  // Vai fechando aos poucos (Millie 28/10: "tem que ir ficando gradualmente"): na metade da vida mal
+  // aparece, só perto do zero chega no máximo.
+  const forca = Math.pow(i, 1.3)
   // Coração mais rápido quanto pior.
   const batida = (1.7 - 0.8 * i).toFixed(2)
   return (
     <div className={`ferida${ferimento.desmaiado ? ' desmaiado' : ''}`} aria-hidden>
+      <div className="ferida-lente" style={{ opacity: (0.1 + 0.6 * forca).toFixed(2) }} />
       <div
-        className="ferida-vinheta"
+        className="ferida-moldura"
         style={{
-          background: `radial-gradient(ellipse at center, transparent ${Math.round(62 - 32 * i)}%, rgba(110, 0, 0, ${(0.3 + 0.45 * i).toFixed(2)}) 88%, rgba(40, 0, 0, ${(0.55 + 0.4 * i).toFixed(2)}) 100%)`,
+          backgroundImage: `url(${MOLDURA_SANGUE})`,
+          opacity: (0.15 + 0.85 * forca).toFixed(2),
+          ['--zoom' as string]: (1.5 - 0.5 * forca).toFixed(3),
           animationDuration: `${batida}s`,
         }}
       />
-      {MANCHAS.slice(0, ferimento.pingos).map((m, n) => (
-        <span key={n} className="ferida-mancha" style={{ left: `${m.x}%`, top: `${m.y}%`, width: m.tam, height: m.tam, animationDelay: `${n * 0.25}s` }}>
-          <svg viewBox="0 0 100 100" style={{ transform: `rotate(${m.giro}deg)` }}>
-            <path d={m.d} />
-          </svg>
-          <i style={{ height: m.escorre, animationDelay: `${n * 0.7}s` }} />
-        </span>
-      ))}
       {ferimento.desmaiado && <div className="ferida-desmaio" />}
     </div>
   )

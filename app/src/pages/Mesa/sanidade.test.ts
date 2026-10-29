@@ -19,7 +19,7 @@ it('a loucura começa no 7 de SAN e só ondula do 3 pra baixo (KAN-116, ajuste 2
 it('a vida baixa sangra da metade pra baixo, borra no último quarto e desmaia no zero', () => {
   expect(ferimentoDaVida(20, 20)).toEqual(SEM_FERIMENTO)
   expect(ferimentoDaVida(11, 20)).toEqual(SEM_FERIMENTO)
-  expect(ferimentoDaVida(10, 20)).toEqual({ intensidade: 0.2, borrao: 0, pingos: 2, desmaiado: false })
+  expect(ferimentoDaVida(10, 20)).toEqual({ intensidade: 0.2, borrao: 0, desmaiado: false })
   expect(ferimentoDaVida(5, 20).borrao).toBe(0.6)
   expect(ferimentoDaVida(1, 20).borrao).toBeGreaterThan(2)
   expect(ferimentoDaVida(0, 20).desmaiado).toBe(true)

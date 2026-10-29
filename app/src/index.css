@@ -18895,16 +18895,12 @@ textarea.mesa-nota.editando { resize: none; outline: 2px solid var(--mesa-destaq
 .loucura.enlouquecendo .loucura-vulto, .loucura.enlouquecendo .loucura-vulto-cabeca { animation-duration: 9s; }
 /* Machucado: borda vermelha batendo com o coração, sangue na "lente"; desmaiado, quase tudo preto. */
 .ferida { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.ferida-vinheta { position: absolute; inset: -6%; animation: ferida-pulso 1.4s ease-in-out infinite; }
-.ferida-mancha { position: absolute; transform: translate(-50%, -50%); opacity: 0; animation: ferida-respingo 0.5s ease-out forwards; }
-.ferida-mancha svg { display: block; width: 100%; height: 100%; fill: #7a0207; opacity: 0.82; filter: blur(1.5px) drop-shadow(0 0 3px rgba(60, 0, 0, 0.8)); }
-.ferida-mancha i { position: absolute; left: 47%; top: 55%; width: 7px; border-radius: 0 0 6px 6px; background: linear-gradient(#7a0207, rgba(122, 2, 7, 0.6)); filter: blur(1px); transform-origin: top; animation: ferida-escorrer 9s ease-in both; }
+.ferida-lente { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 45%, rgba(25, 0, 2, 0.85) 100%); }
+.ferida-moldura { position: absolute; inset: 0; background-size: 100% 100%; background-repeat: no-repeat; transform: scale(var(--zoom)); animation: ferida-pulso 1.4s ease-in-out infinite; }
 .ferida-desmaio { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(20, 0, 0, 0.82), #000 70%); animation: ferida-desmaio 5s ease-in-out infinite; }
-@keyframes ferida-pulso { 0%, 34%, 100% { opacity: 0.75; transform: scale(1.03); } 10% { opacity: 1; transform: scale(0.98); } 22% { opacity: 0.9; transform: scale(1); } }
-@keyframes ferida-respingo { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
-@keyframes ferida-escorrer { 0% { transform: scaleY(0); } 100% { transform: scaleY(1); } }
+@keyframes ferida-pulso { 0%, 34%, 100% { transform: scale(var(--zoom)); } 10% { transform: scale(calc(var(--zoom) * 0.975)); } 22% { transform: scale(calc(var(--zoom) * 0.99)); } }
 @keyframes ferida-desmaio { 0%, 100% { opacity: 0.96; } 50% { opacity: 0.86; } }
-@media (prefers-reduced-motion: reduce) { .ferida * { animation: none !important; } .ferida-mancha { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ferida * { animation: none !important; } }
 .mesa-moldes text { fill: #f4f4f6; paint-order: stroke; stroke: #000; stroke-width: 0.25em; font-family: 'Signika', var(--sans); font-weight: 700; }
 .mesa-moldes-barra button { white-space: nowrap; }
 

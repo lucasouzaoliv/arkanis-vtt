@@ -32,25 +32,23 @@ export function loucuraDaSanidade(atual: number, max: number | null): Loucura {
 }
 
 export type Ferimento = {
-  intensidade: number // 0 a 1: borda vermelha pulsando
+  intensidade: number // 0 a 1: a moldura de sangue fechando a visão
   borrao: number // px de desfoque no mapa
-  pingos: number // manchas de sangue na "lente"
   desmaiado: boolean // PV zerado: tela quase preta
 }
 
-export const SEM_FERIMENTO: Ferimento = { intensidade: 0, borrao: 0, pingos: 0, desmaiado: false }
+export const SEM_FERIMENTO: Ferimento = { intensidade: 0, borrao: 0, desmaiado: false }
 
 // Da metade da vida pra baixo a visão sangra; de um quarto pra baixo começa a borrar.
 export function ferimentoDaVida(atual: number, max: number | null): Ferimento {
   if (!max || max <= 0) return SEM_FERIMENTO
-  if (atual <= 0) return { intensidade: 1, borrao: 6, pingos: 9, desmaiado: true }
+  if (atual <= 0) return { intensidade: 1, borrao: 6, desmaiado: true }
   const pct = atual / max
   if (pct > 0.5) return SEM_FERIMENTO
   const falta = (0.5 - pct) / 0.5 // 0 na metade, perto de 1 quase zerado
   return {
     intensidade: duasCasas(0.2 + falta * 0.8),
     borrao: pct > 0.25 ? 0 : duasCasas(0.6 + ((0.25 - pct) / 0.25) * 2.4),
-    pingos: Math.round(2 + falta * 7),
     desmaiado: false,
   }
 }
