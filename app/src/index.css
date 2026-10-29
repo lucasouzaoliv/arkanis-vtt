@@ -18883,17 +18883,6 @@ textarea.mesa-nota.editando { resize: none; outline: 2px solid var(--mesa-destaq
 @keyframes loucura-coracao { 0%, 30%, 100% { transform: scale(1.03); } 12% { transform: scale(0.97); } 22% { transform: scale(1); } }
 @keyframes loucura-rastejar { 0%, 100% { transform: translateX(-90%) scaleY(0.8) rotate(-5deg); } 45% { transform: translateX(-22%) scaleY(1.1) rotate(5deg); } 62% { transform: translateX(-30%) scaleY(0.9) rotate(-3deg); } }
 @media (prefers-reduced-motion: reduce) { .loucura *, .loucura-vinheta { animation: none !important; } }
-/* Vulto: aparição de manto parada no escuro da borda; surge, flutua de leve e some. */
-.loucura-vulto { position: absolute; bottom: 0; aspect-ratio: 200 / 380; transform: translateX(-50%); opacity: 0; animation: loucura-vulto 13s ease-in-out both; }
-.loucura-vulto.fundo { bottom: auto; top: 28%; }
-.loucura-vulto svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 5px rgba(190, 190, 205, 0.22)) drop-shadow(0 0 22px rgba(150, 150, 170, 0.12)); animation: loucura-vulto-flutuar 7s ease-in-out infinite; }
-.loucura-vulto-fumaca ellipse { fill: #3a3a42; opacity: 0.55; }
-.loucura-vulto-dobra { fill: none; stroke: #000; stroke-width: 4; stroke-linecap: round; opacity: 0.35; }
-.loucura-vulto-dobra.clara { stroke: #8a8a94; stroke-width: 1.6; opacity: 0.25; }
-.loucura-vulto-beirada { fill: none; stroke: #8b8b92; stroke-width: 4; opacity: 0.55; }
-@keyframes loucura-vulto { 0% { opacity: 0; } 25%, 78% { opacity: 0.92; } 100% { opacity: 0; } }
-@keyframes loucura-vulto-flutuar { 0%, 100% { transform: translateY(0) rotate(-0.5deg); } 50% { transform: translateY(-2.5%) rotate(0.5deg); } }
-.loucura.enlouquecendo .loucura-vulto { animation-duration: 9s; }
 /* Machucado: borda vermelha batendo com o coração, sangue na "lente"; desmaiado, quase tudo preto. */
 .ferida { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .ferida-lente { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 45%, rgba(25, 0, 2, 0.85) 100%); }

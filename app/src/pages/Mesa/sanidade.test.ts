@@ -7,10 +7,9 @@ it('a loucura começa no 7 de SAN e só ondula do 3 pra baixo (KAN-116, ajuste 2
   const sete = loucuraDaSanidade(7, 40)
   expect(sete.intensidade).toBe(0.15)
   expect(sete.ondulacao).toBe(0)
-  expect(sete.vultos).toBe(0)
-  expect(loucuraDaSanidade(4, 40)).toMatchObject({ ondulacao: 0, vultos: 1 })
-  expect(loucuraDaSanidade(3, 40)).toMatchObject({ ondulacao: 0.3, vultos: 1 })
-  expect(loucuraDaSanidade(0, 40)).toMatchObject({ intensidade: 1, ondulacao: 1, vultos: 3, coracao: true })
+  expect(loucuraDaSanidade(4, 40)).toMatchObject({ ondulacao: 0 })
+  expect(loucuraDaSanidade(3, 40)).toMatchObject({ ondulacao: 0.3 })
+  expect(loucuraDaSanidade(0, 40)).toMatchObject({ intensidade: 1, ondulacao: 1, coracao: true })
   expect(loucuraDaSanidade(-2, 40).intensidade).toBe(1)
   // Sem SAN máxima (ficha sem classe): nada.
   expect(loucuraDaSanidade(2, null)).toEqual(SEM_LOUCURA)

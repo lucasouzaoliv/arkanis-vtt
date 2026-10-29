@@ -11,11 +11,10 @@ export const SAN_ONDULA = 3
 export type Loucura = {
   intensidade: number // 0 a 1: escurece e perde a cor
   ondulacao: number // 0 a 1: o mapa derretendo (só do SAN_ONDULA pra baixo)
-  vultos: number // quantos vultos observando do escuro ao mesmo tempo
   coracao: boolean // zerada: tudo pulsa com o coração
 }
 
-export const SEM_LOUCURA: Loucura = { intensidade: 0, ondulacao: 0, vultos: 0, coracao: false }
+export const SEM_LOUCURA: Loucura = { intensidade: 0, ondulacao: 0, coracao: false }
 
 const duasCasas = (n: number) => Math.round(n * 100) / 100
 
@@ -25,8 +24,7 @@ export function loucuraDaSanidade(atual: number, max: number | null): Loucura {
   return {
     intensidade: duasCasas(0.15 + ((SAN_COMECA - san) / SAN_COMECA) * 0.85),
     ondulacao: san > SAN_ONDULA ? 0 : duasCasas(0.3 + ((SAN_ONDULA - san) / SAN_ONDULA) * 0.7),
-    // Sem sangue nem garra na sanidade (Millie 28/10): só vultos de gente parada no escuro.
-    vultos: san > 5 ? 0 : san > 2 ? 1 : san > 0 ? 2 : 3,
+    // Só escurece, as sombras rastejam e o mapa derrete (Millie 28/10: sem sangue, garra, olho nem vulto).
     coracao: san <= 0,
   }
 }
