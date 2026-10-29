@@ -68,139 +68,52 @@ function useRodizio<T extends { id: number }>(quantos: number, novo: (id: number
   return lista
 }
 
-// ---- Olho: abre no escuro da borda, injetado, pupila de fenda, olha pros lados e fecha ----
+// ---- Vulto: silhueta de gente parada no escuro da borda, observando ----
 
-type Olho = { id: number; x: number; y: number; tam: number; giro: number }
+type Vulto = { id: number; x: number; alt: number; lado: 'esquerda' | 'direita' | 'fundo'; vira: number }
 
-function novoOlho(id: number): Olho {
-  const perto = () => (Math.random() < 0.5 ? 6 + Math.random() * 12 : 82 + Math.random() * 12)
-  const pos = Math.random() < 0.5 ? { x: perto(), y: 12 + Math.random() * 76 } : { x: 10 + Math.random() * 80, y: perto() }
-  return { id, ...pos, tam: 90 + Math.random() * 70, giro: Math.random() * 24 - 12 }
+function novoVulto(id: number): Vulto {
+  const sorteio = Math.random()
+  const lado = sorteio < 0.4 ? 'esquerda' : sorteio < 0.8 ? 'direita' : 'fundo'
+  const x = lado === 'esquerda' ? 2 + Math.random() * 12 : lado === 'direita' ? 86 + Math.random() * 12 : 25 + Math.random() * 50
+  return { id, x, lado, alt: lado === 'fundo' ? 26 + Math.random() * 10 : 46 + Math.random() * 22, vira: lado === 'esquerda' ? 1 : lado === 'direita' ? -1 : Math.random() < 0.5 ? 1 : -1 }
 }
 
-// Veias saindo da borda do olho pro meio.
-const VEIAS = [
-  'M8 40 C22 36 30 42 44 37 C50 35 54 38 58 36',
-  'M14 31 C26 30 32 24 46 28',
-  'M16 50 C28 50 34 56 48 51 C52 50 55 52 58 50',
-  'M152 40 C138 37 130 43 116 38 C110 36 106 39 102 37',
-  'M146 30 C134 30 128 24 114 28',
-  'M144 51 C132 51 126 57 112 52',
-  'M40 22 C46 26 50 26 56 30',
-  'M118 60 C112 56 108 57 102 52',
-]
+// Corpo comprido, ombros caídos, braços compridos demais pendurados. Os pés somem no escuro.
+const CORPO = 'M50 47C43 47 41 52 40 57C28 61 21 69 19 82L13 148C11 172 11 196 9 222C8 228 10 232 12 226C15 200 17 174 21 150L27 106L30 162C30 212 33 258 35 300L65 300C67 258 70 212 70 162L73 106L79 150C83 174 85 200 88 226C90 232 92 228 91 222C89 196 89 172 87 148L81 82C79 69 72 61 60 57C59 52 57 47 50 47Z'
 
-function OlhoNoEscuro({ o }: { o: Olho }) {
+function VultoNoEscuro({ v }: { v: Vulto }) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, '')
   return (
-    <span className="loucura-olho" style={{ left: `${o.x}%`, top: `${o.y}%`, width: o.tam, ['--giro' as string]: `${o.giro}deg` }}>
-      <svg viewBox="0 0 160 80">
+    <span className={`loucura-vulto ${v.lado}`} style={{ left: `${v.x}%`, height: `${v.alt}vh` }}>
+      <svg viewBox="0 0 100 300" preserveAspectRatio="xMidYMax meet" style={{ transform: `scaleX(${v.vira})` }}>
         <defs>
-          <radialGradient id={`esc${id}`} cx="50%" cy="50%" r="60%">
-            <stop offset="0" stopColor="#dccba0" />
-            <stop offset="0.5" stopColor="#c99a7a" />
-            <stop offset="0.8" stopColor="#7a1510" />
-            <stop offset="1" stopColor="#2a0303" />
-          </radialGradient>
-          <radialGradient id={`iris${id}`}>
-            <stop offset="0" stopColor="#ff4a1c" />
-            <stop offset="0.35" stopColor="#b3120c" />
-            <stop offset="0.8" stopColor="#3a0202" />
+          <linearGradient id={`some${id}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0.55" stopColor="#fff" />
             <stop offset="1" stopColor="#000" />
-          </radialGradient>
-          <clipPath id={`corte${id}`}>
-            <path d="M4 40C40 2 120 2 156 40C120 78 40 78 4 40Z" />
-          </clipPath>
+          </linearGradient>
+          <mask id={`mascara${id}`}>
+            <rect width="100" height="300" fill={`url(#some${id})`} />
+          </mask>
         </defs>
-        <g className="loucura-olho-palpebra">
-          <path d="M4 40C40 2 120 2 156 40C120 78 40 78 4 40Z" fill={`url(#esc${id})`} />
-          <g clipPath={`url(#corte${id})`}>
-            {VEIAS.map((d, n) => <path key={n} d={d} className="loucura-olho-veia" />)}
-            <g className="loucura-olho-iris">
-              <circle cx="80" cy="40" r="23" fill={`url(#iris${id})`} />
-              <ellipse cx="80" cy="40" rx="3.6" ry="18" className="loucura-olho-pupila" />
-              <circle cx="73" cy="32" r="3" fill="#fff" opacity="0.55" />
-            </g>
+        <g mask={`url(#mascara${id})`}>
+          <path d={CORPO} className="loucura-vulto-corpo" />
+          <g className="loucura-vulto-cabeca">
+            <ellipse cx="50" cy="30" rx="12.5" ry="16.5" className="loucura-vulto-corpo" />
           </g>
-          <path d="M4 40C40 2 120 2 156 40C120 78 40 78 4 40Z" className="loucura-olho-borda" />
         </g>
       </svg>
     </span>
   )
 }
 
-function Olhos({ quantos }: { quantos: number }) {
-  const olhos = useRodizio(quantos, novoOlho, 3600)
-  return <>{olhos.map((o) => <OlhoNoEscuro key={o.id} o={o} />)}</>
-}
-
-// ---- Sangue escorrendo do alto da tela ----
-
-const GOTAS = (() => {
-  const r = sorteador(13)
-  return Array.from({ length: 16 }, (_, n) => ({
-    x: Math.round((n / 16) * 100 + r() * 5),
-    larg: 4 + Math.round(r() * 9),
-    comp: 10 + Math.round(r() * 38),
-    dur: 9 + r() * 10,
-    atraso: r() * 14,
-  }))
-})()
-
-// Borda de cima molhada, irregular (esticada na largura da tela).
-const BORDA_SANGUE = (() => {
-  const r = sorteador(5)
-  let d = 'M0 0H1000V10'
-  for (let x = 1000; x > 0; x -= 40) d += `C${x - 12} ${8 + r() * 14} ${x - 28} ${4 + r() * 16} ${x - 40} ${8 + r() * 12}`
-  return d + 'Z'
-})()
-
-function Sangue({ forca }: { forca: number }) {
-  const quantas = Math.round(6 + 10 * forca)
-  return (
-    <div className="loucura-sangue">
-      <svg className="loucura-sangue-borda" viewBox="0 0 1000 30" preserveAspectRatio="none">
-        <path d={BORDA_SANGUE} />
-      </svg>
-      {GOTAS.slice(0, quantas).map((g, n) => (
-        <span
-          key={n}
-          className="loucura-gota"
-          style={{ left: `${g.x}%`, width: g.larg, ['--comp' as string]: `${g.comp}vh`, animationDuration: `${g.dur}s`, animationDelay: `-${g.atraso}s` }}
-        />
-      ))}
-    </div>
-  )
-}
-
-// ---- Garras: três arranhões rasgando a tela, de surpresa ----
-
-type Garra = { id: number; x: number; y: number; giro: number; tam: number }
-const novaGarra = (id: number): Garra => ({ id, x: 12 + Math.random() * 76, y: 14 + Math.random() * 72, giro: -50 + Math.random() * 100, tam: 160 + Math.random() * 140 })
-
-// Arranhão afinando nas pontas.
-const RISCO = 'M0 14C40 6 120 2 200 10C130 9 60 12 0 14Z'
-
-function Garras() {
-  const garras = useRodizio(1, novaGarra, 4200)
-  return (
-    <>
-      {garras.map((g) => (
-        <span key={g.id} className="loucura-garra" style={{ left: `${g.x}%`, top: `${g.y}%`, width: g.tam, ['--giro' as string]: `${g.giro}deg` }}>
-          {[0, 1, 2].map((n) => (
-            <svg key={n} viewBox="0 0 200 20" style={{ top: n * 18, left: n * 8, width: `${100 - n * 8}%`, animationDelay: `${n * 0.05}s` }}>
-              <path d={RISCO} className="loucura-garra-fundo" />
-              <path d={RISCO} className="loucura-garra-carne" transform="translate(6 1) scale(0.94 0.8)" />
-            </svg>
-          ))}
-        </span>
-      ))}
-    </>
-  )
+function Vultos({ quantos }: { quantos: number }) {
+  const vultos = useRodizio(quantos, novoVulto, 6500)
+  return <>{vultos.map((v) => <VultoNoEscuro key={v.id} v={v} />)}</>
 }
 
 // Por cima do mapa (não pega nos painéis). Do 7 pra baixo: bordas escuras e sombras rastejando;
-// depois o olho, o sangue escorrendo e, do 3 pra baixo, as garras e o derreter (o filtro mora aqui).
+// do 5 pra baixo, vultos observando do escuro; do 3 pra baixo, o mapa derrete (o filtro mora aqui).
 export default function LoucuraNaTela({ loucura }: { loucura: Loucura }) {
   const i = Math.max(0, Math.min(1, loucura.intensidade))
   const escala = Math.round(8 + 40 * loucura.ondulacao)
@@ -237,9 +150,7 @@ export default function LoucuraNaTela({ loucura }: { loucura: Loucura }) {
           </div>
         )
       })}
-      {loucura.sangue && <Sangue forca={i} />}
-      {loucura.olhos > 0 && <Olhos quantos={loucura.olhos} />}
-      {loucura.garras && <Garras />}
+      {loucura.vultos > 0 && <Vultos quantos={loucura.vultos} />}
     </div>
   )
 }
