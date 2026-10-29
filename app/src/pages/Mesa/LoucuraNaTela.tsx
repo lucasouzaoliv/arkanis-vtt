@@ -81,26 +81,20 @@ export default function LoucuraNaTela({ loucura }: { loucura: Loucura }) {
 
 // ---- Machucado: a visão sangra e borra; desmaiado, quase tudo preto ----
 
-// Moldura de sangue da referência da Millie (28/10): o meio é transparente. Com pouca ferida ela fica
-// grande (só a beirada aparece) e meio apagada; perto do zero fecha na tela inteira, igual à imagem.
-const MOLDURA_SANGUE = '/efeitos/visao-ferida.webp'
-
+// Sem borda vermelha (Millie 28/10, "ficou feio"): só a lente escurecendo as beiradas, batendo de leve
+// com o coração, e a visão borrando (o borrão vai pelo filtro do mapa).
 export function FerimentoNaTela({ ferimento }: { ferimento: Ferimento }) {
   const i = Math.max(0, Math.min(1, ferimento.intensidade))
-  // Vai fechando aos poucos (Millie 28/10: "tem que ir ficando gradualmente"): na metade da vida mal
-  // aparece, só perto do zero chega no máximo.
+  // Vai fechando aos poucos: na metade da vida mal aparece, só perto do zero chega no máximo.
   const forca = Math.pow(i, 1.3)
   // Coração mais rápido quanto pior.
   const batida = (1.7 - 0.8 * i).toFixed(2)
   return (
     <div className={`ferida${ferimento.desmaiado ? ' desmaiado' : ''}`} aria-hidden>
-      <div className="ferida-lente" style={{ opacity: (0.1 + 0.6 * forca).toFixed(2) }} />
       <div
-        className="ferida-moldura"
+        className="ferida-lente"
         style={{
-          backgroundImage: `url(${MOLDURA_SANGUE})`,
-          opacity: (0.15 + 0.85 * forca).toFixed(2),
-          ['--zoom' as string]: (1.5 - 0.5 * forca).toFixed(3),
+          background: `radial-gradient(ellipse at center, transparent ${Math.round(60 - 25 * forca)}%, rgba(6, 2, 3, ${(0.35 + 0.55 * forca).toFixed(2)}) 100%)`,
           animationDuration: `${batida}s`,
         }}
       />

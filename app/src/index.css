@@ -18885,10 +18885,9 @@ textarea.mesa-nota.editando { resize: none; outline: 2px solid var(--mesa-destaq
 @media (prefers-reduced-motion: reduce) { .loucura *, .loucura-vinheta { animation: none !important; } }
 /* Machucado: borda vermelha batendo com o coração, sangue na "lente"; desmaiado, quase tudo preto. */
 .ferida { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.ferida-lente { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 45%, rgba(25, 0, 2, 0.85) 100%); }
-.ferida-moldura { position: absolute; inset: 0; background-size: 100% 100%; background-repeat: no-repeat; transform: scale(var(--zoom)); animation: ferida-pulso 1.4s ease-in-out infinite; }
+.ferida-lente { position: absolute; inset: -4%; animation: ferida-pulso 1.4s ease-in-out infinite; }
 .ferida-desmaio { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(20, 0, 0, 0.82), #000 70%); animation: ferida-desmaio 5s ease-in-out infinite; }
-@keyframes ferida-pulso { 0%, 34%, 100% { transform: scale(var(--zoom)); } 10% { transform: scale(calc(var(--zoom) * 0.975)); } 22% { transform: scale(calc(var(--zoom) * 0.99)); } }
+@keyframes ferida-pulso { 0%, 34%, 100% { transform: scale(1); } 10% { transform: scale(0.975); } 22% { transform: scale(0.99); } }
 @keyframes ferida-desmaio { 0%, 100% { opacity: 0.96; } 50% { opacity: 0.86; } }
 @media (prefers-reduced-motion: reduce) { .ferida * { animation: none !important; } }
 .mesa-moldes text { fill: #f4f4f6; paint-order: stroke; stroke: #000; stroke-width: 0.25em; font-family: 'Signika', var(--sans); font-weight: 700; }
