@@ -175,3 +175,36 @@ export function nomesNumerados(nomes: string[]): string[] {
     return `${n} ${i}`
   })
 }
+
+// ---- Sorteio de alvo (pedido da Millie, 01/11): o mestre sorteia quem a ameaça ataca, sem favorecer ninguém. ----
+
+export type Sorteio = { id: string; tokens: string[]; vencedor: string }
+
+type TokenDoSorteio = { id: string; x: number; y: number; width: number; height: number; layer: string; character_id?: string | null; actor_id?: string | null }
+
+// Os personagens jogáveis do combate com token nessa cena (nunca ameaça nem NPC), um token por personagem,
+// em volta do meio do grupo: é a ordem em que a seta gira.
+export function candidatosDoSorteio(ordem: Pick<Combatente, 'tipo' | 'character_id' | 'actor_id'>[], tokens: TokenDoSorteio[]): string[] {
+  const achados: TokenDoSorteio[] = []
+  for (const c of ordem) {
+    if (c.tipo !== 'jogador') continue
+    const t = tokens.find((o) => o.layer !== 'mestre' && ((c.character_id && o.character_id === c.character_id) || (c.actor_id && o.actor_id === c.actor_id)))
+    if (t && !achados.includes(t)) achados.push(t)
+  }
+  const centro = (o: TokenDoSorteio) => ({ x: o.x + o.width / 2, y: o.y + o.height / 2 })
+  const meio = achados.reduce((m, o) => ({ x: m.x + centro(o).x / achados.length, y: m.y + centro(o).y / achados.length }), { x: 0, y: 0 })
+  const angulo = (o: TokenDoSorteio) => Math.atan2(centro(o).y - meio.y, centro(o).x - meio.x)
+  return [...achados].sort((a, b) => angulo(a) - angulo(b)).map((o) => o.id)
+}
+
+export function sortearVencedor(tokens: string[], sorteio: () => number = Math.random): string {
+  return tokens[Math.floor(sorteio() * tokens.length)]
+}
+
+// A seta dá algumas voltas e para no vencedor; cada passo demora mais que o anterior.
+export function passosDoSorteio(quantos: number, vencedor: number): { indice: number; ms: number }[] {
+  if (quantos <= 1) return [{ indice: 0, ms: 0 }]
+  const voltas = Math.max(3, Math.ceil(14 / quantos))
+  const total = voltas * quantos + vencedor + 1
+  return Array.from({ length: total }, (_, i) => ({ indice: i % quantos, ms: Math.round(90 + 860 * (i / (total - 1)) ** 3) }))
+}

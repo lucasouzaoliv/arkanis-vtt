@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { elementoDaCriatura, lerPericias, filtrarAmeacas, lerTeste, nomesNumerados, ordemDeIniciativa, rolarDano, rolarTeste, testeDeIniciativa, vdTotal, type CriaturaLista } from './combate'
+import { candidatosDoSorteio, passosDoSorteio, sortearVencedor, elementoDaCriatura, lerPericias, filtrarAmeacas, lerTeste, nomesNumerados, ordemDeIniciativa, rolarDano, rolarTeste, testeDeIniciativa, vdTotal, type CriaturaLista } from './combate'
 
 const c = (p: Partial<CriaturaLista>): CriaturaLista => ({
   id: 'x', name: 'X', vd: 10, image_url: null, tipo_criatura: null, tamanho: null, descritores: [], categoria: 'mundana', source_id: 'base', iniciativa: null, pv_maximo: null, ...p,
@@ -103,4 +103,35 @@ it('carrossel: quem está na vez no centro, próximos à direita, os que já for
 it('ameaças repetidas ganham número', () => {
   expect(nomesNumerados(['Zumbi', 'Zumbi', 'Cultista'])).toEqual(['Zumbi 1', 'Zumbi 2', 'Cultista'])
   expect(nomesNumerados([])).toEqual([])
+})
+
+describe('sorteio de alvo', () => {
+  const tk = (id: string, x: number, y: number, extra = {}) => ({ id, x, y, width: 100, height: 100, layer: 'token', character_id: id, ...extra })
+  const jog = (id: string) => ({ tipo: 'jogador' as const, character_id: id, actor_id: null })
+
+  it('só entram jogadores com token na cena', () => {
+    const ordem = [jog('a'), { tipo: 'ameaca' as const, character_id: null, actor_id: 'm' }, { tipo: 'npc' as const, character_id: 'n', actor_id: 'n' }, jog('fora'), jog('b')]
+    const tokens = [tk('a', 0, 0), tk('b', 300, 0), tk('n', 500, 0), tk('m', 700, 0, { character_id: null, actor_id: 'm' }), tk('fora', 0, 0, { layer: 'mestre' })]
+    expect(candidatosDoSorteio(ordem, tokens).sort()).toEqual(['a', 'b'])
+  })
+
+  it('personagem com dois tokens conta uma vez só', () => {
+    expect(candidatosDoSorteio([jog('a')], [tk('a', 0, 0), { ...tk('a', 300, 0), id: 'a2' }])).toEqual(['a'])
+  })
+
+  it('é justo: cada um tem a mesma chance', () => {
+    const contagem: Record<string, number> = { a: 0, b: 0, c: 0 }
+    for (let i = 0; i < 3000; i++) contagem[sortearVencedor(['a', 'b', 'c'], () => i / 3000)]++
+    expect(contagem).toEqual({ a: 1000, b: 1000, c: 1000 })
+  })
+
+  it('a seta para sempre no vencedor, cada vez mais devagar', () => {
+    for (const [quantos, vencedor] of [[2, 0], [2, 1], [4, 2], [6, 5]]) {
+      const p = passosDoSorteio(quantos, vencedor)
+      expect(p[p.length - 1].indice).toBe(vencedor)
+      expect(p.length).toBeGreaterThanOrEqual(14)
+      for (let i = 1; i < p.length; i++) expect(p[i].ms).toBeGreaterThanOrEqual(p[i - 1].ms)
+    }
+    expect(passosDoSorteio(1, 0)).toEqual([{ indice: 0, ms: 0 }])
+  })
 })

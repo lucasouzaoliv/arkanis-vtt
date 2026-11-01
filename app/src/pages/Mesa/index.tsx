@@ -51,7 +51,7 @@ import PainelCombate, { IndicadorTurno } from './PainelCombate'
 import CriarCombate, { type AtorDoCombate } from './CriarCombate'
 import EditorAmeaca, { carregarParaEditar, criaturaVazia, type CriaturaEditavel } from './EditorAmeaca'
 import { useCombate, type Combate } from './useCombate'
-import type { Combatente } from './combate'
+import { candidatosDoSorteio, sortearVencedor, type Combatente } from './combate'
 import type { Camada, Cena, ObjetoCena } from './cenas'
 import { useFps, useSessaoMesa } from './useSessaoMesa'
 import { autoria, resumoDaMensagem, textoPuro, type Mensagem, type ModoEnvio } from './chat'
@@ -745,6 +745,13 @@ export default function Mesa() {
   }
 
   // Clicar em alguém do combate abre a ficha do personagem dele (a mesma da aba Personagens).
+  // Roleta do combate: o mestre clica, o sorteio sai aqui e a seta aparece pra todos na cena.
+  function sortearAlvo() {
+    const tokens = candidatosDoSorteio(combate.ordem, objetos.objetos)
+    if (!tokens.length) return avisar('Nenhum personagem jogável do combate tem token nessa cena.', true)
+    objetos.sortear({ id: crypto.randomUUID(), tokens, vencedor: sortearVencedor(tokens) })
+  }
+
   function abrirCombatente(c: Combatente) {
     const a = c.actor_id ? atores.atores.find((x) => x.id === c.actor_id) : atores.atores.find((x) => x.character_id === c.character_id)
     if (a) abrirFicha(a.id)
@@ -1070,6 +1077,7 @@ export default function Mesa() {
                 vidaDe={vidaDoCombatente}
                 barras={(c) => (combateDa(campanha.configuracoes).vidaNoCarrossel ? combate.barras(c) : null)}
                 meusPersonagens={meusPersonagensIds}
+                onSortear={souMestre ? sortearAlvo : undefined}
                 onCriar={() => setMontandoCombate({})}
                 onEditar={(c) => setMontandoCombate({ editando: c })}
                 onExcluir={(c) => combate.excluir(c.id)}

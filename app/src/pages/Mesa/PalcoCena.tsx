@@ -5,6 +5,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import EfeitoClimatico from './EfeitoClimatico'
+import SetaDoSorteio from './SetaDoSorteio'
 import NevoaNaTela from './NevoaNaTela'
 import MenuContexto, { type ItemMenu } from './MenuContexto'
 import { itensDeImagem, useMostrarImagem } from './mostrarImagem'
@@ -1460,6 +1461,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, corDe,
             </svg>
           )}
 
+          {obj.sorteio && <SetaDoSorteio key={obj.sorteio.id} sorteio={obj.sorteio} tokens={objetos} escala={vista.escala} onFim={obj.limparSorteio} />}
           {pings.map((p) => (
             <span key={p.id} className="mesa-ping" style={{ left: p.x, top: p.y, ['--escala' as string]: String(1 / vista.escala), ['--cor' as string]: p.userId ? corDe(p.userId) : undefined }}>
               <span className="mesa-ping-nome">{p.nome}</span>

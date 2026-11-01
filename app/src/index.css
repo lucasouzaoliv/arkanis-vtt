@@ -19051,3 +19051,9 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .quadro.ligando .quadro-barbante:hover .quadro-barbante-fio { stroke: #ff6262; stroke-dasharray: 6 4; }
 .quadro-barbante-fio.previa { stroke-dasharray: 6 5; opacity: 0.85; }
 .config-grupo .janela-check { white-space: normal; align-items: flex-start; min-width: 0; }
+/* Roleta do combate: a seta desliza de cabeça em cabeça e, quando para, pula em cima do sorteado. */
+.mesa-sorteio { position: absolute; width: 0; height: 0; z-index: 6; pointer-events: none; transition-property: left, top; transition-timing-function: ease-out; }
+.mesa-sorteio-seta { position: absolute; left: 0; bottom: 0; width: calc(46px * var(--escala, 1)); height: calc(52px * var(--escala, 1)); margin-bottom: calc(14px * var(--escala, 1)); transform: translateX(-50%); color: #ffd24a; filter: drop-shadow(0 0 calc(2px * var(--escala, 1)) #000) drop-shadow(0 0 calc(10px * var(--escala, 1)) rgba(255, 190, 40, 0.8)); }
+.mesa-sorteio.parou .mesa-sorteio-seta { color: #ff5a4a; filter: drop-shadow(0 0 calc(2px * var(--escala, 1)) #000) drop-shadow(0 0 calc(14px * var(--escala, 1)) rgba(255, 60, 40, 0.95)); animation: mesa-sorteio-pulo 0.6s ease-in-out infinite; }
+.mesa-sorteio-nome { position: absolute; left: 0; bottom: calc(72px * var(--escala, 1)); transform: translateX(-50%); padding: calc(3px * var(--escala, 1)) calc(10px * var(--escala, 1)); border-radius: calc(5px * var(--escala, 1)); background: rgba(0, 0, 0, 0.82); color: #fff; font: 700 calc(15px * var(--escala, 1)) 'Signika', var(--sans); white-space: nowrap; }
+@keyframes mesa-sorteio-pulo { 0%, 100% { translate: 0 0; } 50% { translate: 0 calc(-10px * var(--escala, 1)); } }

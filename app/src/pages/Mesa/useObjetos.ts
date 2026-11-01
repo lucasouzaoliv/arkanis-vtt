@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
+import type { Sorteio } from './combate'
 import type { ObjetoCena } from './cenas'
 import type { CamposObjeto } from './tokens'
 
@@ -26,6 +27,7 @@ function numeros(o: ObjetoCena): ObjetoCena {
 export function useObjetos(cenaId: string | null, onPing: (p: Ping) => void) {
   const [objetos, setObjetos] = useState<ObjetoCena[]>([])
   const [reguas, setReguas] = useState<Record<string, Regua>>({})
+  const [sorteio, setSorteio] = useState<Sorteio | null>(null)
   const canalRef = useRef<RealtimeChannel | null>(null)
   const pingRef = useRef(onPing)
   pingRef.current = onPing
@@ -58,6 +60,7 @@ export function useObjetos(cenaId: string | null, onPing: (p: Ping) => void) {
         setObjetos((l) => l.map((o) => (posicoes[o.id] ? { ...o, ...posicoes[o.id] } : o)))
       })
       .on('broadcast', { event: 'ping' }, ({ payload }) => pingRef.current(payload as Ping))
+      .on('broadcast', { event: 'sorteio' }, ({ payload }) => setSorteio(payload as Sorteio))
       .on('broadcast', { event: 'regua' }, ({ payload }) => {
         const r = payload as Regua
         setReguas((m) => {
@@ -81,6 +84,11 @@ export function useObjetos(cenaId: string | null, onPing: (p: Ping) => void) {
 
   const transmitirRegua = useCallback((r: Regua) => {
     canalRef.current?.send({ type: 'broadcast', event: 'regua', payload: r })
+  }, [])
+
+  const sortear = useCallback((s: Sorteio) => {
+    setSorteio(s)
+    canalRef.current?.send({ type: 'broadcast', event: 'sorteio', payload: s })
   }, [])
 
   const pingar = useCallback((p: Ping) => {
@@ -160,5 +168,5 @@ export function useObjetos(cenaId: string | null, onPing: (p: Ping) => void) {
     await supabase.from('scene_tokens').delete().in('id', ids)
   }, [])
 
-  return { objetos, criar, criarVarios, alterarVarios, moverComoJogador, transformarComoJogador, virarComoJogador, lanternaComoJogador, ajustarLanternaComoJogador, excluirComoJogador, excluirVarios, transmitirArrasto, pingar, reguas, transmitirRegua }
+  return { objetos, criar, criarVarios, alterarVarios, moverComoJogador, transformarComoJogador, virarComoJogador, lanternaComoJogador, ajustarLanternaComoJogador, excluirComoJogador, excluirVarios, transmitirArrasto, pingar, reguas, transmitirRegua, sorteio, sortear, limparSorteio: () => setSorteio(null) }
 }

@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBackwardStep, faForwardStep, faPenToSquare, faPlay, faPlus, faSkull, faStop, faTrash, faUser, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faBackwardStep, faBullseye, faForwardStep, faPenToSquare, faPlay, faPlus, faSkull, faStop, faTrash, faUser, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { useEffect, useRef } from 'react'
 import caveiraVazia from '../../assets/empty-skull-icon.svg'
 import caveiraMarcada from '../../assets/marked-skull-icon.svg'
@@ -11,7 +11,7 @@ import type { CondicaoPersonalizada } from '../CharacterSheet/efeitosEscolhidos'
 
 // Aba Encontros de Combate (12.4). Sem combate rodando: a lista dos combates salvos
 // (Nome + VD + Iniciar). Rodando: a ordem de iniciativa, os turnos e a rodada.
-export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo, ordem, vidaDe, barras, meusPersonagens, onCriar, onEditar, onExcluir, onIniciar, onEncerrar, onAdicionar, onPassar, onRemover, onAbrir, onSoltarAtor, condicoesDe, onMudarCondicoes, duracoesDe, onDuracao }: {
+export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo, ordem, vidaDe, barras, meusPersonagens, onSortear, onCriar, onEditar, onExcluir, onIniciar, onEncerrar, onAdicionar, onPassar, onRemover, onAbrir, onSoltarAtor, condicoesDe, onMudarCondicoes, duracoesDe, onDuracao }: {
   souMestre: boolean
   combates: Combate[]
   vdDoCombate: (c: Combate) => number
@@ -21,6 +21,8 @@ export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo,
   vidaDe: (c: Combatente) => [number, number | null] | null
   barras: (c: Combatente) => Barras | null
   meusPersonagens: string[]
+  // Roleta: sorteia um personagem jogável do combate pra ser o alvo.
+  onSortear?: () => void
   onCriar: () => void
   onEditar: (c: Combate) => void
   onExcluir: (c: Combate) => void
@@ -171,6 +173,7 @@ export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo,
       <footer className="combate-rodape">
         {souMestre && (
           <div className="combate-turnos">
+            {onSortear && <button type="button" className="mesa-botao" title="Sorteia um dos personagens jogáveis com token nessa cena; todo mundo vê a seta" onClick={onSortear}><FontAwesomeIcon icon={faBullseye} /> Sortear alvo</button>}
             <button type="button" className="mesa-botao" onClick={() => onPassar(ativo, true)}><FontAwesomeIcon icon={faBackwardStep} /> Voltar Turno</button>
             <button type="button" className="mesa-botao" onClick={() => onPassar(ativo, false)}>Próximo turno <FontAwesomeIcon icon={faForwardStep} /></button>
           </div>
