@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, coneDaLanterna, conesDosTokens, lanternaNoMapa, luzDoObjeto, luzesDoAmbiente, temLuzAmbiente } from './luz'
+import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, coneDaLanterna, conesDosTokens, lanternaNoMapa, luzDoObjeto, luzesDoAmbiente, temLuzAmbiente, temVisaoNoEscuro, veNoEscuroNaCena } from './luz'
 
 const token = { id: 't', x: 0, y: 0, width: 100, height: 100, rotation: 0, layer: 'token' as const }
 const celula = { w: 100, h: 100 }
@@ -119,5 +119,25 @@ describe('bateria da lanterna (KAN-114)', () => {
     expect(conesDosTokens([{ ...t, lanterna_estado: 'sem_bateria' }], celula, false)).toEqual([])
     expect(conesDosTokens([{ ...t, lanterna_estado: 'falhando' }], celula, false)[0].animacao).toBe('falhando')
     expect(conesDosTokens([t], celula, false)[0].animacao).toBeUndefined()
+  })
+})
+
+describe('enxergar no escuro', () => {
+  it('reconhece os poderes pelo nome, com ou sem acento', () => {
+    expect(temVisaoNoEscuro(['Visão do Oculto'])).toBe(true)
+    expect(temVisaoNoEscuro(['Golpe de Sorte', 'instintos sanguinários'])).toBe(true)
+    expect(temVisaoNoEscuro(['  ADEPTO DO ESCURO '])).toBe(true)
+    expect(temVisaoNoEscuro(['Barreira do Oculto', 'Conhecimento Oculto'])).toBe(false)
+    expect(temVisaoNoEscuro([])).toBe(false)
+  })
+
+  it('só vale com o token do personagem na cena', () => {
+    const temPoder = (id: string) => id === 'kevin'
+    const comKevin = [{ character_id: 'kevin', layer: 'token' }]
+    expect(veNoEscuroNaCena(['kevin'], comKevin, temPoder)).toBe(true)
+    expect(veNoEscuroNaCena(['kevin'], [{ character_id: 'outro', layer: 'token' }], temPoder)).toBe(false)
+    expect(veNoEscuroNaCena(['kevin'], [{ character_id: 'kevin', layer: 'mestre' }], temPoder)).toBe(false)
+    expect(veNoEscuroNaCena(['outro'], [...comKevin, { character_id: 'outro', layer: 'token' }], temPoder)).toBe(false)
+    expect(veNoEscuroNaCena([], comKevin, temPoder)).toBe(false)
   })
 })

@@ -35,7 +35,7 @@ import { useEscuridao } from './useEscuridao'
 import { useMoldesNoPalco } from './MoldesNoPalco'
 import LoucuraNaTela, { FerimentoNaTela, filtroDaVisao, useLoucuraLigada } from './LoucuraNaTela'
 import { ferimentoDaVida, loucuraDaSanidade, SEM_FERIMENTO, SEM_LOUCURA } from './sanidade'
-import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, caminhoDoCone, coneDaLanterna, conesDosTokens, IMAGEM_LUZ, IMAGEM_NOTA, LANTERNAS, luzCompleta, luzesDoAmbiente, temLuzAmbiente, type AjusteLanterna, type Lanterna, type LuzAmbiente } from './luz'
+import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, caminhoDoCone, coneDaLanterna, conesDosTokens, IMAGEM_LUZ, IMAGEM_NOTA, LANTERNAS, luzCompleta, luzesDoAmbiente, temLuzAmbiente, veNoEscuroNaCena, type AjusteLanterna, type Lanterna, type LuzAmbiente } from './luz'
 import ConfigurarLuz from './ConfigurarLuz'
 import ConfigurarEfeito from './ConfigurarEfeito'
 import EfeitosNoPalco from './EfeitosNoPalco'
@@ -66,7 +66,7 @@ type Gesto =
 
 // Centro da mesa: a cena com imagem, grade, objetos/tokens, escuridão, ambiente e clima.
 // Arrastar com o botão direito move o mapa (o esquerdo faz a caixa de seleção), a rodinha dá zoom.
-export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null, barrasDe, documentos = [], onEsconderDocumento, onAcharDocumento, onAbrirDocumento }: {
+export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null, barrasDe, enxergaNoEscuro, documentos = [], onEsconderDocumento, onAcharDocumento, onAbrirDocumento }: {
   cena: Cena | null
   souMestre: boolean
   userId: string
@@ -132,6 +132,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   turnoDoCombate?: string | null
   // Sanidade do personagem (atual, máximo), pra tela derreter com ela baixa (KAN-116).
   barrasDe?: (characterId: string) => { pv: [number, number | null]; san: [number, number | null] } | null
+  // Tem poder de enxergar no escuro (Visão do Oculto e afins)?
+  enxergaNoEscuro?: (characterId: string) => boolean
   // Documentos encontráveis (KAN-118): o mestre esconde no mapa; o jogador clica no papel e acha.
   documentos?: { id: string; titulo: string }[]
   onEsconderDocumento?: (documentoId: string, ponto: { x: number; y: number }) => void
@@ -209,6 +211,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   const loucura = barrasDaVisao ? loucuraDaSanidade(...barrasDaVisao.san) : SEM_LOUCURA
   const ferimento = barrasDaVisao ? ferimentoDaVida(...barrasDaVisao.pv) : SEM_FERIMENTO
   const filtroVisao = filtroDaVisao(loucura, ferimento)
+  // Quem enxerga no escuro não tem a escuridão por cima (os outros continuam vendo tudo escuro).
+  const veNoEscuro = !veTudo && !!enxergaNoEscuro && veNoEscuroNaCena(personagensDaVisao, objetos, enxergaNoEscuro)
   const visiveis = objetos.filter((o) => veTudo || (o.layer !== 'mestre' && !o.so_uv && o.image_url !== IMAGEM_LUZ && o.image_url !== IMAGEM_EFEITO))
 
   // Quem pode mexer em cada objeto: o mestre sempre; o jogador no próprio personagem ou
@@ -1253,7 +1257,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
 
           {/* Jogador (ou o mestre vendo como jogador): a escuridão cobre também os tokens, então só
               aparece o que a luz pega; os tokens do próprio jogador ficam por cima (bug 26/10). */}
-          {!veTudo && <LuzesNoPalco mapa={mapa} souMestre={false} nivel={cena.darkness} areas={esc.areas} cones={cones} celula={celula} sobreTokens />}
+          {!veTudo && !veNoEscuro && <LuzesNoPalco mapa={mapa} souMestre={false} nivel={cena.darkness} areas={esc.areas} cones={cones} celula={celula} sobreTokens />}
 
           {/* Alças de tamanho e a bolinha de girar, por cima de tudo (12.8) */}
           {unico && !unico.locked && (

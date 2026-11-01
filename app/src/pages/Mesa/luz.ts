@@ -227,3 +227,22 @@ export function setaNoAlcance(a: { x: number; y: number }, b: { x: number; y: nu
 
 // Marca das anotações do mestre (KAN-123): não aparece (o bilhete vai no lugar), só preenche image_url.
 export const IMAGEM_NOTA = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"/>')
+
+// Enxergar no escuro (pedido da Millie, 01/11): quem tem um desses poderes não vê a escuridão da
+// cena nem as áreas pintadas. Vale pelo nome, então poder escrito à mão na ficha também conta.
+const PODERES_DE_VISAO_NO_ESCURO = ['visao do oculto', 'instintos sanguinarios', 'adepto do escuro']
+
+const semAcento = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+
+export function temVisaoNoEscuro(poderes: string[]): boolean {
+  return poderes.some((p) => PODERES_DE_VISAO_NO_ESCURO.includes(semAcento(p)))
+}
+
+// O poder é do personagem: só vale com o token dele nessa cena (fora dela, não está vendo nada lá).
+export function veNoEscuroNaCena(
+  personagens: string[],
+  objetos: { character_id?: string | null; layer: string }[],
+  temPoder: (characterId: string) => boolean,
+): boolean {
+  return personagens.some((id) => temPoder(id) && objetos.some((o) => o.character_id === id && o.layer !== 'mestre'))
+}

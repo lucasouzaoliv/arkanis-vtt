@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { temVisaoNoEscuro } from './luz'
 import { supabase } from '../../lib/supabase'
 import { computeDerivedStats, type Training } from '../../lib/rules'
 import { lerTeste, nomesNumerados, ordemDeIniciativa, rolarTeste, testeDeIniciativa, type Combatente } from './combate'
@@ -123,6 +124,8 @@ export function useCombate(campanhaId: string | undefined) {
         const id = (p.old as { id?: string }).id
         if (id) setTimers((l) => l.filter((t) => t.id !== id))
       })
+      // Poder novo ou tirado da ficha: vale na hora (PV máximo, enxergar no escuro).
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'character_abilities' }, () => carregarFichas())
       // Vida/PE/Sanidade mudaram na ficha de alguém: a barra acompanha.
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'characters', filter: filtro }, (p) => {
         const f = p.new as FichaBarras
@@ -380,5 +383,7 @@ export function useCombate(campanhaId: string | undefined) {
     await supabase.from('combatants').delete().eq('id', combatenteId)
   }, [])
 
-  return { combates, ativo, ordem, barras, condicoesDaFicha, duracoesDe, marcarDuracao, criar, salvar, excluir, iniciar, entrarAmeacas, adicionarAtor, encerrar, passar, remover }
+  const enxergaNoEscuro = (characterId: string) => temVisaoNoEscuro(poderesDe[characterId] ?? [])
+
+  return { combates, ativo, ordem, barras, enxergaNoEscuro, condicoesDaFicha, duracoesDe, marcarDuracao, criar, salvar, excluir, iniciar, entrarAmeacas, adicionarAtor, encerrar, passar, remover }
 }
