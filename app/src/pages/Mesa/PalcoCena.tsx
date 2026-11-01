@@ -5,6 +5,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import EfeitoClimatico from './EfeitoClimatico'
+import NevoaNaTela from './NevoaNaTela'
 import MenuContexto, { type ItemMenu } from './MenuContexto'
 import { itensDeImagem, useMostrarImagem } from './mostrarImagem'
 import Janela, { Campo } from './Janela'
@@ -1467,7 +1468,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
       )}
       {/* Filtro de iluminação: uma luz colorida por cima do mapa inteiro (lua de sangue, luz verde…). */}
       {cena?.filtro_cor && <div className="mesa-filtro-luz" style={{ background: cena.filtro_cor, opacity: cena.filtro_intensidade }} aria-hidden />}
-      {cena?.weather && <EfeitoClimatico key={cena.weather} clima={cena.weather} cor={cena.weather_cor} />}
+      {cena?.weather === 'nevoa' && <NevoaNaTela cor={cena.weather_cor} />}
+      {cena?.weather && cena.weather !== 'nevoa' && <EfeitoClimatico key={cena.weather} clima={cena.weather} cor={cena.weather_cor} />}
       {cena && efeitoDoOculto && <VisaoDoOcultoNaTela />}
       {cena && loucura.intensidade > 0 && <LoucuraNaTela loucura={loucura} />}
       {cena && ferimento.intensidade > 0 && <FerimentoNaTela ferimento={ferimento} />}

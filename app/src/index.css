@@ -12396,6 +12396,11 @@ button.character-tile-link {
 }
 
 .mesa-escuridao,
+/* Névoa em vídeo: o wrapper mistura com o mapa no modo "tela" (o preto do vídeo some). */
+.mesa-nevoa { position: absolute; inset: 0; overflow: hidden; pointer-events: none; isolation: isolate; mix-blend-mode: screen; background: #000; }
+.mesa-nevoa video { position: absolute; inset: -4%; width: 108%; height: 108%; object-fit: cover; opacity: 0; filter: blur(5px) brightness(0.8) contrast(1.9); mix-blend-mode: screen; }
+.mesa-nevoa video.espelhado { transform: scale(-1, 1); }
+.mesa-nevoa-cor { position: absolute; inset: 0; mix-blend-mode: multiply; }
 .mesa-clima {
   position: absolute;
   inset: 0;
