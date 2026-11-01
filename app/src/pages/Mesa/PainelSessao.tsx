@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEyeSlash, faMap, faUser } from '@fortawesome/free-solid-svg-icons'
-import { rotuloJogador, type Membro } from './mesa'
+import { corDaPessoa, rotuloJogador, type Membro } from './mesa'
 import type { Camada } from './cenas'
 
 const CAMADAS: { id: Camada; rotulo: string; icone: typeof faMap }[] = [
@@ -24,7 +24,7 @@ export default function PainelSessao({ conectados, latencia, fps, camada, onCama
   return (
     <section className="mesa-sessao" aria-label="Painel de sessão">
       <div className="mesa-sessao-pessoa">
-        <span className="mesa-sessao-ponto mesa-sessao-ponto-mestre" aria-hidden />
+        <span className="mesa-sessao-ponto mesa-sessao-ponto-mestre" style={mestre ? { background: corDaPessoa(mestre.userId, mestre.cor) } : undefined} aria-hidden />
         <strong>{mestre ? mestre.nomeConta : 'Mestre ausente'} [Mestre]</strong>
       </div>
       <div className="mesa-sessao-metricas">
@@ -41,7 +41,7 @@ export default function PainelSessao({ conectados, latencia, fps, camada, onCama
       )}
       {jogadores.map((j) => (
         <div key={j.userId} className="mesa-sessao-pessoa">
-          <span className="mesa-sessao-ponto" aria-hidden />
+          <span className="mesa-sessao-ponto" style={{ background: corDaPessoa(j.userId, j.cor) }} aria-hidden />
           {rotuloJogador(j)}
         </div>
       ))}

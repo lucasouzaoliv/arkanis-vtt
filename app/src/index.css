@@ -12948,11 +12948,11 @@ button.character-tile-link {
   top: 0;
   width: calc(60px * var(--escala, 1));
   height: calc(60px * var(--escala, 1));
-  border: calc(3px * var(--escala, 1)) solid #f0f0f2;
+  border: calc(3px * var(--escala, 1)) solid var(--cor, #f0f0f2);
   border-radius: 50%;
   transform: translate(-50%, -50%) scale(0.2);
   animation: mesa-ping 1.3s ease-out 2;
-  box-shadow: 0 0 calc(10px * var(--escala, 1)) rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 calc(10px * var(--escala, 1)) color-mix(in srgb, var(--cor, #fff) 70%, transparent);
 }
 
 .mesa-ping::after {
@@ -14224,14 +14224,12 @@ button.character-tile-link {
   transform: translate(-50%, calc(var(--px, 1px) * -4));
   pointer-events: none;
   color: #d8d8dc;
-  opacity: 0.6;
   filter: drop-shadow(0 0 2px #000);
   font-size: calc(var(--px, 1px) * 20);
 }
 
-.mesa-mira.minha {
-  color: #f4f4f6;
-  opacity: 1;
+.mesa-mira .de-outro {
+  opacity: 0.75;
 }
 
 /* Passar o mouse em qualquer token (mesmo de outra pessoa) e o token focado: contorno leve */
@@ -18859,12 +18857,12 @@ textarea.mesa-nota.editando { resize: none; outline: 2px solid var(--mesa-destaq
 
 /* Moldes de área (KAN-119). */
 .mesa-moldes { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.mesa-molde-area { fill: rgba(255, 128, 64, 0.18); stroke: #ff9a5c; stroke-linejoin: round; }
+.mesa-molde-area { fill: color-mix(in srgb, var(--cor, #ff9a5c) 20%, transparent); stroke: var(--cor, #ff9a5c); stroke-linejoin: round; }
 .mesa-molde.previa .mesa-molde-area { stroke-dasharray: 6 4; }
-.mesa-molde.selecionado .mesa-molde-area { fill: rgba(255, 128, 64, 0.28); stroke: #ffd27a; }
+.mesa-molde.selecionado .mesa-molde-area { fill: color-mix(in srgb, var(--cor, #ff9a5c) 32%, transparent); stroke: #fff; }
 .mesa-moldes.ativo .mesa-molde-area { pointer-events: visiblePainted; cursor: move; }
-.mesa-molde-origem { fill: #ff9a5c; }
-.mesa-molde-pego { fill: rgba(255, 128, 64, 0.12); stroke: #ff9a5c; }
+.mesa-molde-origem { fill: var(--cor, #ff9a5c); }
+.mesa-molde-pego { fill: color-mix(in srgb, var(--cor, #ff9a5c) 14%, transparent); stroke: var(--cor, #ff9a5c); }
 .mesa-molde-rotulo { text-anchor: middle; }
 .mesa-molde-acoes { position: absolute; z-index: 4; display: flex; gap: 4px; padding: 3px; border-radius: 9px; background: rgba(16, 16, 20, 0.92); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45); transform-origin: 0 0; pointer-events: auto; white-space: nowrap; }
 .mesa-molde-acoes button { box-sizing: border-box; display: grid; place-items: center; width: 28px; height: 28px; margin: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #e8e8ec; font-size: 13px; line-height: 1; cursor: pointer; }
@@ -19052,3 +19050,4 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .quadro.ligando .quadro-barbante-toque { pointer-events: stroke; cursor: pointer; }
 .quadro.ligando .quadro-barbante:hover .quadro-barbante-fio { stroke: #ff6262; stroke-dasharray: 6 4; }
 .quadro-barbante-fio.previa { stroke-dasharray: 6 5; opacity: 0.85; }
+.config-grupo .janela-check { white-space: normal; align-items: flex-start; min-width: 0; }

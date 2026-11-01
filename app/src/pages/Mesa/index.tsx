@@ -83,6 +83,7 @@ import {
   ACOES_ESQUERDA,
   AJUDA_FERRAMENTA,
   comFichasDadas,
+  corDaPessoa,
   conectados as filtrarConectados,
   linkDeConvite,
   type AbaDireita,
@@ -139,6 +140,7 @@ export default function Mesa() {
   const [ferramenta, setFerramenta] = useState('selecionar')
   const [copiado, setCopiado] = useState(false)
   // Configurações (KAN-54): o dado de cada um, e as janelas abertas.
+  const gravarCor = useRef<number | undefined>(undefined)
   const [estilosDados, setEstilosDados] = useState<Record<string, Partial<EstiloDados> | null>>({})
   const [janelasConfig, setJanelasConfig] = useState<(JanelaDoPainel | SecaoConfig)[]>([])
   const abrirConfig = (j: JanelaDoPainel | SecaoConfig) => setJanelasConfig((l) => (l.includes(j) ? l : [...l, j]))
@@ -169,7 +171,7 @@ export default function Mesa() {
         supabase.from('characters').select('id, user_id, name, avatar_url, npc').eq('campaign_id', id),
       ])
       const ids = [...new Set([campanha.owner_id, ...(linhas ?? []).map((l) => l.user_id)])]
-      const { data: perfis } = await supabase.from('profiles').select('id, display_name, avatar_url, dados3d').in('id', ids)
+      const { data: perfis } = await supabase.from('profiles').select('id, display_name, avatar_url, dados3d, accent_color').in('id', ids)
       if (cancelado) return
       const perfil = new Map((perfis ?? []).map((p) => [p.id, p]))
       const membros: Membro[] = ids.map((uid) => {
@@ -183,6 +185,7 @@ export default function Mesa() {
           personagem: p?.name ?? null,
           personagemId: p?.id ?? null,
           fotoPersonagem: p?.avatar_url ?? null,
+          cor: perfil.get(uid)?.accent_color ?? null,
         }
       })
       setEstilosDados(Object.fromEntries((perfis ?? []).map((p) => [p.id, p.dados3d as Partial<EstiloDados> | null])))
@@ -348,9 +351,9 @@ export default function Mesa() {
         setEstado((e) => (e.tipo === 'pronta' ? { ...e, campanha: { ...e.campanha, name: n.name ?? e.campanha.name, accent_color: n.accent_color ?? null, permissoes: n.permissoes ?? {}, configuracoes: n.configuracoes ?? {} } } : e))
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=in.(${ids.join(',')})` }, (p) => {
-        const n = p.new as { id: string; dados3d: Partial<EstiloDados> | null; display_name: string | null }
+        const n = p.new as { id: string; dados3d: Partial<EstiloDados> | null; display_name: string | null; accent_color: string | null }
         setEstilosDados((m) => ({ ...m, [n.id]: n.dados3d }))
-        if (n.display_name) setEstado((e) => (e.tipo === 'pronta' ? { ...e, membros: e.membros.map((x) => (x.userId === n.id ? { ...x, nomeConta: n.display_name! } : x)) } : e))
+        setEstado((e) => (e.tipo === 'pronta' ? { ...e, membros: e.membros.map((x) => (x.userId === n.id ? { ...x, nomeConta: n.display_name || x.nomeConta, cor: n.accent_color } : x)) } : e))
       })
       .subscribe()
     return () => {
@@ -727,6 +730,20 @@ export default function Mesa() {
 
   const meusPersonagensIds = eu?.personagemId ? [eu.personagemId] : []
 
+  // Cor de cada pessoa (a escolhida no perfil ou nas Configurações).
+  const corDe = (uid: string) => corDaPessoa(uid, membros.find((m) => m.userId === uid)?.cor)
+  // Muda na hora na própria tela; o seletor dispara várias vezes, então grava só quando parar.
+  function salvarMinhaCor(cor: string) {
+    if (!userId) return
+    setEstado((e) => (e.tipo === 'pronta' ? { ...e, membros: e.membros.map((x) => (x.userId === userId ? { ...x, cor } : x)) } : e))
+    window.clearTimeout(gravarCor.current)
+    gravarCor.current = window.setTimeout(() => {
+      supabase.from('profiles').update({ accent_color: cor }).eq('id', userId).then(({ error }) => {
+        if (error) avisar('Não deu pra salvar a sua cor.', true)
+      })
+    }, 400)
+  }
+
   // Clicar em alguém do combate abre a ficha do personagem dele (a mesma da aba Personagens).
   function abrirCombatente(c: Combatente) {
     const a = c.actor_id ? atores.atores.find((x) => x.id === c.actor_id) : atores.atores.find((x) => x.character_id === c.character_id)
@@ -837,6 +854,7 @@ export default function Mesa() {
         alcances={sistemaDe(campanha.system).alcances}
         userId={userId ?? ''}
         nomeUsuario={eu?.personagem || eu?.nomeConta || 'Alguém'}
+        corDe={corDe}
         meusPersonagens={eu?.personagemId ? [eu.personagemId] : []}
         jogadores={jogadoresParaCena}
         obj={objetos}
@@ -1314,7 +1332,7 @@ export default function Mesa() {
         const fechar = () => fecharConfig(j)
         if (j === 'jogo') return <ConfiguracoesDoJogo key={j} souMestre={souMestre} onAbrir={abrirConfig} onFechar={fechar} />
         if (j === 'controles') return <JanelaControles key={j} souMestre={souMestre} onFechar={fechar} />
-        if (j === 'interface') return <JanelaInterface key={j} onFechar={fechar} />
+        if (j === 'interface') return <JanelaInterface key={j} cor={corDe(userId ?? '')} onCor={salvarMinhaCor} onFechar={fechar} />
         if (j === 'som') return <JanelaSom key={j} onFechar={fechar} />
         if (j === 'dados') {
           return (

@@ -59,7 +59,8 @@ type Gesto = { tipo: 'novo'; a: Ponto } | { tipo: 'mover'; id: string; inicio: P
 // Ferramenta Moldes de Área (barra esquerda, Controles de Token): escolhe a forma, aperta onde ela
 // começa e arrasta (direção e tamanho, de quadrado em quadrado). Todo mundo vê os moldes e quem
 // cada um pegou; com a ferramenta aberta, clicar num molde mostra Marcar alvos e Tirar.
-export function useMoldesNoPalco({ cena, ferramenta, souMestre, userId, pontoNoMapa, escala, celula, tokens, meusAlvos, onAlternarAlvo }: {
+export function useMoldesNoPalco({ cena, ferramenta, souMestre, userId, corDe, pontoNoMapa, escala, celula, tokens, meusAlvos, onAlternarAlvo }: {
+  corDe: (userId: string) => string
   cena: Cena | null
   ferramenta: string
   souMestre: boolean
@@ -158,7 +159,7 @@ export function useMoldesNoPalco({ cena, ferramenta, souMestre, userId, pontoNoM
     const r = rotuloDoMolde(m, celula, mpq)
     const sel = salvo && salvo.id === selecionado
     return (
-      <g key={chave} className={`mesa-molde mesa-molde-${m.forma}${sel ? ' selecionado' : ''}${salvo ? '' : ' previa'}`}>
+      <g key={chave} className={`mesa-molde mesa-molde-${m.forma}${sel ? ' selecionado' : ''}${salvo ? '' : ' previa'}`} style={{ ['--cor' as string]: corDe(salvo ? salvo.author_id : userId) }}>
         <path
           className="mesa-molde-area"
           d={caminhoDoMolde(contornoDoMolde(m, celula, mpq))}

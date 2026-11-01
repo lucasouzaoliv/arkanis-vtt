@@ -77,6 +77,18 @@ export type Membro = {
   fotoConta?: string | null
   personagemId?: string | null
   fotoPersonagem?: string | null
+  cor?: string | null // a cor que a pessoa escolheu (profiles.accent_color)
+}
+
+// Cor de cada pessoa na mesa (pedido da Millie, 01/11): a bolinha, o ping, a mira, a régua e os moldes.
+// Quem nunca escolheu fica com uma da lista, sempre a mesma para aquela pessoa.
+const CORES_DE_PESSOA = ['#e8b23a', '#4fb3e8', '#e8654f', '#6fd08c', '#b48af0', '#f08ac0', '#4fd0c8', '#d0d060']
+
+export function corDaPessoa(userId: string, escolhida?: string | null): string {
+  if (escolhida && /^#[0-9a-f]{6}$/i.test(escolhida)) return escolhida
+  let soma = 0
+  for (const c of userId) soma = (soma * 31 + c.charCodeAt(0)) >>> 0
+  return CORES_DE_PESSOA[soma % CORES_DE_PESSOA.length]
 }
 
 // O que cada aba aberta da mesa anuncia no canal de presença.

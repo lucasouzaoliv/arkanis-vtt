@@ -7,7 +7,7 @@ import type { CamposObjeto } from './tokens'
 const CAMPOS =
   'id, scene_id, campaign_id, name, image_url, x, y, width, height, rotation, layer, sort, locked, flip_h, flip_v, character_id, group_id, actor_id, move_permission, movable_by, luz, lanterna, lanterna_ajuste, lanterna_estado, nota, documento_id, luz_ajuste, efeito, so_uv, item_id, created_at'
 
-export type Ping = { id: string; x: number; y: number; foco: boolean; nome: string }
+export type Ping = { id: string; x: number; y: number; foco: boolean; nome: string; userId?: string }
 
 // Régua de alguém medindo distância (12.13), vista ao vivo por todos. pontos null = apagou.
 export type Regua = { userId: string; nome: string; pontos: { x: number; y: number }[] | null }

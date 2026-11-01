@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ABAS_DIREITA, calcularFps, comFichasDadas, conectados, linkDeConvite, primeiroNome, rotuloJogador, type Membro } from './mesa'
+import { ABAS_DIREITA, calcularFps, comFichasDadas, conectados, corDaPessoa, linkDeConvite, primeiroNome, rotuloJogador, type Membro } from './mesa'
 
 const membros: Membro[] = [
   { userId: 'j2', papel: 'jogador', nomeConta: 'Pedro Alves', personagem: 'Zeca' },
@@ -90,4 +90,11 @@ describe('comFichasDadas', () => {
   it('usa a foto da ficha quando tem', () => {
     expect(comFichasDadas([jogador], [ator({ j1: 'dono' })], () => '/foto.webp')[0].fotoPersonagem).toBe('/foto.webp')
   })
+})
+
+it('a cor da pessoa é a que ela escolheu; sem escolher, uma fixa', () => {
+  expect(corDaPessoa('u1', '#072da2')).toBe('#072da2')
+  expect(corDaPessoa('u1', null)).toBe(corDaPessoa('u1'))
+  expect(corDaPessoa('u1', 'vermelho')).toBe(corDaPessoa('u1'))
+  expect(corDaPessoa('u1')).toMatch(/^#[0-9a-f]{6}$/)
 })

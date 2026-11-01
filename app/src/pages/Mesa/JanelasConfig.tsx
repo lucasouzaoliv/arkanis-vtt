@@ -89,7 +89,7 @@ function Grupo({ titulo, children }: { titulo: string; children: ReactNode }) {
 }
 
 // ---- Interface de Usuário ----
-export function JanelaInterface({ onFechar }: { onFechar: () => void }) {
+export function JanelaInterface({ cor, onCor, onFechar }: { cor: string; onCor: (c: string) => void; onFechar: () => void }) {
   const [escala, setEscala] = useState(lerInterface().escala)
   const [loucura, setLoucura] = useState(lerInterface().loucura)
   const [visaoOculto, setVisaoOculto] = useState(lerInterface().visaoOculto)
@@ -112,6 +112,10 @@ export function JanelaInterface({ onFechar }: { onFechar: () => void }) {
           <Campo rotulo="Escala da Interface" dica="Deixa painéis, janelas e textos maiores ou menores. O mapa não muda.">
             <Deslizante rotulo="Escala da Interface" valor={escala} min={0.75} max={1.4} passo={0.05} onMudar={mudar} />
           </Campo>
+        </Grupo>
+        <Grupo titulo="Sua Cor">
+          <p className="janela-dica">A sua bolinha, o seu ping, a sua mira, a sua régua e os seus moldes na mesa. É a mesma cor do seu perfil.</p>
+          <CampoCor rotulo="Sua cor" valor={cor} onMudar={onCor} />
         </Grupo>
         <Grupo titulo="Efeitos na Tela">
           <label className="janela-check">

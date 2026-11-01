@@ -68,11 +68,13 @@ type Gesto =
 
 // Centro da mesa: a cena com imagem, grade, objetos/tokens, escuridão, ambiente e clima.
 // Arrastar com o botão direito move o mapa (o esquerdo faz a caixa de seleção), a rodinha dá zoom.
-export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null, barrasDe, enxergaNoEscuro, visaoDoOculto, documentos = [], onEsconderDocumento, onAcharDocumento, onAbrirDocumento }: {
+export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, corDe, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null, barrasDe, enxergaNoEscuro, visaoDoOculto, documentos = [], onEsconderDocumento, onAcharDocumento, onAbrirDocumento }: {
   cena: Cena | null
   souMestre: boolean
   userId: string
   nomeUsuario: string
+  // A cor que cada pessoa escolheu: ping, mira, régua e moldes.
+  corDe: (userId: string) => string
   meusPersonagens: string[]
   jogadores: { userId: string; rotulo: string }[]
   obj: Objetos
@@ -298,7 +300,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   const escuro = useEscuridaoNoPalco({ cena, ferramenta, souMestre, esc, pontoNoMapa, escala: vista.escala, pedidoLimpar: pedidoLimparEscuridao })
   // Moldes de área (KAN-119): pegam os tokens que o jogador vê (não luz, efeito nem anotação).
   const moldes = useMoldesNoPalco({
-    cena, ferramenta, souMestre, userId, pontoNoMapa, escala: vista.escala, celula: cena ? celulaDaGrade(cena, mapa) : { w: 100, h: 100 },
+    cena, ferramenta, souMestre, userId, corDe, pontoNoMapa, escala: vista.escala, celula: cena ? celulaDaGrade(cena, mapa) : { w: 100, h: 100 },
     tokens: visiveis.filter((o) => o.layer === 'token' && !o.efeito && o.nota == null && o.image_url !== IMAGEM_LUZ),
     meusAlvos, onAlternarAlvo,
   })
@@ -948,7 +950,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
 
   function itensDoMenu(): ItemMenu[] {
     if (!menu) return []
-    const ping = (foco: boolean) => obj.pingar({ id: crypto.randomUUID(), x: menu.mapa.x, y: menu.mapa.y, foco, nome: nomeUsuario })
+    const ping = (foco: boolean) => obj.pingar({ id: crypto.randomUUID(), x: menu.mapa.x, y: menu.mapa.y, foco, nome: nomeUsuario, userId })
     const pingItens: ItemMenu[] = [
       ...(podePingar ? [{ rotulo: 'Ping Todos', icone: faTowerBroadcast, onClick: () => ping(false) } as ItemMenu] : []),
       ...(souMestre ? [{ rotulo: 'Ping de Foco', icone: faCrosshairs, onClick: () => ping(true) } as ItemMenu] : []),
@@ -1248,13 +1250,15 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
                 )}
                 {o.locked && selecionados.includes(o.id) && <FontAwesomeIcon icon={faLock} className="mesa-objeto-trava" style={{ fontSize: 16 / vista.escala }} />}
                 {(() => {
-                  // Mira em cima do token marcado: a minha mais forte; a dos outros mais apagada, com o nome.
+                  // Mira em cima do token marcado: uma por pessoa, na cor dela; a minha mais forte.
                   const meu = meusAlvos.includes(o.id)
-                  const deQuem = Object.values(outrosAlvos).filter((m) => m.alvos.includes(o.id)).map((m) => m.nome)
+                  const quemMais = Object.entries(outrosAlvos).filter(([, m]) => m.alvos.includes(o.id))
+                  const deQuem = quemMais.map(([, m]) => m.nome)
                   if (!meu && !deQuem.length) return null
                   return (
                     <span className={`mesa-mira${meu ? ' minha' : ''}`} title={[meu ? 'Seu alvo' : '', ...deQuem.map((n) => `Alvo de ${n}`)].filter(Boolean).join(' · ')}>
-                      <FontAwesomeIcon icon={faCrosshairs} />
+                      {meu && <FontAwesomeIcon icon={faCrosshairs} style={{ color: corDe(userId) }} />}
+                      {quemMais.map(([id]) => <FontAwesomeIcon key={id} icon={faCrosshairs} className="de-outro" style={{ color: corDe(id) }} />)}
                     </span>
                   )
                 })()}
@@ -1396,8 +1400,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
           {/* Réguas: a minha e a de quem mais estiver medindo (12.13). */}
           {cena && (() => {
             const todas = [
-              ...(regua ? [{ chave: 'eu', nome: '', pontos: [...regua.pontos, regua.atual] }] : []),
-              ...Object.values(obj.reguas).filter((r) => r.userId !== userId && r.pontos).map((r) => ({ chave: r.userId, nome: r.nome, pontos: r.pontos! })),
+              ...(regua ? [{ chave: 'eu', nome: '', cor: corDe(userId), pontos: [...regua.pontos, regua.atual] }] : []),
+              ...Object.values(obj.reguas).filter((r) => r.userId !== userId && r.pontos).map((r) => ({ chave: r.userId, nome: r.nome, cor: corDe(r.userId), pontos: r.pontos! })),
             ].filter((r) => r.pontos.length > 1)
             if (!todas.length) return null
             const px = 1 / vista.escala
@@ -1409,8 +1413,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
                   return (
                     <g key={r.chave}>
                       <polyline points={r.pontos.map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="#000" strokeWidth={7 * px} strokeLinejoin="round" opacity={0.55} />
-                      <polyline points={r.pontos.map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="#e8e8ec" strokeWidth={3 * px} strokeLinejoin="round" />
-                      {r.pontos.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={5 * px} fill="#e8e8ec" stroke="#000" strokeWidth={1.5 * px} />)}
+                      <polyline points={r.pontos.map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke={r.cor} strokeWidth={3 * px} strokeLinejoin="round" />
+                      {r.pontos.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={5 * px} fill={r.cor} stroke="#000" strokeWidth={1.5 * px} />)}
                       {r.pontos.length > 2 && m.trechos.map((t, i) => (
                         <text key={i} x={(r.pontos[i].x + r.pontos[i + 1].x) / 2} y={(r.pontos[i].y + r.pontos[i + 1].y) / 2 - 8 * px} fontSize={13 * px} className="mesa-regua-trecho">
                           {textoDaDistancia(t, cena)}
@@ -1457,7 +1461,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
           )}
 
           {pings.map((p) => (
-            <span key={p.id} className="mesa-ping" style={{ left: p.x, top: p.y, ['--escala' as string]: String(1 / vista.escala) }}>
+            <span key={p.id} className="mesa-ping" style={{ left: p.x, top: p.y, ['--escala' as string]: String(1 / vista.escala), ['--cor' as string]: p.userId ? corDe(p.userId) : undefined }}>
               <span className="mesa-ping-nome">{p.nome}</span>
             </span>
           ))}
