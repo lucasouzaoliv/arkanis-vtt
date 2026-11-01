@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { usePastasFechadas } from './pastasFechadas'
 import {
   faCheck, faClone, faEye, faEyeSlash, faFloppyDisk, faFolder, faFolderOpen, faFolderPlus, faMap, faPenToSquare, faPeopleArrows, faTrash,
 } from '@fortawesome/free-solid-svg-icons'
@@ -41,7 +42,7 @@ export default function PainelCenas({ souMestre, cenas, pastas, ativa, vendo, on
   const [criandoPasta, setCriandoPasta] = useState<{ pai: string | null } | null>(null)
   const [editandoPasta, setEditandoPasta] = useState<Pasta | null>(null)
   const [vendoQuem, setVendoQuem] = useState<Cena | null>(null)
-  const [fechadas, setFechadas] = useState<Set<string>>(new Set())
+  const [fechadas, setFechadas] = usePastasFechadas('cenas')
   const [alvoSoltar, setAlvoSoltar] = useState<string | null>(null) // id da pasta, ou 'raiz'
   const arvore = montarArvore(pastas, cenas)
 

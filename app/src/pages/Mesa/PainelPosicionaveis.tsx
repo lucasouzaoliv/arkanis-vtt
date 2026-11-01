@@ -1,6 +1,7 @@
 import { recortarImagem } from '../../components/RecortarImagem'
 import { useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { usePastasFechadas } from './pastasFechadas'
 import {
   faArrowUpRightFromSquare, faBookmark, faBookOpen, faCubes, faFile, faFloppyDisk, faFolder, faFolderOpen, faFolderPlus, faFont, faLightbulb, faFire, faMusic,
   faPenToSquare, faPencil, faPlus, faTrash, faUser,
@@ -56,7 +57,7 @@ export default function PainelPosicionaveis({ souMestre, userId, api, categoria,
   avisar: (texto: string | null, erro?: boolean) => void
 }) {
   const [busca, setBusca] = useState('')
-  const [fechadas, setFechadas] = useState<Set<string>>(new Set())
+  const [fechadas, setFechadas] = usePastasFechadas('posicionaveis')
   const [menu, setMenu] = useState<{ x: number; y: number; itens: ItemMenu[] } | null>(null)
   const imagem = useMostrarImagem()
   const [pasta, setPasta] = useState<{ pai: string | null; editando?: Pasta } | null>(null)

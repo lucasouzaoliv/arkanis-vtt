@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { usePastasFechadas } from './pastasFechadas'
 import {
   faArrowDownAZ, faArrowDown19, faBookOpen, faClone, faFileExport, faFileImport, faFloppyDisk, faFolder, faFolderOpen, faFolderPlus, faFolderTree,
   faMagnifyingGlass, faPenToSquare, faPlus, faTrash, faUserGear,
@@ -36,7 +37,7 @@ export default function PainelDiario({ souMestre, userId, podeCriar = true, entr
 }) {
   const [busca, setBusca] = useState('')
   const [ordem, setOrdem] = useState<'alfabetica' | 'criacao'>('alfabetica')
-  const [fechadas, setFechadas] = useState<Set<string>>(new Set())
+  const [fechadas, setFechadas] = usePastasFechadas('diario')
   const [menu, setMenu] = useState<{ x: number; y: number; itens: ItemMenu[] } | null>(null)
   const imagem = useMostrarImagem()
   const arquivo = useRef<HTMLInputElement>(null)

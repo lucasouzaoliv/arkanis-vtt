@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { usePastasFechadas } from './pastasFechadas'
 import {
   faClone, faFolder, faFolderOpen, faFolderPlus, faImage, faPenToSquare, faSkull, faTrash, faUser, faUserGear, faUserPlus,
 } from '@fortawesome/free-solid-svg-icons'
@@ -36,7 +37,7 @@ export default function PainelPersonagens({ souMestre, userId, atores, pastas, f
 }) {
   const [menu, setMenu] = useState<{ x: number; y: number; itens: ItemMenu[] } | null>(null)
   const imagem = useMostrarImagem()
-  const [fechadas, setFechadas] = useState<Set<string>>(new Set())
+  const [fechadas, setFechadas] = usePastasFechadas('personagens')
   const arvore = montarArvore<Ator>(pastas, atores)
 
   // Dono: quem criou a ficha, ou quem o mestre marcou como Dono em Configurar Propriedade.

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { usePastasFechadas } from './pastasFechadas'
 import {
   faArrowDownAZ, faArrowDown19, faBriefcase, faClone, faFloppyDisk, faFolder, faFolderOpen, faFolderPlus, faFolderTree, faMagnifyingGlass, faPenToSquare,
   faPlus, faThumbtack, faTrash, faUserGear,
@@ -38,7 +39,7 @@ export default function PainelItens({ souMestre, userId, itens, pastas, acoes }:
 }) {
   const [busca, setBusca] = useState('')
   const [ordem, setOrdem] = useState<'alfabetica' | 'criacao'>('alfabetica')
-  const [fechadas, setFechadas] = useState<Set<string>>(new Set())
+  const [fechadas, setFechadas] = usePastasFechadas('itens')
   const [menu, setMenu] = useState<{ x: number; y: number; itens: ItemMenu[] } | null>(null)
   const imagem = useMostrarImagem()
 

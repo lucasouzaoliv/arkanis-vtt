@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { usePastasFechadas } from './pastasFechadas'
 import {
   faBold, faCheck, faChevronDown, faChevronRight, faCircleArrowRight, faFileAudio, faFloppyDisk, faFolder, faFolderOpen, faItalic,
   faListOl, faListUl, faMagnifyingGlass, faMusic, faPenToSquare, faPlay, faPlus, faRepeat, faShuffle, faStop, faTrash, faUnderline, faVolumeHigh,
@@ -22,7 +23,7 @@ const ICONE_MODO: Record<ModoPlayback, typeof faShuffle> = { sequencial: faCircl
 // controla as playlists; o jogador só ajusta o próprio volume (e ouve).
 export default function PainelPlaylist({ souMestre, userId, pl }: { souMestre: boolean; userId: string; pl: Api }) {
   const [busca, setBusca] = useState('')
-  const [abertas, setAbertas] = useState<Record<string, boolean>>({})
+  const [fechadas, setFechadas] = usePastasFechadas('playlist')
   const [volumesAbertos, setVolumesAbertos] = useState(true)
   const [criando, setCriando] = useState<{ pasta: string | null } | null>(null)
   const [editando, setEditando] = useState<Playlist | null>(null)
@@ -32,8 +33,8 @@ export default function PainelPlaylist({ souMestre, userId, pl }: { souMestre: b
   const volumes = useVolumesDoUsuario()
 
   const arvore = montarArvore<Playlist>(pl.pastas, pl.playlists, busca)
-  const alternar = (id: string) => setAbertas((a) => ({ ...a, [id]: !(a[id] ?? true) }))
-  const aberta = (id: string) => abertas[id] ?? true
+  const alternar = (id: string) => setFechadas((s) => { const x = new Set(s); if (x.has(id)) x.delete(id); else x.add(id); return x })
+  const aberta = (id: string) => !fechadas.has(id)
 
   const abrirMenu = (e: React.MouseEvent, itens: ItemMenu[]) => {
     e.preventDefault()
