@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { temVisaoNoEscuro } from './luz'
+import { temVisaoDoOculto, temVisaoNoEscuro } from './luz'
 import { supabase } from '../../lib/supabase'
 import { computeDerivedStats, type Training } from '../../lib/rules'
 import { lerTeste, nomesNumerados, ordemDeIniciativa, rolarTeste, testeDeIniciativa, type Combatente } from './combate'
@@ -385,5 +385,7 @@ export function useCombate(campanhaId: string | undefined) {
 
   const enxergaNoEscuro = (characterId: string) => temVisaoNoEscuro(poderesDe[characterId] ?? [])
 
-  return { combates, ativo, ordem, barras, enxergaNoEscuro, condicoesDaFicha, duracoesDe, marcarDuracao, criar, salvar, excluir, iniciar, entrarAmeacas, adicionarAtor, encerrar, passar, remover }
+  const visaoDoOculto = (characterId: string) => temVisaoDoOculto(poderesDe[characterId] ?? [])
+
+  return { combates, ativo, ordem, barras, enxergaNoEscuro, visaoDoOculto, condicoesDaFicha, duracoesDe, marcarDuracao, criar, salvar, excluir, iniciar, entrarAmeacas, adicionarAtor, encerrar, passar, remover }
 }

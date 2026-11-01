@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, coneDaLanterna, conesDosTokens, lanternaNoMapa, luzDoObjeto, luzesDoAmbiente, temLuzAmbiente, temVisaoNoEscuro, veNoEscuroNaCena } from './luz'
+import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, coneDaLanterna, conesDosTokens, lanternaNoMapa, luzDoObjeto, luzesDoAmbiente, naEscuridao, temLuzAmbiente, temVisaoDoOculto, temVisaoNoEscuro, veNoEscuroNaCena, visaoDoOcultoAtiva } from './luz'
 
 const token = { id: 't', x: 0, y: 0, width: 100, height: 100, rotation: 0, layer: 'token' as const }
 const celula = { w: 100, h: 100 }
@@ -139,5 +139,32 @@ describe('enxergar no escuro', () => {
     expect(veNoEscuroNaCena(['kevin'], [{ character_id: 'kevin', layer: 'mestre' }], temPoder)).toBe(false)
     expect(veNoEscuroNaCena(['outro'], [...comKevin, { character_id: 'outro', layer: 'token' }], temPoder)).toBe(false)
     expect(veNoEscuroNaCena([], comKevin, temPoder)).toBe(false)
+  })
+})
+
+describe('efeito da Visão do Oculto', () => {
+  const area = { x: 0, y: 0, width: 300, height: 300 }
+  const dentro = { character_id: 'kevin', layer: 'token', x: 100, y: 100, width: 100, height: 100 }
+  const fora = { ...dentro, x: 500 }
+  const temPoder = (id: string) => id === 'kevin'
+
+  it('é só a Visão do Oculto, não os outros poderes de enxergar no escuro', () => {
+    expect(temVisaoDoOculto(['Visão do Oculto'])).toBe(true)
+    expect(temVisaoDoOculto(['Instintos Sanguinários', 'Adepto do Escuro'])).toBe(false)
+  })
+
+  it('conta o meio do token dentro da área, ou a cena toda escura', () => {
+    expect(naEscuridao(dentro, [area], 0)).toBe(true)
+    expect(naEscuridao(fora, [area], 0)).toBe(false)
+    expect(naEscuridao({ ...dentro, x: 260 }, [area], 0)).toBe(false)
+    expect(naEscuridao(fora, [], 0.3)).toBe(false)
+    expect(naEscuridao(fora, [], 0.5)).toBe(true)
+  })
+
+  it('liga só pra quem tem o poder e está no escuro', () => {
+    expect(visaoDoOcultoAtiva(['kevin'], [dentro], temPoder, [area], 0)).toBe(true)
+    expect(visaoDoOcultoAtiva(['kevin'], [fora], temPoder, [area], 0)).toBe(false)
+    expect(visaoDoOcultoAtiva(['outro'], [dentro, { ...dentro, character_id: 'outro' }], temPoder, [area], 0)).toBe(false)
+    expect(visaoDoOcultoAtiva(['kevin'], [{ ...dentro, layer: 'mestre' }], temPoder, [area], 0)).toBe(false)
   })
 })

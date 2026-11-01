@@ -92,13 +92,18 @@ function Grupo({ titulo, children }: { titulo: string; children: ReactNode }) {
 export function JanelaInterface({ onFechar }: { onFechar: () => void }) {
   const [escala, setEscala] = useState(lerInterface().escala)
   const [loucura, setLoucura] = useState(lerInterface().loucura)
+  const [visaoOculto, setVisaoOculto] = useState(lerInterface().visaoOculto)
   const mudar = (v: number) => {
     setEscala(v)
-    salvarInterface({ escala: v, loucura })
+    salvarInterface({ escala: v, loucura, visaoOculto })
   }
   const mudarLoucura = (v: boolean) => {
     setLoucura(v)
-    salvarInterface({ escala, loucura: v })
+    salvarInterface({ escala, loucura: v, visaoOculto })
+  }
+  const mudarVisaoOculto = (v: boolean) => {
+    setVisaoOculto(v)
+    salvarInterface({ escala, loucura, visaoOculto: v })
   }
   return (
     <Janela titulo="Configuração da Interface do Usuário" icone={faSwatchbook} largura={520} onFechar={onFechar}>
@@ -111,10 +116,14 @@ export function JanelaInterface({ onFechar }: { onFechar: () => void }) {
         <Grupo titulo="Efeitos na Tela">
           <label className="janela-check">
             <input type="checkbox" checked={loucura} onChange={(e) => mudarLoucura(e.target.checked)} />
-            Sanidade e vida baixas mexem na tela (escurece, sangra, borra, o mapa derrete)
+            Sanidade e vida baixas mexem na tela (escurece, borra, o mapa derrete)
+          </label>
+          <label className="janela-check">
+            <input type="checkbox" checked={visaoOculto} onChange={(e) => mudarVisaoOculto(e.target.checked)} />
+            Visão do Oculto na escuridão (borda dourada e sigilos na tela)
           </label>
         </Grupo>
-        <Rodape onRedefinir={() => { setLoucura(true); setEscala(INTERFACE_PADRAO.escala); salvarInterface(INTERFACE_PADRAO) }} />
+        <Rodape onRedefinir={() => { setLoucura(true); setVisaoOculto(true); setEscala(INTERFACE_PADRAO.escala); salvarInterface(INTERFACE_PADRAO) }} />
       </div>
     </Janela>
   )

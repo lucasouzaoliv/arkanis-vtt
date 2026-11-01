@@ -33,9 +33,10 @@ import { useSomNoPalco } from './SonsNoPalco'
 import { BrilhoDasLanternas, LuzesNoPalco, useEscuridaoNoPalco } from './EscuridaoNoPalco'
 import { useEscuridao } from './useEscuridao'
 import { useMoldesNoPalco } from './MoldesNoPalco'
+import VisaoDoOcultoNaTela, { useVisaoDoOcultoLigada } from './VisaoDoOcultoNaTela'
 import LoucuraNaTela, { FerimentoNaTela, filtroDaVisao, useLoucuraLigada } from './LoucuraNaTela'
 import { ferimentoDaVida, loucuraDaSanidade, SEM_FERIMENTO, SEM_LOUCURA } from './sanidade'
-import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, caminhoDoCone, coneDaLanterna, conesDosTokens, IMAGEM_LUZ, IMAGEM_NOTA, LANTERNAS, luzCompleta, luzesDoAmbiente, temLuzAmbiente, veNoEscuroNaCena, type AjusteLanterna, type Lanterna, type LuzAmbiente } from './luz'
+import { ajusteDaSeta, setaNoAlcance, caminhoDaLuzUv, caminhoDoCone, coneDaLanterna, conesDosTokens, IMAGEM_LUZ, IMAGEM_NOTA, LANTERNAS, luzCompleta, luzesDoAmbiente, temLuzAmbiente, veNoEscuroNaCena, visaoDoOcultoAtiva, type AjusteLanterna, type Lanterna, type LuzAmbiente } from './luz'
 import ConfigurarLuz from './ConfigurarLuz'
 import ConfigurarEfeito from './ConfigurarEfeito'
 import EfeitosNoPalco from './EfeitosNoPalco'
@@ -66,7 +67,7 @@ type Gesto =
 
 // Centro da mesa: a cena com imagem, grade, objetos/tokens, escuridão, ambiente e clima.
 // Arrastar com o botão direito move o mapa (o esquerdo faz a caixa de seleção), a rodinha dá zoom.
-export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null, barrasDe, enxergaNoEscuro, documentos = [], onEsconderDocumento, onAcharDocumento, onAbrirDocumento }: {
+export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null, barrasDe, enxergaNoEscuro, visaoDoOculto, documentos = [], onEsconderDocumento, onAcharDocumento, onAbrirDocumento }: {
   cena: Cena | null
   souMestre: boolean
   userId: string
@@ -134,6 +135,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   barrasDe?: (characterId: string) => { pv: [number, number | null]; san: [number, number | null] } | null
   // Tem poder de enxergar no escuro (Visão do Oculto e afins)?
   enxergaNoEscuro?: (characterId: string) => boolean
+  // Tem Visão do Oculto? Dentro da escuridão, borda dourada e sigilos na tela.
+  visaoDoOculto?: (characterId: string) => boolean
   // Documentos encontráveis (KAN-118): o mestre esconde no mapa; o jogador clica no papel e acha.
   documentos?: { id: string; titulo: string }[]
   onEsconderDocumento?: (documentoId: string, ponto: { x: number; y: number }) => void
@@ -212,6 +215,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
   const ferimento = barrasDaVisao ? ferimentoDaVida(...barrasDaVisao.pv) : SEM_FERIMENTO
   const filtroVisao = filtroDaVisao(loucura, ferimento)
   // Quem enxerga no escuro não tem a escuridão por cima (os outros continuam vendo tudo escuro).
+  const visaoDoOcultoLigada = useVisaoDoOcultoLigada()
   const veNoEscuro = !veTudo && !!enxergaNoEscuro && veNoEscuroNaCena(personagensDaVisao, objetos, enxergaNoEscuro)
   const visiveis = objetos.filter((o) => veTudo || (o.layer !== 'mestre' && !o.so_uv && o.image_url !== IMAGEM_LUZ && o.image_url !== IMAGEM_EFEITO))
 
@@ -269,6 +273,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
     .filter((o) => (souMestre ? selecionados.includes(o.id) : o.character_id !== null && meusPersonagens.includes(o.character_id)))
     .map((o) => ({ x: o.x + o.width / 2, y: o.y + o.height / 2 }))
   const esc = useEscuridao(cena?.id ?? null)
+  const efeitoDoOculto = veNoEscuro && visaoDoOcultoLigada && !!visaoDoOculto && visaoDoOcultoAtiva(personagensDaVisao, objetos, visaoDoOculto, esc.areas, cena?.darkness ?? 0)
   // Configurar Lanterna: token sendo configurado e a seta que a pessoa está desenhando.
   const [configLanterna, setConfigLanterna] = useState<string | null>(null)
   // Configurar Luz / Efeito: o objeto e como estava ao abrir (fechar sem salvar volta pra isso).
@@ -1463,6 +1468,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, meusPe
       {/* Filtro de iluminação: uma luz colorida por cima do mapa inteiro (lua de sangue, luz verde…). */}
       {cena?.filtro_cor && <div className="mesa-filtro-luz" style={{ background: cena.filtro_cor, opacity: cena.filtro_intensidade }} aria-hidden />}
       {cena?.weather && <EfeitoClimatico key={cena.weather} clima={cena.weather} cor={cena.weather_cor} />}
+      {cena && efeitoDoOculto && <VisaoDoOcultoNaTela />}
       {cena && loucura.intensidade > 0 && <LoucuraNaTela loucura={loucura} />}
       {cena && ferimento.intensidade > 0 && <FerimentoNaTela ferimento={ferimento} />}
       {soltando && <div className="mesa-soltar">{cena?.background_url ? 'Solte pra colocar a imagem na cena' : 'Solte pra usar como fundo da cena'}</div>}

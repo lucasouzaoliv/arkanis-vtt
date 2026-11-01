@@ -47,16 +47,17 @@ export function nomesDasFontes(c: ConfigCampanha | null | undefined): string[] {
 
 // ---- Interface do usuário (no navegador de cada um) ----
 // loucura: a tela derrete com a SAN baixa (KAN-116); dá pra desligar (enjoo).
-export type PreferenciasInterface = { escala: number; loucura: boolean }
+// visaoOculto: borda dourada e sigilos de quem tem Visão do Oculto dentro da escuridão.
+export type PreferenciasInterface = { escala: number; loucura: boolean; visaoOculto: boolean }
 
-export const INTERFACE_PADRAO: PreferenciasInterface = { escala: 1, loucura: true }
+export const INTERFACE_PADRAO: PreferenciasInterface = { escala: 1, loucura: true, visaoOculto: true }
 
 const CHAVE_INTERFACE = 'arkanis-interface'
 
 export function lerInterface(): PreferenciasInterface {
   try {
     const p = { ...INTERFACE_PADRAO, ...JSON.parse(localStorage.getItem(CHAVE_INTERFACE) ?? '{}') }
-    return { escala: Math.min(1.4, Math.max(0.75, Number(p.escala) || 1)), loucura: p.loucura !== false }
+    return { escala: Math.min(1.4, Math.max(0.75, Number(p.escala) || 1)), loucura: p.loucura !== false, visaoOculto: p.visaoOculto !== false }
   } catch {
     return INTERFACE_PADRAO
   }

@@ -246,3 +246,33 @@ export function veNoEscuroNaCena(
 ): boolean {
   return personagens.some((id) => temPoder(id) && objetos.some((o) => o.character_id === id && o.layer !== 'mestre'))
 }
+
+export function temVisaoDoOculto(poderes: string[]): boolean {
+  return poderes.some((p) => semAcento(p) === 'visao do oculto')
+}
+
+// Cena escura a partir daqui conta como estar na escuridão em qualquer lugar do mapa.
+export const NIVEL_CENA_ESCURA = 0.5
+
+// O meio do token está numa área pintada (ou a cena toda está escura)?
+export function naEscuridao(
+  o: { x: number; y: number; width: number; height: number },
+  areas: { x: number; y: number; width: number; height: number }[],
+  nivel: number,
+): boolean {
+  if (nivel >= NIVEL_CENA_ESCURA) return true
+  const cx = o.x + o.width / 2
+  const cy = o.y + o.height / 2
+  return areas.some((a) => cx >= a.x && cx <= a.x + a.width && cy >= a.y && cy <= a.y + a.height)
+}
+
+// Efeito da Visão do Oculto: quem tem o poder, com o token dele dentro da escuridão.
+export function visaoDoOcultoAtiva(
+  personagens: string[],
+  objetos: { character_id?: string | null; layer: string; x: number; y: number; width: number; height: number }[],
+  temPoder: (characterId: string) => boolean,
+  areas: { x: number; y: number; width: number; height: number }[],
+  nivel: number,
+): boolean {
+  return personagens.some((id) => temPoder(id) && objetos.some((o) => o.character_id === id && o.layer !== 'mestre' && naEscuridao(o, areas, nivel)))
+}
