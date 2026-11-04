@@ -929,7 +929,13 @@ export default function Mesa() {
         pedidoPaleta={pedidoPaleta}
         pedidoLimpar={pedidoLimpar}
         combates={combate.combates}
-        entraEmCombate={(id) => atoresParaCombate.some((a) => a.id === id)}
+        entraEmCombate={(id) => atores.atores.some((a) => a.id === id)}
+        jaNoCombate={(c, id) => {
+          // Personagem de jogador só volta com o combate rodando (no Iniciar ele entra sozinho).
+          const a = atores.atores.find((x) => x.id === id)
+          const deJogador = !!a && (a.tipo === 'jogador' || Object.values(a.acesso_jogadores).includes('dono'))
+          return combate.naOrdem(c, id) || (deJogador && !c.ativo)
+        }}
         onAdicionarAoCombate={(combateId, atorId) => {
           const c = combate.combates.find((x) => x.id === combateId)
           if (c) combate.adicionarAtor(c, atorId)
@@ -1248,7 +1254,7 @@ export default function Mesa() {
 
       {montandoCombate && (
         <CriarCombate
-          inicial={montandoCombate.editando ?? montandoCombate.adicionarEm}
+          inicial={montandoCombate.adicionarEm ? { ...montandoCombate.adicionarEm, atores: montandoCombate.adicionarEm.atores.filter((id) => combate.naOrdem(montandoCombate.adicionarEm!, id)) } : montandoCombate.editando}
           modo={montandoCombate.adicionarEm ? 'adicionar' : 'criar'}
           atores={atoresParaCombate}
           meuId={userId ?? ''}

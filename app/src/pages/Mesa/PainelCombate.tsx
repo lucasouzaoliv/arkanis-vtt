@@ -169,8 +169,8 @@ export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo,
                 )
               })()}
               <span className="combate-iniciativa" title="Iniciativa">{c.iniciativa}</span>
-              {souMestre && c.tipo !== 'jogador' && ((vida && vida[0] <= 0) || (b && b.pv[0] <= 0)) && (
-                <button type="button" className="combate-icone" aria-label={`Tirar ${c.name} do combate`} title="Tirar do combate" onClick={() => onRemover(ativo, c.id)}>
+              {souMestre && (
+                <button type="button" className="combate-icone combate-tirar" aria-label={`Tirar ${c.name} do combate`} title="Tirar do combate" onClick={() => window.confirm(`Tirar ${c.name} do combate?`) && onRemover(ativo, c.id)}>
                   <FontAwesomeIcon icon={faXmark} />
                 </button>
               )}

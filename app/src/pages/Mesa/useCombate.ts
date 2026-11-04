@@ -251,10 +251,12 @@ export function useCombate(campanhaId: string | undefined) {
   }, [campanhaId, pastaDoCombate])
 
   // Personagens da aba Personagens (ameaças e NPCs) entrando na ordem de iniciativa.
-  const entrarAtores = useCallback(async (combate: Combate, atorIds: string[]) => {
+  // comJogadores: personagem de jogador voltando pro combate depois de ser tirado (ele entra sozinho no Iniciar).
+  const entrarAtores = useCallback(async (combate: Combate, atorIds: string[], comJogadores = false) => {
     if (!campanhaId || !atorIds.length) return []
-    const { data: atores } = await supabase.from('campaign_actors').select('id, tipo, character_id, creature_id, name, token_url, condicoes, condicoes_personalizadas').in('id', atorIds)
-    const lista = (atores ?? []).filter((a) => a.tipo !== 'jogador')
+    const { data: atores } = await supabase.from('campaign_actors').select('id, tipo, character_id, creature_id, name, token_url, condicoes, condicoes_personalizadas, acesso_jogadores').in('id', atorIds)
+    const lista = (atores ?? []).filter((a) => comJogadores || a.tipo !== 'jogador')
+    const deJogador = (a: (typeof lista)[number]) => comJogadores && (a.tipo === 'jogador' || Object.values((a.acesso_jogadores ?? {}) as Record<string, string>).includes('dono'))
     const idsCriatura = lista.map((a) => a.creature_id).filter((x): x is string => !!x)
     const { data: criaturas } = idsCriatura.length ? await supabase.from('creatures').select('id, iniciativa, image_url').in('id', idsCriatura) : { data: [] }
     const criatura = new Map((criaturas ?? []).map((c) => [c.id, c]))
@@ -269,18 +271,30 @@ export function useCombate(campanhaId: string | undefined) {
         name: a.name, image_url: a.token_url ?? c?.image_url ?? null, iniciativa: rolarTeste(t).total, desempate: t.bonus,
       }
     })
-    const npcs = lista.filter((a) => a.tipo === 'npc' && a.character_id)
+    const npcs = lista.filter((a) => a.tipo !== 'ameaca' && a.character_id && !deJogador(a))
+    const deJogadores = lista.filter((a) => a.character_id && deJogador(a))
     const { data: fichasNpc } = npcs.length
       ? await supabase.from('characters').select('id, user_id, name, avatar_url, attributes, conditions, condicoes_personalizadas').in('id', npcs.map((a) => a.character_id!))
       : { data: [] }
     const linhasNpc = await iniciativaDasFichas((fichasNpc ?? []) as FichaIniciativa[], combate, 'npc', new Map(npcs.map((a) => [a.character_id!, a.id])), new Map(npcs.map((a) => [a.character_id!, a.token_url])))
-    const linhas = [...ameacas, ...linhasNpc]
+    const { data: fichasJog } = deJogadores.length
+      ? await supabase.from('characters').select('id, user_id, name, avatar_url, attributes, conditions, condicoes_personalizadas').in('id', deJogadores.map((a) => a.character_id!))
+      : { data: [] }
+    const linhasJog = await iniciativaDasFichas((fichasJog ?? []) as FichaIniciativa[], combate, 'jogador', new Map(deJogadores.map((a) => [a.character_id!, a.id])), new Map(deJogadores.map((a) => [a.character_id!, a.token_url])))
+    const linhas = [...ameacas, ...linhasNpc, ...linhasJog]
     if (!linhas.length) return []
     const { data } = await supabase.from('combatants').insert(linhas).select('*')
     const novos = (data ?? []) as Combatente[]
     setCombatentes((l) => novos.reduce(trocar, l))
     return novos
   }, [campanhaId, iniciativaDasFichas])
+
+  // Já está nesse combate? Rodando, vale a ordem de iniciativa (quem foi tirado pode voltar);
+  // parado, a lista de quem vai lutar.
+  const naOrdem = useCallback(
+    (combate: Pick<Combate, 'id' | 'ativo' | 'atores'>, atorId: string) => (combate.ativo ? combatentes.some((c) => c.combat_id === combate.id && c.actor_id === atorId) : combate.atores.includes(atorId)),
+    [combatentes],
+  )
 
   // Guarda no combate quem luta nele (as do bestiário que já viraram personagem saem de "ameacas").
   const gravarAtores = useCallback(async (combate: Combate, atores: string[], ameacas: string[]) => {
@@ -318,17 +332,20 @@ export function useCombate(campanhaId: string | undefined) {
   // entrou já rola a iniciativa.
   const entrarAmeacas = useCallback(async (combate: Combate, criaturaIds: string[], atorIds: string[] = []) => {
     const novos = await criarAtoresDoBestiario(combate, criaturaIds)
-    const entram = [...novos, ...atorIds.filter((id) => !combate.atores.includes(id))]
+    const entram = [...novos, ...atorIds.filter((id) => !naOrdem(combate, id))]
     await gravarAtores(combate, [...combate.atores, ...entram], combate.ameacas)
     return entrarAtores(combate, entram)
-  }, [criarAtoresDoBestiario, gravarAtores, entrarAtores])
+  }, [criarAtoresDoBestiario, gravarAtores, entrarAtores, naOrdem])
 
   // Botão direito no token / arrastar da aba Personagens pro combate. Rodando: já rola a iniciativa.
+  // Quem foi tirado pode voltar, até personagem de jogador (ele não vai pra lista: no Iniciar entra sozinho).
   const adicionarAtor = useCallback(async (combate: Combate, atorId: string) => {
-    if (combate.atores.includes(atorId)) return
-    await gravarAtores(combate, [...combate.atores, atorId], combate.ameacas)
-    if (combate.ativo) await entrarAtores(combate, [atorId])
-  }, [gravarAtores, entrarAtores])
+    if (naOrdem(combate, atorId)) return
+    const { data: a } = await supabase.from('campaign_actors').select('tipo, acesso_jogadores').eq('id', atorId).maybeSingle()
+    const deJogador = a?.tipo === 'jogador' || Object.values((a?.acesso_jogadores ?? {}) as Record<string, string>).includes('dono')
+    if (!deJogador) await gravarAtores(combate, [...combate.atores, atorId], combate.ameacas)
+    if (combate.ativo) await entrarAtores(combate, [atorId], deJogador)
+  }, [gravarAtores, entrarAtores, naOrdem])
 
   // Iniciar (12.4): rola a iniciativa de todos os personagens jogáveis e de quem luta no combate.
   // (Combate salvo antes desta mudança ainda pode ter ameaças só do bestiário: viram personagens aqui.)
@@ -376,7 +393,7 @@ export function useCombate(campanhaId: string | undefined) {
     return !error
   }, [])
 
-  // Tirar do combate (ameaça com 0 de vida, 12.4). Se era a vez dela, passa antes.
+  // Tirar do combate (morreu, fugiu…): qualquer um, a qualquer hora. Se era a vez dele, passa antes.
   const remover = useCallback(async (combate: Combate, combatenteId: string) => {
     if (combate.turno_atual === combatenteId) await supabase.rpc('passar_turno', { p_combat_id: combate.id, p_voltar: false })
     setCombatentes((l) => l.filter((c) => c.id !== combatenteId))
@@ -387,5 +404,5 @@ export function useCombate(campanhaId: string | undefined) {
 
   const visaoDoOculto = (characterId: string) => temVisaoDoOculto(poderesDe[characterId] ?? [])
 
-  return { combates, ativo, ordem, barras, enxergaNoEscuro, visaoDoOculto, condicoesDaFicha, duracoesDe, marcarDuracao, criar, salvar, excluir, iniciar, entrarAmeacas, adicionarAtor, encerrar, passar, remover }
+  return { combates, ativo, ordem, naOrdem, barras, enxergaNoEscuro, visaoDoOculto, condicoesDaFicha, duracoesDe, marcarDuracao, criar, salvar, excluir, iniciar, entrarAmeacas, adicionarAtor, encerrar, passar, remover }
 }

@@ -69,7 +69,7 @@ type Gesto =
 
 // Centro da mesa: a cena com imagem, grade, objetos/tokens, escuridão, ambiente e clima.
 // Arrastar com o botão direito move o mapa (o esquerdo faz a caixa de seleção), a rodinha dá zoom.
-export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, corDe, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null, barrasDe, enxergaNoEscuro, visaoDoOculto, documentos = [], onEsconderDocumento, onAcharDocumento, onAbrirDocumento }: {
+export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, corDe, meusPersonagens, jogadores, obj, aviso, pings, focoPing, onSoltarImagem, onColocarAtor, onAbrirFicha, variacoesDe, onAbrirVariacoes, ferramenta, meusAlvos, outrosAlvos, onAlternarAlvo, onLimparAlvos, combates = [], onAdicionarAoCombate, entraEmCombate, des, pedidoPaleta = 0, pedidoLimpar = 0, sons, pedidoPaletaSom = 0, pedidoLimparSom = 0, pedidoLimparEscuridao = 0, ehMeuToken, podePingar = true, onInteragir, onColocarItem, itensDaCampanha = [], onEditarItem, podeEditarItem, onColocarPosicionavel, onColocarDaBiblioteca, onGuardarPosicionaveis, onCriarItemDoObjeto, camadaAtiva, alcances = [], deslocamentoDe, turnoDoCombate = null, barrasDe, enxergaNoEscuro, visaoDoOculto, jaNoCombate, documentos = [], onEsconderDocumento, onAcharDocumento, onAbrirDocumento }: {
   cena: Cena | null
   souMestre: boolean
   userId: string
@@ -97,6 +97,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, corDe,
   combates?: { id: string; name: string; ativo: boolean; atores: string[] }[]
   onAdicionarAoCombate?: (combateId: string, atorId: string) => void
   entraEmCombate?: (atorId: string) => boolean
+  // Já está nesse combate (quem foi tirado pode voltar pelo botão direito).
+  jaNoCombate?: (combate: { id: string; ativo: boolean; atores: string[] }, atorId: string) => boolean
   // Ferramentas de Desenho (KAN-52).
   des: ReturnType<typeof useDesenhos>
   pedidoPaleta?: number
@@ -972,13 +974,13 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, corDe,
           ...(podeMover(o) && variacoesDe(o.actor_id).length > 1
             ? [{ rotulo: 'Variação de Token', icone: faImages, onClick: () => onAbrirVariacoes(o.id) } as ItemMenu]
             : []),
-          // Ameaça/NPC que já está na cena entra no combate (o de jogador entra sozinho).
+          // Quem está na cena entra no combate (o de jogador entra sozinho no Iniciar; aqui ele volta se foi tirado).
           ...(souMestre && onAdicionarAoCombate && combates.length && entraEmCombate?.(o.actor_id)
             ? [{
                 tipo: 'sub', rotulo: 'Adicionar ao Combate', icone: faShieldHalved,
                 itens: combates.map((c) => ({
-                  rotulo: `${c.atores.includes(o.actor_id!) ? '✓ ' : ''}${c.name}${c.ativo ? ' (rodando)' : ''}`,
-                  desativado: c.atores.includes(o.actor_id!),
+                  rotulo: `${jaNoCombate?.(c, o.actor_id!) ? '✓ ' : ''}${c.name}${c.ativo ? ' (rodando)' : ''}`,
+                  desativado: jaNoCombate?.(c, o.actor_id!),
                   onClick: () => onAdicionarAoCombate(c.id, o.actor_id!),
                 })),
               } as ItemMenu]
