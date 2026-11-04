@@ -182,13 +182,18 @@ export type Sorteio = { id: string; tokens: string[]; vencedor: string }
 
 type TokenDoSorteio = { id: string; x: number; y: number; width: number; height: number; layer: string; character_id?: string | null; actor_id?: string | null }
 
+// O token de quem está no combate, nessa cena: pelo personagem ou pela ameaça (cada uma tem o seu ator).
+export function tokenDoCombatente<T extends { character_id?: string | null; actor_id?: string | null }>(c: Pick<Combatente, 'character_id' | 'actor_id'>, tokens: T[]): T | undefined {
+  return tokens.find((o) => (c.character_id && o.character_id === c.character_id) || (c.actor_id && o.actor_id === c.actor_id))
+}
+
 // Os personagens jogáveis do combate com token nessa cena (nunca ameaça nem NPC), um token por personagem,
 // em volta do meio do grupo: é a ordem em que a seta gira.
 export function candidatosDoSorteio(ordem: Pick<Combatente, 'tipo' | 'character_id' | 'actor_id'>[], tokens: TokenDoSorteio[]): string[] {
   const achados: TokenDoSorteio[] = []
   for (const c of ordem) {
     if (c.tipo !== 'jogador') continue
-    const t = tokens.find((o) => o.layer !== 'mestre' && ((c.character_id && o.character_id === c.character_id) || (c.actor_id && o.actor_id === c.actor_id)))
+    const t = tokenDoCombatente(c, tokens.filter((o) => o.layer !== 'mestre'))
     if (t && !achados.includes(t)) achados.push(t)
   }
   const centro = (o: TokenDoSorteio) => ({ x: o.x + o.width / 2, y: o.y + o.height / 2 })

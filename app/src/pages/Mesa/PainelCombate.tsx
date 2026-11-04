@@ -11,7 +11,7 @@ import type { CondicaoPersonalizada } from '../CharacterSheet/efeitosEscolhidos'
 
 // Aba Encontros de Combate (12.4). Sem combate rodando: a lista dos combates salvos
 // (Nome + VD + Iniciar). Rodando: a ordem de iniciativa, os turnos e a rodada.
-export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo, ordem, vidaDe, barras, meusPersonagens, onSortear, onCriar, onEditar, onExcluir, onIniciar, onEncerrar, onAdicionar, onPassar, onRemover, onAbrir, onSoltarAtor, condicoesDe, onMudarCondicoes, duracoesDe, onDuracao }: {
+export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo, ordem, vidaDe, barras, meusPersonagens, onSortear, onFocar, onCriar, onEditar, onExcluir, onIniciar, onEncerrar, onAdicionar, onPassar, onRemover, onAbrir, onSoltarAtor, condicoesDe, onMudarCondicoes, duracoesDe, onDuracao }: {
   souMestre: boolean
   combates: Combate[]
   vdDoCombate: (c: Combate) => number
@@ -23,6 +23,8 @@ export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo,
   meusPersonagens: string[]
   // Roleta: sorteia um personagem jogável do combate pra ser o alvo.
   onSortear?: () => void
+  // Mestre, botão direito no nome: a tela vai até o token.
+  onFocar?: (c: Combatente) => void
   onCriar: () => void
   onEditar: (c: Combate) => void
   onExcluir: (c: Combate) => void
@@ -126,7 +128,14 @@ export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo,
           const verDetalhes = c.tipo === 'jogador' || souMestre
           return (
             <li key={c.id} className={`combate-linha${vez ? ' vez' : ''}${meu ? ' meu' : ''}`}>
-              <button type="button" className="combate-quem" disabled={!verDetalhes} onClick={() => onAbrir(c)}>
+              <button
+                type="button"
+                className="combate-quem"
+                disabled={!verDetalhes}
+                title={onFocar ? 'Clique: abrir a ficha · Botão direito: ir até o token' : undefined}
+                onClick={() => onAbrir(c)}
+                onContextMenu={onFocar ? (e) => { e.preventDefault(); onFocar(c) } : undefined}
+              >
                 <span className="ator-token">
                   {c.image_url ? <img src={c.image_url} alt="" /> : <FontAwesomeIcon icon={c.tipo === 'ameaca' ? faSkull : faUser} />}
                 </span>
@@ -210,7 +219,7 @@ function deslocamento(pos: number): number {
   return Math.sign(pos) * (primeiro + (Math.abs(pos) - 1) * passo)
 }
 
-export function IndicadorTurno({ ativo, ordem, barras, meusPersonagens, souMestre, onPassar }: {
+export function IndicadorTurno({ ativo, ordem, barras, meusPersonagens, souMestre, onPassar, onFocar }: {
   ativo: Combate
   ordem: Combatente[]
   // Vida dos jogadores (o tracinho embaixo do card; ameaças não mostram).
@@ -218,6 +227,8 @@ export function IndicadorTurno({ ativo, ordem, barras, meusPersonagens, souMestr
   meusPersonagens: string[]
   souMestre: boolean
   onPassar: () => void
+  // Mestre, botão direito no card da vez: a tela vai até o token.
+  onFocar?: (c: Combatente) => void
 }) {
   const indiceAtual = Math.max(0, ordem.findIndex((c) => c.id === ativo.turno_atual))
   const atual = ordem[indiceAtual]
@@ -251,7 +262,7 @@ export function IndicadorTurno({ ativo, ordem, barras, meusPersonagens, souMestr
               disabled={!pode}
               aria-hidden={distancia > VISIVEIS_DE_CADA_LADO}
               tabIndex={pode ? 0 : -1}
-              title={pode ? (minhaVez ? 'Clique pra passar o turno' : 'Passar o turno') : undefined}
+              title={pode ? (minhaVez ? 'Clique pra passar o turno' : onFocar ? 'Clique: passar o turno · Botão direito: ir até o token' : 'Passar o turno') : undefined}
               style={{
                 transform: `translateX(calc(-50% + ${deslocamento(pos)}px))`,
                 opacity: distancia > VISIVEIS_DE_CADA_LADO ? 0 : vez ? 1 : Math.max(0.35, 0.9 - (distancia - 1) * 0.18),
@@ -259,6 +270,7 @@ export function IndicadorTurno({ ativo, ordem, barras, meusPersonagens, souMestr
                 zIndex: 10 - distancia,
               }}
               onClick={onPassar}
+              onContextMenu={onFocar && vez ? (e) => { e.preventDefault(); onFocar(c) } : undefined}
             >
               <span className="indicador-turno-imagem">
                 {c.image_url ? <img src={c.image_url} alt="" draggable={false} /> : <FontAwesomeIcon icon={c.tipo === 'ameaca' ? faSkull : faUser} />}

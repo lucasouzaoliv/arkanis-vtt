@@ -51,7 +51,7 @@ import PainelCombate, { IndicadorTurno } from './PainelCombate'
 import CriarCombate, { type AtorDoCombate } from './CriarCombate'
 import EditorAmeaca, { carregarParaEditar, criaturaVazia, type CriaturaEditavel } from './EditorAmeaca'
 import { useCombate, type Combate } from './useCombate'
-import { candidatosDoSorteio, sortearVencedor, type Combatente } from './combate'
+import { candidatosDoSorteio, sortearVencedor, tokenDoCombatente, type Combatente } from './combate'
 import type { Camada, Cena, ObjetoCena } from './cenas'
 import { useFps, useSessaoMesa } from './useSessaoMesa'
 import { autoria, resumoDaMensagem, textoPuro, type Mensagem, type ModoEnvio } from './chat'
@@ -752,6 +752,13 @@ export default function Mesa() {
     objetos.sortear({ id: crypto.randomUUID(), tokens, vencedor: sortearVencedor(tokens) })
   }
 
+  // Mestre, botão direito no combate: a câmera vai até o token e ele pisca com o nome (só na própria tela).
+  function focarCombatente(c: Combatente) {
+    const t = tokenDoCombatente(c, objetos.objetos)
+    if (!t) return avisar(`${c.name} não tem token nessa cena.`, true)
+    receberPing({ id: crypto.randomUUID(), x: t.x + t.width / 2, y: t.y + t.height / 2, foco: true, nome: c.name, userId: userId ?? undefined })
+  }
+
   function abrirCombatente(c: Combatente) {
     const a = c.actor_id ? atores.atores.find((x) => x.id === c.actor_id) : atores.atores.find((x) => x.character_id === c.character_id)
     if (a) abrirFicha(a.id)
@@ -1078,6 +1085,7 @@ export default function Mesa() {
                 barras={(c) => (combateDa(campanha.configuracoes).vidaNoCarrossel ? combate.barras(c) : null)}
                 meusPersonagens={meusPersonagensIds}
                 onSortear={souMestre ? sortearAlvo : undefined}
+                onFocar={souMestre ? focarCombatente : undefined}
                 onCriar={() => setMontandoCombate({})}
                 onEditar={(c) => setMontandoCombate({ editando: c })}
                 onExcluir={(c) => combate.excluir(c.id)}
@@ -1234,6 +1242,7 @@ export default function Mesa() {
           meusPersonagens={meusPersonagensIds}
           souMestre={souMestre}
           onPassar={() => combate.ativo && combate.passar(combate.ativo)}
+          onFocar={souMestre ? focarCombatente : undefined}
         />
       )}
 

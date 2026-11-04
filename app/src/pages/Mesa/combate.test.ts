@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { candidatosDoSorteio, passosDoSorteio, sortearVencedor, elementoDaCriatura, lerPericias, filtrarAmeacas, lerTeste, nomesNumerados, ordemDeIniciativa, rolarDano, rolarTeste, testeDeIniciativa, vdTotal, type CriaturaLista } from './combate'
+import { tokenDoCombatente, candidatosDoSorteio, passosDoSorteio, sortearVencedor, elementoDaCriatura, lerPericias, filtrarAmeacas, lerTeste, nomesNumerados, ordemDeIniciativa, rolarDano, rolarTeste, testeDeIniciativa, vdTotal, type CriaturaLista } from './combate'
 
 const c = (p: Partial<CriaturaLista>): CriaturaLista => ({
   id: 'x', name: 'X', vd: 10, image_url: null, tipo_criatura: null, tamanho: null, descritores: [], categoria: 'mundana', source_id: 'base', iniciativa: null, pv_maximo: null, ...p,
@@ -103,6 +103,18 @@ it('carrossel: quem está na vez no centro, próximos à direita, os que já for
 it('ameaças repetidas ganham número', () => {
   expect(nomesNumerados(['Zumbi', 'Zumbi', 'Cultista'])).toEqual(['Zumbi 1', 'Zumbi 2', 'Cultista'])
   expect(nomesNumerados([])).toEqual([])
+})
+
+it('acha o token certo entre ameaças iguais', () => {
+  const tokens = [
+    { id: 't1', actor_id: 'enraizado-1', character_id: null },
+    { id: 't2', actor_id: 'enraizado-2', character_id: null },
+    { id: 't3', actor_id: 'ator-nina', character_id: 'nina' },
+  ]
+  expect(tokenDoCombatente({ actor_id: 'enraizado-2', character_id: null }, tokens)?.id).toBe('t2')
+  expect(tokenDoCombatente({ actor_id: null, character_id: 'nina' }, tokens)?.id).toBe('t3')
+  expect(tokenDoCombatente({ actor_id: 'outra', character_id: null }, tokens)).toBeUndefined()
+  expect(tokenDoCombatente({ actor_id: null, character_id: null }, tokens)).toBeUndefined()
 })
 
 describe('sorteio de alvo', () => {
