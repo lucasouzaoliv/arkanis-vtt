@@ -1,7 +1,7 @@
 // Regras puras do Sistema de Mira (KAN-51, spec 12.9): o ataque que vai pro chat, a Defesa e
 // as resistências do alvo e quanto do dano passa.
 import { rollAttributeTest, rollDiceFormula } from '../../lib/rules'
-import { resistenciasDoItemEquipado, type AppliedModifier } from '../CharacterSheet/itemMods'
+import { lerResistenciasExtras, resistenciasDoItemEquipado, resistenciasFinais, TODO_DANO, type AppliedModifier } from '../CharacterSheet/itemMods'
 import { defesaTotal } from '../CharacterSheet/defesa'
 import { defesaDeCondicoes } from '../CharacterSheet/condicoes'
 import { lerCondicoesPersonalizadas } from '../CharacterSheet/efeitosEscolhidos'
@@ -32,7 +32,7 @@ export type RolagemDano = {
   dados: { sides: number; value: number }[]
   critico: boolean
   // Quanto passou em cada alvo e por quê (null: alvo sem ficha).
-  efeitos?: Record<string, { pv: number; san: number; motivos: string[] } | null>
+  efeitos?: Record<string, { pv: number; san: number; motivos: string[]; pvNoTemp?: number } | null>
 }
 
 export type Reacao = { tipo: 'esquiva' | 'bloqueio' | 'contra'; valor: number }
@@ -108,6 +108,10 @@ export type DadosDoAlvo =
       max_pv_override?: number | null
       max_sanity_override?: number | null
       max_pe_override?: number | null
+      // Editadas na ficha (Tela de Ruído como reação, resistência temporária…).
+      resistencias_extras?: unknown
+      // Os PV temporários só valem contra esses tipos (película da Tela de Ruído).
+      temp_pv_tipos?: string[] | null
       pv?: number | null
       san?: number | null
       pe?: number | null
@@ -144,7 +148,7 @@ export function nomeDoTipo(t: string): string {
 }
 
 // Resistências do alvo: valor por tipo ("dano" vale pra tudo), imunidades e vulnerabilidades.
-export type Perfil = { resist: Record<string, number>; imune: string[]; imuneExceto: string[] | null; vulneravel: string[] }
+export type Perfil = { resist: Record<string, number>; imune: string[]; imuneExceto: string[] | null; vulneravel: string[]; tempTipos?: string[] }
 
 const PERFIL_VAZIO: Perfil = { resist: {}, imune: [], imuneExceto: null, vulneravel: [] }
 
@@ -188,13 +192,12 @@ export function perfilDoAlvo(d: DadosDoAlvo): Perfil {
   if (d.tipo === 'criatura') return lerResistenciasDaCriatura(d.resistencias, d.vulnerabilidades)
   if (d.tipo !== 'ficha') return PERFIL_VAZIO
   const resist: Record<string, number> = {}
-  for (const item of d.itens) {
-    for (const r of resistenciasDoItemEquipado(item.stats, item.mods)) {
-      const k = tipoDeDano(r.tipo)
-      resist[k] = Math.max(resist[k] ?? 0, r.valor)
-    }
+  const deItens = d.itens.flatMap((item) => resistenciasDoItemEquipado(item.stats, item.mods))
+  for (const r of resistenciasFinais(deItens, lerResistenciasExtras(d.resistencias_extras))) {
+    const k = normalizar(r.tipo) === normalizar(TODO_DANO) ? 'dano' : tipoDeDano(r.tipo)
+    resist[k] = Math.max(resist[k] ?? 0, r.valor)
   }
-  return { resist, imune: [], imuneExceto: null, vulneravel: [] }
+  return { resist, imune: [], imuneExceto: null, vulneravel: [], ...(d.temp_pv_tipos ? { tempTipos: d.temp_pv_tipos.map(tipoDeDano) } : {}) }
 }
 
 // Mesma conta da ficha (defesa.ts): 10 + Agilidade + itens + poderes fixos + outros + condições.
@@ -207,8 +210,10 @@ export function defesaDoAlvo(d: DadosDoAlvo): number | null {
 
 // Quanto do dano passa: imune zera, vulnerável dobra, resistência do tipo (ou a geral, a maior
 // das duas) tira de cada parte; o Bloqueio tira do total. Dano mental vai pra Sanidade.
-export function danoNoAlvo(partes: { valor: number; tipo: string }[], perfil: Perfil, bloqueio = 0): { pv: number; san: number; motivos: string[] } {
+// pvNoTemp: quanto do dano os PV temporários podem absorver, quando eles só valem contra alguns tipos.
+export function danoNoAlvo(partes: { valor: number; tipo: string }[], perfil: Perfil, bloqueio = 0): { pv: number; san: number; motivos: string[]; pvNoTemp?: number } {
   let pv = 0
+  let noTemp = 0
   let san = 0
   const motivos: string[] = []
   for (const p of partes) {
@@ -227,14 +232,17 @@ export function danoNoAlvo(partes: { valor: number; tipo: string }[], perfil: Pe
     if (r && v) motivos.push(`resistência ${r}`)
     v = Math.max(0, v - r)
     if (tipo === 'mental') san += v
-    else pv += v
+    else {
+      pv += v
+      if (perfil.tempTipos?.includes(tipo)) noTemp += v
+    }
   }
   if (bloqueio > 0) {
     const tira = Math.min(bloqueio, pv)
     pv -= tira
     motivos.push(`bloqueio ${bloqueio}`)
   }
-  return { pv, san, motivos: [...new Set(motivos)] }
+  return { pv, san, motivos: [...new Set(motivos)], ...(perfil.tempTipos ? { pvNoTemp: Math.min(noTemp, pv) } : {}) }
 }
 
 // Ataque da ficha de ameaça: "+10 (2d20), crítico 19/x3" e "1d6+9 corte".

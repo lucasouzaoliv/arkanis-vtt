@@ -215,6 +215,34 @@ export function defesaDeModificadores(applied: AppliedModifier[] | undefined): n
 // o maior valor citado, que e o teto, e a condicao continua escrita no texto do efeito.
 export type Resistencia = { tipo: string; valor: number }
 
+// Resistência que a pessoa editou na ficha. temporaria: só um rótulo pra saber que é passageira;
+// umaVez: some depois do próximo dano; semItem: tira a daquele tipo que vem dos itens.
+export type ResistenciaExtra = Resistencia & { id: string; temporaria?: boolean; umaVez?: boolean; origem?: string; semItem?: boolean }
+
+// Resistência a qualquer dano ("Todo dano" na tela).
+export const TODO_DANO = 'Dano'
+
+const tipoNormal = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+
+export function lerResistenciasExtras(v: unknown): ResistenciaExtra[] {
+  if (!Array.isArray(v)) return []
+  return v.filter((r): r is ResistenciaExtra => !!r && typeof r === 'object' && typeof (r as Resistencia).tipo === 'string' && typeof (r as Resistencia).valor === 'number')
+}
+
+// Itens + o que a pessoa editou: fica a maior de cada tipo, sem as dos itens que ela tirou.
+export function resistenciasFinais(itens: Resistencia[], extras: ResistenciaExtra[]): Resistencia[] {
+  const sem = new Set(extras.filter((e) => e.semItem).map((e) => tipoNormal(e.tipo)))
+  const porTipo = new Map<string, Resistencia>()
+  const somar = (r: Resistencia) => {
+    const k = tipoNormal(r.tipo)
+    const atual = porTipo.get(k)
+    if (!atual || r.valor > atual.valor) porTipo.set(k, { tipo: atual?.tipo ?? r.tipo, valor: r.valor })
+  }
+  for (const r of itens) if (!sem.has(tipoNormal(r.tipo))) somar(r)
+  for (const e of extras) if (!e.semItem) somar({ tipo: e.tipo, valor: e.valor })
+  return [...porTipo.values()]
+}
+
 const ELEMENTOS = ['Sangue', 'Morte', 'Conhecimento', 'Energia', 'Medo']
 
 export function resistenciasDoEfeito(effect: string): Resistencia[] {

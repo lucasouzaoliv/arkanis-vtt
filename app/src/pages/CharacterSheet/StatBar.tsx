@@ -19,6 +19,8 @@ export default function StatBar({
   onIncrement,
   onTempDecrement,
   onTempIncrement,
+  onTempChange,
+  tempNota,
   onCurrentChange,
   onMaxChange,
   deathMarks,
@@ -36,6 +38,9 @@ export default function StatBar({
   onIncrement: () => void
   onTempDecrement?: () => void
   onTempIncrement?: () => void
+  // Digitar quanto de temporário ganhou, sem ir de um em um.
+  onTempChange?: (value: number) => void
+  tempNota?: string
   onCurrentChange?: (value: number) => void
   onMaxChange?: (value: number) => void
   deathMarks?: number
@@ -57,8 +62,20 @@ export default function StatBar({
             <span className={`stat-bar-temp${temp > 0 ? ' stat-bar-temp-active' : ''}`}>
               Temp.
               <button type="button" className="stat-bar-temp-arrow" onClick={onTempDecrement} aria-label={`-1 Temp. ${label}`}>‹</button>
-              {temp}
+              {onTempChange ? (
+                <input
+                  type="number"
+                  min={0}
+                  className="stat-bar-temp-input"
+                  value={temp}
+                  style={{ width: larguraDoNumero(temp) }}
+                  onChange={(e) => onTempChange(Math.max(0, Math.floor(Number(e.target.value)) || 0))}
+                  onFocus={(e) => e.target.select()}
+                  aria-label={`Temporário de ${label}`}
+                />
+              ) : temp}
               <button type="button" className="stat-bar-temp-arrow" onClick={onTempIncrement} aria-label={`+1 Temp. ${label}`}>›</button>
+              {tempNota && temp > 0 && <span className="stat-bar-temp-nota" title={tempNota}>físico</span>}
             </span>
           )}
         </div>

@@ -17,6 +17,8 @@ import { useAlvosDaMesa } from '../../lib/miraDaMesa'
 import { postarCura } from '../Mesa/acoesDeMira'
 import { curaDoTexto } from '../Mesa/mira'
 import { encantoDoRitual, regraDoRitual, textoDoEncanto } from './encantos'
+import { camposDaPelicula, efeitoDaTelaDeRuido, extrasDaReacao, type EscolhaDaTela } from './efeitosDeRitual'
+import { lerResistenciasExtras } from './itemMods'
 import EscolherArmaModal, { type ArmaEscolhivel } from './EscolherArmaModal'
 import d20Icon from '../../assets/icons/d20-paranormal.svg'
 import sangueIcon from '../../assets/rituais/sangue-simbolo.png'
@@ -88,7 +90,7 @@ type CharacterRitual = {
 const ELEMENTOS = ['sangue', 'morte', 'conhecimento', 'energia', 'medo'] as const
 const CIRCULOS = [1, 2, 3, 4]
 
-export default function RituaisTab({ character, onGastar }: { character: CharacterRecord; onGastar: (campo: 'current_pe' | 'current_pd', valor: number) => Promise<void> }) {
+export default function RituaisTab({ character, onGastar, onUpdated }: { character: CharacterRecord; onGastar: (campo: 'current_pe' | 'current_pd', valor: number) => Promise<void>; onUpdated?: () => void }) {
   // Recarrega quando a ficha muda em qualquer lugar (Realtime, 11/10).
   const versao = useVersaoDaFicha()
   // DT e custo dependem dos poderes, da Presença (com itens) e do elemento escolhido (11/10).
@@ -122,6 +124,8 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
   // Alvos marcados com a mira na mesa (12.9): ritual de cura com alvo vai pro chat.
   const alvos = useAlvosDaMesa(character.campaign_id)
   // Amaldiçoar Arma e afins: primeiro escolhe a arma (e o elemento), depois conjura.
+  // Tela de Ruído: escolhe entre a película e a reação antes de conjurar.
+  const [telaPara, setTelaPara] = useState<{ ritual: RitualView; mode: ModoRitual; formula: string | null } | null>(null)
   const [armaPara, setArmaPara] = useState<{ ritual: RitualView; mode: ModoRitual; formula: string | null } | null>(null)
 
   useEffect(() => {
@@ -261,7 +265,12 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
   // Conjurar (Normal / Discente / Verdadeiro): desconta o custo do PE (ou da Determinação, em
   // "Jogando sem Sanidade"), rola os dados se o ritual tiver e registra tudo no chat e no
   // Histórico com o gasto embaixo.
-  async function conjurar(ritual: RitualView, mode: ModoRitual, formula: string | null, arma?: { arma: ArmaEscolhivel; elemento: string }) {
+  async function conjurar(ritual: RitualView, mode: ModoRitual, formula: string | null, arma?: { arma: ArmaEscolhivel; elemento: string }, tela?: EscolhaDaTela) {
+    const efeitoTela = efeitoDaTelaDeRuido(ritual.name, mode)
+    if (efeitoTela && !tela) {
+      setTelaPara({ ritual, mode, formula })
+      return
+    }
     const regra = regraDoRitual(ritual.name)
     if (regra && !arma && encantoDoRitual(ritual.name, mode, regra.elementos[0] ?? '')) {
       setArmaPara({ ritual, mode, formula })
@@ -287,7 +296,25 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
       }
     }
     await onGastar(recurso.campo, depois)
-    const nota = notaDoGasto(custo, recurso.sigla, antes, depois)
+    let nota = notaDoGasto(custo, recurso.sigla, antes, depois)
+
+    // Tela de Ruído: já entra na ficha o que ela dá.
+    if (efeitoTela && tela) {
+      const pelicula = tela === 'pelicula' ? camposDaPelicula(character.temp_pv, efeitoTela.pvTemp) : null
+      const campos = tela === 'reacao'
+        ? { resistencias_extras: extrasDaReacao(lerResistenciasExtras(character.resistencias_extras), efeitoTela.resistencia, crypto.randomUUID()) }
+        : pelicula
+      if (campos) {
+        const { error } = await supabase.from('characters').update(campos).eq('id', character.id)
+        if (error) setAvisoGasto(`Não deu pra aplicar o efeito do ritual: ${error.message}`)
+        else onUpdated?.()
+      }
+      nota += tela === 'reacao'
+        ? ` · resistência ${efeitoTela.resistencia} no próximo dano`
+        : pelicula
+          ? ` · ${efeitoTela.pvTemp} PV temporários só contra dano físico`
+          : ` · já tinha ${character.temp_pv} PV temporários (não somam)`
+    }
 
     const modeLabel = mode === 'normal' ? '' : mode === 'discente' ? ' (Discente)' : ' (Verdadeiro)'
     const label = `Ritual: ${ritual.name}${modeLabel}`
@@ -406,6 +433,32 @@ export default function RituaisTab({ character, onGastar }: { character: Charact
             }}
             onClose={() => setArmaPara(null)}
           />
+        )
+      })()}
+
+      {telaPara && (() => {
+        const e = efeitoDaTelaDeRuido(telaPara.ritual.name, telaPara.mode)
+        if (!e) return null
+        const escolher = (tela: EscolhaDaTela) => {
+          const p = telaPara
+          setTelaPara(null)
+          conjurar(p.ritual, p.mode, p.formula, undefined, tela)
+        }
+        return (
+          <div className="ritual-escolha-fundo" onClick={() => setTelaPara(null)}>
+            <div className="ritual-escolha" role="dialog" aria-label="Como usar a Tela de Ruído" onClick={(ev) => ev.stopPropagation()}>
+              <h3>{telaPara.ritual.name}</h3>
+              <button type="button" onClick={() => escolher('pelicula')}>
+                <strong>Película</strong>
+                <span>{e.pvTemp} PV temporários, só contra dano balístico, de corte, de impacto ou de perfuração.</span>
+              </button>
+              <button type="button" onClick={() => escolher('reacao')}>
+                <strong>Reação ao sofrer dano</strong>
+                <span>Resistência {e.resistencia} só contra o próximo dano.</span>
+              </button>
+              <button type="button" className="ritual-escolha-cancelar" onClick={() => setTelaPara(null)}>Cancelar</button>
+            </div>
+          </div>
         )
       })()}
 

@@ -79,7 +79,7 @@ export async function rolarDanoDaMensagem(m: Mensagem): Promise<string | null> {
   if (!ataque) return null
   const atingidos = acao.alvos.filter((a) => ataque.acertos[a.token_id])
   const d = rolarDanoDoAtaque(acao.ataque, ataque.critico)
-  const efeitos: Record<string, { pv: number; san: number; motivos: string[] } | null> = {}
+  const efeitos: Record<string, { pv: number; san: number; motivos: string[]; pvNoTemp?: number } | null> = {}
   for (const a of atingidos) {
     const dados = await dadosDoAlvo(a.token_id)
     efeitos[a.token_id] = dados && dados.tipo !== 'nenhum' ? danoNoAlvo(d.partes, perfilDoAlvo(dados), bloqueioDe(acao, a.token_id)) : null
@@ -95,7 +95,7 @@ export async function rolarDanoDaMensagem(m: Mensagem): Promise<string | null> {
   }
   for (const [tokenId, e] of Object.entries(efeitos)) {
     if (!e) continue
-    const { error: erro } = await supabase.rpc('aplicar_dano_da_acao', { p_msg_id: m.id, p_token_id: tokenId, p_pv: e.pv, p_san: e.san })
+    const { error: erro } = await supabase.rpc('aplicar_dano_da_acao', { p_msg_id: m.id, p_token_id: tokenId, p_pv: e.pv, p_san: e.san, p_pv_temp: e.pvNoTemp ?? null })
     if (erro) return motivoDoErro(erro)
   }
   return null

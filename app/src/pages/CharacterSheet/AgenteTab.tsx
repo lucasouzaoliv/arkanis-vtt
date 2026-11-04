@@ -303,6 +303,12 @@ export default function AgenteTab({
     onUpdated()
   }
 
+  // Zerou os PV temporários: acaba também a restrição de tipo (película da Tela de Ruído).
+  async function mudarTempPv(valor: number) {
+    await supabase.from('characters').update(valor > 0 ? { temp_pv: valor } : { temp_pv: 0, temp_pv_tipos: null }).eq('id', character.id)
+    onUpdated()
+  }
+
   async function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {
     const escolhido = e.target.files?.[0]
     e.target.value = ''
@@ -491,8 +497,10 @@ export default function AgenteTab({
             colorClass="pv"
             onDecrement={() => updateCharacterField('current_pv', (character.current_pv ?? 0) - 1)}
             onIncrement={() => updateCharacterField('current_pv', (character.current_pv ?? 0) + 1)}
-            onTempDecrement={() => updateCharacterField('temp_pv', Math.max(0, (character.temp_pv ?? 0) - 1))}
+            onTempDecrement={() => mudarTempPv(Math.max(0, (character.temp_pv ?? 0) - 1))}
             onTempIncrement={() => updateCharacterField('temp_pv', (character.temp_pv ?? 0) + 1)}
+            onTempChange={mudarTempPv}
+            tempNota={character.temp_pv_tipos?.length ? 'Tela de Ruído: só contra dano balístico, de corte, de impacto ou de perfuração' : undefined}
             onCurrentChange={(value) => updateCharacterField('current_pv', value)}
             onMaxChange={(value) => updateCharacterField('max_pv_override', value)}
             deathMarks={character.pv_death_marks ?? 0}
@@ -512,6 +520,7 @@ export default function AgenteTab({
               onIncrement={() => updateCharacterField('current_pd', (character.current_pd ?? 0) + 1)}
               onTempDecrement={() => updateCharacterField('temp_pd', Math.max(0, (character.temp_pd ?? 0) - 1))}
               onTempIncrement={() => updateCharacterField('temp_pd', (character.temp_pd ?? 0) + 1)}
+              onTempChange={(value) => updateCharacterField('temp_pd', value)}
               onCurrentChange={(value) => updateCharacterField('current_pd', value)}
             />
           ) : (
@@ -527,6 +536,7 @@ export default function AgenteTab({
                 onIncrement={() => updateCharacterField('current_sanity', (character.current_sanity ?? 0) + 1)}
                 onTempDecrement={() => updateCharacterField('temp_sanity', Math.max(0, (character.temp_sanity ?? 0) - 1))}
                 onTempIncrement={() => updateCharacterField('temp_sanity', (character.temp_sanity ?? 0) + 1)}
+                onTempChange={(value) => updateCharacterField('temp_sanity', value)}
                 onCurrentChange={(value) => updateCharacterField('current_sanity', value)}
                 onMaxChange={(value) => updateCharacterField('max_sanity_override', value)}
                 deathMarks={character.sanity_death_marks ?? 0}
@@ -544,6 +554,7 @@ export default function AgenteTab({
                 onIncrement={() => updateCharacterField('current_pe', (character.current_pe ?? 0) + 1)}
                 onTempDecrement={() => updateCharacterField('temp_pe', Math.max(0, (character.temp_pe ?? 0) - 1))}
                 onTempIncrement={() => updateCharacterField('temp_pe', (character.temp_pe ?? 0) + 1)}
+                onTempChange={(value) => updateCharacterField('temp_pe', value)}
                 onCurrentChange={(value) => updateCharacterField('current_pe', value)}
                 onMaxChange={(value) => updateCharacterField('max_pe_override', value)}
               />
@@ -565,6 +576,7 @@ export default function AgenteTab({
                 onIncrement={() => updateCharacterField('current_pd', (character.current_pd ?? 0) + 1)}
                 onTempDecrement={() => updateCharacterField('temp_pd', Math.max(0, (character.temp_pd ?? 0) - 1))}
                 onTempIncrement={() => updateCharacterField('temp_pd', (character.temp_pd ?? 0) + 1)}
+                onTempChange={(value) => updateCharacterField('temp_pd', value)}
                 onCurrentChange={(value) => updateCharacterField('current_pd', value)}
               />
             )
@@ -660,7 +672,7 @@ export default function AgenteTab({
         </nav>
 
         {rightTab === 'Habilidades' && <HabilidadesTab character={character} />}
-        {rightTab === 'Rituais' && <RituaisTab character={character} onGastar={(campo, valor) => updateCharacterField(campo, valor)} />}
+        {rightTab === 'Rituais' && <RituaisTab character={character} onGastar={(campo, valor) => updateCharacterField(campo, valor)} onUpdated={onUpdated} />}
         {rightTab === 'Inventário' && <InventarioTab character={character} editMode={editMode} />}
         {rightTab === 'Combate' && <CombateTab character={character} onUpdated={onUpdated} editMode={editMode} onGastar={(campo, valor) => updateCharacterField(campo, valor)} />}
       </div>

@@ -19060,3 +19060,31 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 @keyframes mesa-sorteio-pulo { 0%, 100% { translate: 0 0; } 50% { translate: 0 calc(-10px * var(--escala, 1)); } }
 .combate-tirar { flex: none; width: 22px; height: 22px; font-size: 11px; opacity: 0.55; }
 .combate-tirar:hover { opacity: 1; color: #ff8a80; }
+/* Temporário digitável nas barras da ficha. */
+.stat-bar-temp-input { box-sizing: content-box; min-width: 1.3ch; height: 1.2em; margin: 0; padding: 0 0.1em; background: transparent; border: none; border-bottom: 1px dashed currentColor; border-radius: 0; color: inherit; font: inherit; text-align: center; -moz-appearance: textfield; appearance: textfield; }
+.stat-bar-temp-input::-webkit-outer-spin-button, .stat-bar-temp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.stat-bar-temp-input:focus { outline: none; border-bottom-style: solid; }
+.stat-bar-temp-nota { margin-left: 0.3em; padding: 0 0.35em; border: 1px solid currentColor; border-radius: 3px; font-size: 0.8em; cursor: help; }
+/* Resistências editáveis na aba Combate. */
+.resist-resumo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4em; margin: 0 0 0.3em; }
+.resist-editar, .resist-lista button, .resist-nova button, .resist-limpar { padding: 0.1em 0.6em; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 4px; background: rgba(255, 255, 255, 0.06); color: inherit; font: inherit; font-size: 0.9em; cursor: pointer; }
+.resist-editar:hover, .resist-lista button:hover, .resist-nova button:hover, .resist-limpar:hover { background: rgba(255, 255, 255, 0.16); }
+.resist-painel { display: flex; flex-direction: column; gap: 0.5em; margin: 0.4em 0 0.6em; padding: 0.6em; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 6px; background: rgba(0, 0, 0, 0.25); }
+.resist-lista { display: flex; flex-direction: column; gap: 0.3em; margin: 0; padding: 0; list-style: none; }
+.resist-lista li { display: flex; align-items: center; justify-content: space-between; gap: 0.5em; }
+.resist-lista li.tirada span { opacity: 0.5; text-decoration: line-through; }
+.resist-lista small { margin-left: 0.5em; opacity: 0.65; }
+.resist-lista small.temp { color: #7de7eb; opacity: 1; }
+.resist-nova { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4em; }
+.resist-nova select, .resist-nova input[type="number"] { height: 1.9em; padding: 0 0.4em; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 4px; background: #111; color: inherit; font: inherit; font-size: 0.9em; }
+.resist-nova input[type="number"] { width: 4em; }
+.resist-nova label { display: inline-flex; align-items: center; gap: 0.3em; }
+.resist-limpar { align-self: flex-start; }
+/* Escolha ao conjurar a Tela de Ruído. */
+.ritual-escolha-fundo { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.6); }
+.ritual-escolha { display: flex; flex-direction: column; gap: 10px; width: min(420px, 100%); padding: 18px; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 10px; background: #141418; color: #eee; font-family: var(--poppins); }
+.ritual-escolha h3 { margin: 0; font-size: 1.1em; }
+.ritual-escolha button { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 7px; background: rgba(255, 255, 255, 0.05); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ritual-escolha button:hover { background: rgba(255, 255, 255, 0.13); }
+.ritual-escolha button span { font-size: 0.85em; opacity: 0.8; }
+.ritual-escolha .ritual-escolha-cancelar { align-self: flex-end; padding: 5px 12px; }

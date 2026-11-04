@@ -50,6 +50,8 @@ export type CharacterRecord = {
   experience: number | null
   current_pv: number | null
   temp_pv: number
+  temp_pv_tipos?: string[] | null
+  resistencias_extras?: unknown
   max_pv_override: number | null
   pv_death_marks: number
   current_sanity: number | null

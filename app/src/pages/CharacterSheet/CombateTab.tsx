@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import EditorDeResistencias from './EditorDeResistencias'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import { recordRoll } from '../../lib/rollHistory'
@@ -10,7 +11,7 @@ import CombateModifiersPanel from './CombateModifiersPanel'
 import AttackFormModal, { type AttackToEdit } from './AttackFormModal'
 import AttackCard from './AttackCard'
 import { penalidadeDeCondicoes, rotuloComCondicoes } from './condicoes'
-import { atributosComBonus, efeitosValendo, rdDeBloqueio, numerosDoAtaque, resistenciasDoItemEquipado, somaBonusNoDano, textoDasResistencias, type AppliedModifier, type Resistencia, modsComEfeitosDoItem } from './itemMods'
+import { atributosComBonus, efeitosValendo, rdDeBloqueio, numerosDoAtaque, lerResistenciasExtras, resistenciasDoItemEquipado, somaBonusNoDano, type AppliedModifier, type Resistencia, modsComEfeitosDoItem } from './itemMods'
 import { useAlvosDaMesa } from '../../lib/miraDaMesa'
 import { defesaDosItens, defesaTotal, origemDoItem, origensDaDefesaDosItens, textoDasOrigens, type ItemDeDefesa } from './defesa'
 import { usePoderesDaFicha } from './usePoderes'
@@ -637,7 +638,14 @@ export default function CombateTab({ character, onUpdated, editMode, onGastar }:
         {defenseDetailsOpen && (
           <div className="combat-defense-details">
             <p><strong>Proteção:</strong> {equippedProtectionName ?? 'Nenhuma equipada'}</p>
-            <p><strong>Resistência:</strong> {textoDasResistencias(resistencias) || 'Nenhuma'}</p>
+            <EditorDeResistencias
+              deItens={resistencias}
+              extras={lerResistenciasExtras(character.resistencias_extras)}
+              onSalvar={async (extras) => {
+                await supabase.from('characters').update({ resistencias_extras: extras }).eq('id', character.id)
+                onUpdated()
+              }}
+            />
             {defesa.poderes.motivos.length > 0 && <p><strong>Poderes:</strong> {defesa.poderes.motivos.join(', ')}</p>}
           </div>
         )}
