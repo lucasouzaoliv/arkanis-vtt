@@ -19124,9 +19124,9 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .op2-perfil { --cor: var(--op2-executor); display: block; position: relative; width: 100%; margin: 0 0 22px; padding: 0; border: 0; background: none; color: #fefefe; font: inherit; text-align: left; cursor: pointer; }
 .op2-perfil-analista { --cor: var(--op2-analista); }
 .op2-perfil-vigilante { --cor: var(--op2-vigilante); }
-.op2-perfil-aba { position: relative; z-index: 1; display: inline-block; padding: 4px 46px 2px 16px; background: var(--cor); color: #fff; font-size: 23px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.01em; clip-path: polygon(0 22%, 100% 0, 90% 100%, 0 100%); }
+.op2-perfil-aba { position: relative; z-index: 1; display: inline-block; padding: 9px 46px 2px 16px; background: var(--cor); color: #fff; font-size: 23px; font-weight: 700; line-height: 1.15; text-transform: uppercase; letter-spacing: 0.01em; clip-path: polygon(0 16%, 100% 0, 90% 100%, 0 100%); }
 .op2-perfil-aba::after { content: ''; position: absolute; }
-.op2-perfil::before { content: ''; position: absolute; top: 3px; left: 152px; width: 22px; height: 26px; background: var(--cor); clip-path: polygon(40% 0, 100% 0, 60% 100%, 0 100%); }
+.op2-perfil::before { content: ''; position: absolute; top: 4px; left: 152px; width: 22px; height: 26px; background: var(--cor); clip-path: polygon(40% 0, 100% 0, 60% 100%, 0 100%); }
 .op2-perfil::after { content: ''; position: absolute; top: 8px; left: 182px; right: 52px; height: 2px; background: repeating-linear-gradient(90deg, var(--cor) 0 26px, transparent 26px 32px, var(--cor) 32px 38px, transparent 38px 46px); opacity: 0.85; }
 .op2-perfil-corpo { position: relative; display: block; margin-top: -3px; padding: 14px 64px 18px 16px; border: 2px solid var(--cor); border-radius: 0 22px 4px 18px; background: rgba(8, 8, 10, 0.88); font-size: 15px; line-height: 1.32; transition: box-shadow 0.18s, border-color 0.18s; }
 .op2-perfil-corpo::after { content: ''; position: absolute; left: 12px; right: 34%; bottom: -8px; height: 2px; background: repeating-linear-gradient(90deg, var(--cor) 0 60px, transparent 60px 66px, var(--cor) 66px 72px, transparent 72px 80px); }
