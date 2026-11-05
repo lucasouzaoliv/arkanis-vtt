@@ -1,4 +1,9 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../lib/AuthContext'
+import { destinoDepoisDoConvite } from '../../lib/convitePendente'
+import { fichaDaPronta, fichaVazia, type FichaNova } from '../../sistemas/op2/ficha'
 import { CENARIOS, type IdCenario } from '../../sistemas/op2/cenarios'
 import { fichasDoCenario, type FichaPronta, type Perfil } from '../../sistemas/op2/fichasProntas'
 import fundo from '../../assets/op2/background-idolo-de-pedra.webp'
@@ -33,19 +38,30 @@ export default function CriarFichaOP2() {
   const [cenario, setCenario] = useState<IdCenario>('maldicao')
   const [ato, setAto] = useState('ato1')
   const [aviso, setAviso] = useState<string | null>(null)
+  const [criando, setCriando] = useState(false)
+  const { session } = useAuth()
+  const navigate = useNavigate()
   const atos = CENARIOS[cenario].atos
   const fichas = fichasDoCenario(cenario, atos.length ? ato : undefined)
 
-  // A ficha do OP2 é o próximo passo: por enquanto só registra a escolha.
-  function escolherPerfil(p: Perfil) {
-    setAviso(`Ficha vazia de ${PERFIS.find((x) => x.id === p)?.nome}: a ficha do Ordem Paranormal 2 ainda está sendo feita.`)
+  // Escolher cria o personagem na conta da pessoa e abre a ficha.
+  async function criar(nova: FichaNova) {
+    if (!session || criando) return
+    setCriando(true)
+    const { data, error } = await supabase
+      .from('characters')
+      .insert({ user_id: session.user.id, system: 'ordem_paranormal_2', name: nova.nome, current_pv: nova.pv, max_pv_override: nova.pv, current_pd: nova.pd, op2: nova.op2 })
+      .select('id')
+      .single()
+    setCriando(false)
+    if (error || !data) return setAviso('Não deu pra criar a ficha. Tenta de novo.')
+    navigate(destinoDepoisDoConvite(`/personagem/${data.id}`))
   }
-  function escolherPronta(f: FichaPronta) {
-    setAviso(`${f.nome}: a ficha do Ordem Paranormal 2 ainda está sendo feita.`)
-  }
+  const escolherPerfil = (p: Perfil) => criar(fichaVazia(cenario, p))
+  const escolherPronta = (f: FichaPronta) => criar(fichaDaPronta(f))
 
   return (
-    <main className={`op2-escolha op2-${cenario}`} style={{ backgroundImage: `url(${fundo})` }}>
+    <main className={`op2-escolha op2-${cenario}${criando ? ' criando' : ''}`} aria-busy={criando} style={{ backgroundImage: `url(${fundo})` }}>
       <div className="op2-escolha-conteudo">
         <header className="op2-escolha-topo">
           <h1 className="op2-titulo">Qual tipo de ficha você quer?</h1>

@@ -27,6 +27,7 @@ import settingsIcon from '../../assets/icons/settings-icon.svg'
 import historyIcon from '../../assets/icons/history-icon.svg'
 import { FichaAoVivo } from './fichaAoVivo'
 import arkanisLogo from '../../assets/icons/arkanis-logo.png'
+import FichaOP2 from '../FichaOP2'
 
 const ELEMENT_BACKGROUNDS: Record<string, string> = {
   sangue: bgSangue,
@@ -50,6 +51,9 @@ export type CharacterRecord = {
   experience: number | null
   current_pv: number | null
   temp_pv: number
+  // Ficha de Ordem Paranormal 2 (system = ordem_paranormal_2).
+  system?: string
+  op2?: unknown
   temp_pv_tipos?: string[] | null
   resistencias_extras?: unknown
   max_pv_override: number | null
@@ -164,6 +168,15 @@ export default function CharacterSheet() {
   const elemento = character.afinidade_elemento
   const bgImage = (elemento && ELEMENT_BACKGROUNDS[elemento]) ?? bgPadrao
   const bgClass = elemento && ELEMENT_BACKGROUNDS[elemento] ? `bg-${elemento}` : 'bg-padrao'
+
+  // Ordem Paranormal 2: jogo novo, ficha própria.
+  if (character.system === 'ordem_paranormal_2' && character.op2) {
+    return (
+      <FichaAoVivo characterId={character.id} onPersonagemMudou={() => setRefreshKey((k) => k + 1)}>
+        <FichaOP2 character={character} />
+      </FichaAoVivo>
+    )
+  }
 
   return (
     <FichaAoVivo characterId={character.id} onPersonagemMudou={() => setRefreshKey((k) => k + 1)}>

@@ -33,7 +33,25 @@ export type FichaOP2 = {
   equipamentos: EquipamentoNaFicha[]
   pontosDeArmadura: number
   relacoes: Relacao[]
+  // Painel "Modificadores de Perícias": dados bônus (dois encaixes), passos em todas as perícias e
+  // dado de pavor (ativo e/ou usado como bônus).
+  modificadores?: Modificadores
+  // DT do controle acima das barras de PV e PD (começa em 7).
+  dtPv?: number
+  dtPd?: number
 }
+
+export type Modificadores = {
+  bonus: [Dado | null, Dado | null]
+  passos: number
+  pavor: Dado
+  pavorAtivo: boolean
+  pavorComoBonus: boolean
+  // O olho do título esconde o painel.
+  escondido?: boolean
+}
+
+export const MODIFICADORES_PADRAO: Modificadores = { bonus: [null, null], passos: 0, pavor: 6, pavorAtivo: false, pavorComoBonus: false }
 
 // PV e PD da ficha vazia (o playtest não tem fórmula; o site começa em 10/10).
 export const PV_INICIAL = 10

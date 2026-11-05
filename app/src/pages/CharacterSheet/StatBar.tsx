@@ -32,7 +32,7 @@ export default function StatBar({
   current: number
   max: number
   temp?: number
-  colorClass: 'pv' | 'sanidade' | 'esforco' | 'pd'
+  colorClass: 'pv' | 'sanidade' | 'esforco' | 'pd' | 'op2pv' | 'op2pd'
   note?: string
   onDecrement: () => void
   onIncrement: () => void
