@@ -193,7 +193,7 @@ export default function AbaAgente({ personagem, ficha }: { personagem: Personage
   }
 
   const linhas = [...op2.pericias].sort((a, b) =>
-    ordem === 'passo' ? PASSOS.indexOf(b.dado) - PASSOS.indexOf(a.dado) || nomeDaLinha(op2.cenario, a).localeCompare(nomeDaLinha(op2.cenario, b)) : 0,
+    (ordem === 'passo' ? PASSOS.indexOf(b.dado) - PASSOS.indexOf(a.dado) : 0) || nomeDaLinha(op2.cenario, a).localeCompare(nomeDaLinha(op2.cenario, b), 'pt-BR'),
   )
 
   return (
@@ -252,7 +252,7 @@ export default function AbaAgente({ personagem, ficha }: { personagem: Personage
             { id: 'pv' as const, rotulo: 'PV', atual: pv, max: pvMax, dt: op2.dtPv ?? 7, icone: iconeDe(pct(pv, pvMax), [pvEmpty, pvLow, pvHalf, pvFull]) },
             { id: 'pd' as const, rotulo: 'PD', atual: pd, max: pdMax, dt: op2.dtPd ?? 7, icone: iconeDe(pct(pd, pdMax), [pdEmpty, pdLow, pdHalf, pdFull]) },
           ].map((b) => {
-            const mudarAtual = (v: number) => mudarColunas(b.id === 'pv' ? { current_pv: v } : { current_pd: v })
+            const mudarAtual = (v: number) => { const n = Math.max(0, Math.round(v) || 0); mudarColunas(b.id === 'pv' ? { current_pv: n } : { current_pd: n }) }
             const mudarDt = (n: number) => mudar((f) => ({ ...f, [b.id === 'pv' ? 'dtPv' : 'dtPd']: Math.max(1, b.dt + n) }))
             return (
               <div key={b.id} className="op2-barra">

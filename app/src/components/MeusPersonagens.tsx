@@ -3,13 +3,17 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { fallbackAvatarColor } from '../lib/color'
+import { SISTEMAS } from '../lib/sistemas'
 import arkanisLogo from '../assets/icons/arkanis-logo.png'
+
+const nomeDoJogo = (system: string) => SISTEMAS.find((s) => s.id === system)?.name ?? 'Ordem Paranormal'
 
 type CharacterListItem = {
   id: string
   name: string | null
   avatar_url: string | null
   historico: string | null
+  system: string
 }
 
 export default function MeusPersonagens({ variant = 'perfil' }: { variant?: 'perfil' | 'jogar' }) {
@@ -25,7 +29,7 @@ export default function MeusPersonagens({ variant = 'perfil' }: { variant?: 'per
     if (!session) return
     const { data } = await supabase
       .from('characters')
-      .select('id, name, avatar_url, historico')
+      .select('id, name, avatar_url, historico, system')
       .eq('user_id', session.user.id)
       // NPCs do mestre vivem na aba Personagens da mesa, não aqui.
       .eq('npc', false)
@@ -127,7 +131,7 @@ export default function MeusPersonagens({ variant = 'perfil' }: { variant?: 'per
               <CardMenu c={c} />
               <div className="character-tile-info">
                 <strong>{c.name || 'Sem nome'}</strong>
-                <span>Ordem Paranormal</span>
+                <span>{nomeDoJogo(c.system)}</span>
               </div>
             </Link>
           ))}
@@ -154,7 +158,7 @@ export default function MeusPersonagens({ variant = 'perfil' }: { variant?: 'per
                 >
                   {c.name || 'Sem nome'}
                 </button>
-                <p className="character-card-game">Ordem Paranormal</p>
+                <p className="character-card-game">{nomeDoJogo(c.system)}</p>
                 {expanded === c.id && (
                   <p className="character-card-historia">{c.historico || 'Sem história definida ainda.'}</p>
                 )}

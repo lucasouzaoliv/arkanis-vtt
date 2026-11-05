@@ -20,8 +20,16 @@ export function useFichaOP2(p: PersonagemOP2) {
     timer.current = undefined
     const campos = pendente.current
     pendente.current = {}
-    if (Object.keys(campos).length) await supabase.from('characters').update(campos).eq('id', p.id)
+    if (!Object.keys(campos).length) return
+    const { error } = await supabase.from('characters').update(campos).eq('id', p.id)
+    if (error) {
+      // Não perde a mudança: volta pra fila (sem passar por cima do que veio depois) e tenta de novo.
+      pendente.current = { ...campos, ...pendente.current }
+      if (timer.current === undefined) timer.current = window.setTimeout(() => void gravarRef.current(), 3000)
+    }
   }, [p.id])
+  const gravarRef = useRef(gravar)
+  gravarRef.current = gravar
 
   const agendar = useCallback((campos: Record<string, unknown>) => {
     pendente.current = { ...pendente.current, ...campos }
@@ -30,6 +38,14 @@ export function useFichaOP2(p: PersonagemOP2) {
   }, [gravar])
 
   useEffect(() => () => { void gravar() }, [gravar])
+
+  // Fechou ou trocou de aba: grava o que estiver esperando sem aguardar os 400 ms.
+  useEffect(() => {
+    const sumiu = () => { if (document.visibilityState === 'hidden' && timer.current !== undefined) void gravar() }
+    document.addEventListener('visibilitychange', sumiu)
+    window.addEventListener('pagehide', sumiu)
+    return () => { document.removeEventListener('visibilitychange', sumiu); window.removeEventListener('pagehide', sumiu) }
+  }, [gravar])
 
   // Veio coisa nova do banco e não tem nada nosso esperando: acompanha.
   useEffect(() => {

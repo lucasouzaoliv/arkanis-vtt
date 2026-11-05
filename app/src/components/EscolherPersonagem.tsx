@@ -36,6 +36,8 @@ export default function EscolherPersonagem({ campanha, codigoConvite, voltarPara
       .eq('user_id', session.user.id)
       // NPCs do mestre vivem na aba Personagens da mesa, não aqui.
       .eq('npc', false)
+      // Ordem Paranormal 2 ainda não joga na mesa.
+      .neq('system', 'ordem_paranormal_2')
       .order('created_at', { ascending: false })
       .then(({ data }) => setOpcoes(data ?? []))
   }, [session])
