@@ -26,6 +26,15 @@ function Escudo() {
   )
 }
 
+// Ícone do espaço preenchido: raio no Ímpeto, lupa na Análise (print de 05/11).
+function IconeDoEspaco({ tipo }: { tipo: 'espacos' | 'marcadores' }) {
+  return tipo === 'espacos' ? (
+    <svg viewBox="0 0 24 12" aria-hidden><path d="M14.5 0.6 7.2 6.6h4.6L9 11.4l7.8-6.4h-4.7z" fill="currentColor" /></svg>
+  ) : (
+    <svg viewBox="0 0 24 12" aria-hidden><circle cx="9.2" cy="5.4" r="3.6" fill="none" stroke="currentColor" strokeWidth="1.9" /><path d="M11.9 8.1l4.4 3.2" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
+  )
+}
+
 // Barra de espaços (Ímpeto) ou marcadores (Análise): clica no espaço pra marcar até ele.
 function Contador({ c, onMudar }: { c: NonNullable<HabilidadeNaFicha['contador']>; onMudar?: (v: number) => void }) {
   return (
@@ -38,8 +47,12 @@ function Contador({ c, onMudar }: { c: NonNullable<HabilidadeNaFicha['contador']
           aria-label={`${i + 1}`}
           disabled={!onMudar}
           onClick={() => onMudar?.(c.valor === i + 1 ? i : i + 1)}
-        />
+        >
+          {i < c.valor && <IconeDoEspaco tipo={c.tipo} />}
+        </button>
       ))}
+      {/* A barra de ímpeto tem sempre o mesmo comprimento: o que passa dos espaços fica escuro (print de 05/11). */}
+      {c.tipo === 'espacos' && Array.from({ length: Math.max(0, 7 - c.maximo) }, (_, i) => <span key={`s${i}`} className="sobra" aria-hidden />)}
     </div>
   )
 }

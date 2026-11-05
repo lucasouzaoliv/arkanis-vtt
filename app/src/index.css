@@ -19315,9 +19315,6 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .op2-cartao-acoes { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 .op2-cartao-acoes button { padding: 3px 10px; border: 1px solid rgba(255, 255, 255, 0.45); background: rgba(30, 30, 36, 0.9); color: #fff; font: inherit; font-size: 14px; cursor: pointer; }
 .op2-cartao-acoes button:hover { background: var(--tema); }
-.op2-contador-hab { display: flex; gap: 4px; margin-top: 8px; padding: 3px; background: var(--tema); border-radius: 2px; }
-.op2-contador-hab button { flex: 1; height: 16px; padding: 0; border: 0; background: #f2f2f2; cursor: pointer; }
-.op2-contador-hab button.cheio { background: color-mix(in srgb, var(--tema) 55%, #000); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
 .op2-contador-hab button:disabled { cursor: default; }
 .op2-texto { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.15); font-size: 14px; line-height: 1.45; }
 .op2-texto p { margin: 0 0 4px; }
@@ -19469,3 +19466,10 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .stat-bar-fill.op2pd { background: var(--pd-barra); }
 .op2-barra:nth-child(1) .vtt-stat-icon { filter: var(--pv-icone); }
 .op2-barra:nth-child(2) .vtt-stat-icon { filter: var(--pd-icone); }
+/* Barra do Ímpeto / marcadores da Análise: faixa na cor do tema com espaços claros; o preenchido leva o ícone. */
+.op2-contador-hab { display: flex; width: fit-content; gap: 5px; margin-top: 8px; padding: 4px 12px 4px 5px; background: color-mix(in srgb, var(--tema) 70%, #000); border-radius: 3px; clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 100%, 0 100%); }
+.op2-contador-hab button { display: grid; place-items: center; width: 38px; height: 15px; padding: 0; border: 0; border-radius: 2px; background: #e4e6e6; color: color-mix(in srgb, var(--tema) 55%, #000); cursor: pointer; }
+.op2-contador-hab button svg { width: 24px; height: 12px; }
+.op2-contador-hab button:hover:not(:disabled) { background: #fff; }
+.op2-esp-inline { display: inline-block; width: 22px; height: 14px; margin: 0 -3px -2px; color: var(--tema-claro); }
+.op2-contador-hab .sobra { width: 38px; height: 15px; border-radius: 2px; background: color-mix(in srgb, var(--tema) 45%, #000); }
