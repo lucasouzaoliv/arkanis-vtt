@@ -346,13 +346,13 @@ export default function AbaAgente({ personagem, ficha }: { personagem: Personage
                 <button type="button" className="op2-pericia-nome" title={`Rolar ${nome}`} onClick={() => rolar(l)}>{nome}</button>
                 <span className="op2-pericia-dados">
                   <button type="button" className="op2-pericia-dado" aria-label={`Dado de ${nome}`} onClick={() => setEscolhendo({ tipo: 'pericia', chave })}>
-                    <DadoIcone lados={dadoDaPericia(l)} tamanho={22} />
+                    <DadoIcone lados={dadoDaPericia(l)} tamanho={27} />
                   </button>
                   {escolhendo?.tipo === 'pericia' && escolhendo.chave === chave && (
                     <EscolherDado atual={l.dado} onEscolher={(d) => { if (d) mudarLinha(chave, { dado: d }); setEscolhendo(null) }} onFechar={() => setEscolhendo(null)} />
                   )}
                   <span className="op2-mais">+</span>
-                  <DadoIcone lados={dadoDoAtributo(l)} tamanho={22} />
+                  <DadoIcone lados={dadoDoAtributo(l)} tamanho={27} />
                 </span>
                 <span className="op2-pericia-atr">
                   <button type="button" className="op2-etiqueta" onClick={() => setEscolhendo({ tipo: 'atributo', chave })}>{ATRIBUTOS.find((a) => a.id === l.atributo)?.nome}</button>
