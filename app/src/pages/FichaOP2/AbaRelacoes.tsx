@@ -85,7 +85,6 @@ export default function AbaRelacoes({ op2, mudar }: { op2: FichaOP2; mudar: (fn:
                 />
               ))}
             </div>
-            {r.rotulo && <span className="op2-rel-rotulo">{r.rotulo}</span>}
             <button type="button" className="op2-rel-tirar" aria-label="Tirar relação" onClick={() => window.confirm(`Tirar ${r.nome || 'esta relação'}?`) && mudar((f) => ({ ...f, relacoes: f.relacoes.filter((_, i) => i !== n) }))}>✕</button>
           </div>
         ))}

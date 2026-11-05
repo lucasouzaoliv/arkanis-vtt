@@ -15,7 +15,7 @@ describe('ficha nova do Ordem Paranormal 2', () => {
 
   it('pronta: copia tudo do material, com os contadores das habilidades zerados', () => {
     const f = fichaDaPronta(pronta('rhiona'), () => 'x')
-    expect(f).toMatchObject({ nome: 'Rhiona', pv: 22, pd: 12 })
+    expect(f).toMatchObject({ nome: 'Rhiona Mac Tuirenn', pv: 22, pd: 12 })
     expect(f.op2).toMatchObject({ pronta: 'rhiona', perfil: 'analista', vocacao: 'Ferreira', nivel: 3, sobrenome: 'Mac Tuirenn', atributos: { fisico: 10, mente: 6, emocao: 6 } })
     expect(f.op2.habilidades.map((h) => h.nome)).toEqual(['Análise', 'Leitura de Combate', 'Segredo do Aço'])
     expect(f.op2.habilidades[0].contador).toEqual({ tipo: 'marcadores', maximo: 4, valor: 0 })

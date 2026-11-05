@@ -36,9 +36,10 @@ const Lapis = () => (
 const pct = (a: number, m: number) => (m > 0 ? (a / m) * 100 : 0)
 const iconeDe = (p: number, [vazio, baixo, meio, cheio]: string[]) => (p <= 0 ? vazio : p <= 33 ? baixo : p <= 66 ? meio : cheio)
 
-// Seta do atributo: ↑ acima do d6 base, ↓ abaixo, com o número de passos quando for mais de um.
-function SetaDoAtributo({ dado }: { dado: Dado }) {
-  const n = passosAte(DADO_BASE_DO_ATRIBUTO, dado)
+// Seta do atributo: ↑ acima do valor com que a ficha nasceu, ↓ abaixo, com o número de passos
+// quando for mais de um (no print, o Alan com Mente d8 de fábrica não tem seta).
+function SetaDoAtributo({ dado, base }: { dado: Dado; base: Dado }) {
+  const n = passosAte(base, dado)
   if (!n) return null
   return (
     <span className="op2-seta" aria-label={`${n > 0 ? '+' : ''}${n} passo${Math.abs(n) > 1 ? 's' : ''}`}>
@@ -234,7 +235,7 @@ export default function AbaAgente({ personagem, ficha }: { personagem: Personage
             return (
               <div key={a.id} className="op2-atributo">
                 <div className="op2-atributo-caixa">
-                  <span className="op2-atributo-nome">{a.nome}<SetaDoAtributo dado={d} /></span>
+                  <span className="op2-atributo-nome">{a.nome}<SetaDoAtributo dado={d} base={op2.atributosBase?.[a.id] ?? DADO_BASE_DO_ATRIBUTO} /></span>
                   <DadoIcone lados={d} tamanho={58} />
                 </div>
                 <div className="op2-mais-menos">

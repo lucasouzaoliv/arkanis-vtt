@@ -23,7 +23,7 @@ export default function FichaOP2({ character }: { character: CharacterRecord }) 
   const fundo = op2.cenario === 'contos' ? fundoContos : fundoIdolo
 
   return (
-    <main className={`op2-ficha op2-tema-${op2.perfil} op2-cenario-${op2.cenario}`} style={{ backgroundImage: `url(${fundo})` }}>
+    <main className={`op2-folha op2-tema-${op2.perfil} op2-cenario-${op2.cenario}`} style={{ backgroundImage: `url(${fundo})` }}>
       <header className="vtt-topbar op2-topbar">
         <nav className="vtt-tabs">
           <img className="vtt-topbar-logo" src={arkanisLogo} alt="Arkanis" />

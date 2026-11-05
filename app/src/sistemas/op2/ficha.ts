@@ -28,6 +28,8 @@ export type FichaOP2 = {
   sobrenome?: string
   pdMaximo: number
   atributos: Record<Atributo, Dado>
+  // Atributos como a ficha nasceu: a seta ↑/↓ mostra quantos passos o atributo andou desde então.
+  atributosBase?: Record<Atributo, Dado>
   pericias: LinhaDePericia[]
   habilidades: HabilidadeNaFicha[]
   equipamentos: EquipamentoNaFicha[]
@@ -68,6 +70,7 @@ export function fichaVazia(cenario: IdCenario, perfil: Perfil): FichaNova {
     op2: {
       versao: 1, cenario, pronta: null, perfil, vocacao: '', nivel: 1, pdMaximo: PD_INICIAL,
       atributos: { fisico: DADO_BASE_DO_ATRIBUTO, mente: DADO_BASE_DO_ATRIBUTO, emocao: DADO_BASE_DO_ATRIBUTO },
+      atributosBase: { fisico: DADO_BASE_DO_ATRIBUTO, mente: DADO_BASE_DO_ATRIBUTO, emocao: DADO_BASE_DO_ATRIBUTO },
       pericias: periciasVazias(cenario), habilidades: [], equipamentos: [], pontosDeArmadura: 0, relacoes: [],
     },
   }
@@ -76,13 +79,14 @@ export function fichaVazia(cenario: IdCenario, perfil: Perfil): FichaNova {
 // Ficha pronta: cópia do material oficial, editável depois.
 export function fichaDaPronta(f: FichaPronta, novoId: () => string = () => crypto.randomUUID()): FichaNova {
   return {
-    nome: f.nome,
+    nome: f.sobrenome ? `${f.nome} ${f.sobrenome}` : f.nome,
     pv: f.pv,
     pd: f.pd,
     op2: {
       versao: 1, cenario: f.cenario, pronta: f.id, perfil: f.perfil, vocacao: f.vocacao, nivel: f.nivel, pdMaximo: f.pd,
       ...(f.sobrenome ? { sobrenome: f.sobrenome } : {}),
       atributos: { ...f.atributos },
+      atributosBase: { ...f.atributos },
       pericias: periciasDaFichaPronta(f),
       habilidades: f.habilidades.map((id) => {
         const h = habilidadeDoCatalogo(f.cenario, id)!
