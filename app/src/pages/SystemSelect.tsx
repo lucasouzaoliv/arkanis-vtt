@@ -21,7 +21,7 @@ export default function SystemSelect() {
                 <div className="system-card-left">
                   <h2>{s.name}</h2>
                   <p>{s.description}</p>
-                  <Link to={`/personagem/criar/${s.slug}`} className="btn-pill btn-pill-danger">Criar Personagem</Link>
+                  <Link to={`/personagem/criar/${s.slug}`} className={`btn-pill ${'botao' in s ? s.botao : 'btn-pill-danger'}`}>Criar Personagem</Link>
                 </div>
                 <div className="system-card-right" style={{ backgroundImage: `url(${s.image})` }} />
               </div>

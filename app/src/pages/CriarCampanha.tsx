@@ -148,7 +148,7 @@ export default function CriarCampanha() {
       <section>
         <h2>Escolha o jogo para a campanha</h2>
         <div className="system-card-grid cc-jogos">
-          {SISTEMAS.map((s) => (
+          {SISTEMAS.filter((s) => !('semCampanha' in s && s.semCampanha)).map((s) => (
             <div key={s.id} className={`system-card-wrap${jogo === s.id ? ' cc-jogo-escolhido' : ''}`}>
               <span className="system-card-badge">{s.version}</span>
               <div className="system-card">

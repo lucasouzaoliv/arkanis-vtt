@@ -11,6 +11,7 @@ import EditarPerfil from './pages/EditarPerfil'
 import Jogar from './pages/Jogar'
 import SystemSelect from './pages/SystemSelect'
 import CharacterCreate from './pages/CharacterCreate'
+import CriarFichaOP2 from './pages/CriarFichaOP2'
 import CharacterSheet from './pages/CharacterSheet'
 import EntrarCampanha from './pages/EntrarCampanha'
 import Mesa from './pages/Mesa'
@@ -38,6 +39,7 @@ function App() {
           <Route path="/campanha/entrar/:code" element={<ProtectedRoute><EntrarCampanha /></ProtectedRoute>} />
           <Route path="/mesa/:id" element={<ProtectedRoute><Mesa /></ProtectedRoute>} />
           <Route path="/personagem/criar" element={<ProtectedRoute><SystemSelect /></ProtectedRoute>} />
+          <Route path="/personagem/criar/ordem-paranormal-2" element={<ProtectedRoute><CriarFichaOP2 /></ProtectedRoute>} />
           <Route path="/personagem/criar/:system" element={<ProtectedRoute><CharacterCreate /></ProtectedRoute>} />
           <Route path="/personagem/:id" element={<ProtectedRoute><CharacterSheet /></ProtectedRoute>} />
         </Routes>
