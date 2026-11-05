@@ -19256,8 +19256,6 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .op2-dt > * { transform: none; }
 .op2-dt button { border-radius: 0; width: 26px; border: 0; background: var(--tema); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
 .op2-dt span { padding: 1px 10px; margin: 0 3px; background: color-mix(in srgb, var(--tema) 80%, #000); color: #fff; font-family: 'Girassol', serif; font-size: 18px; }
-.stat-bar-fill.op2pv { background: linear-gradient(90deg, #7a2e04 0%, #b5480a 48%, #d9620f 100%); }
-.stat-bar-fill.op2pd { background: linear-gradient(90deg, #b56a10 0%, #e08d1f 48%, #f6ab3c 100%); }
 
 /* Modificadores de perícias. */
 .op2-mods { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; margin-bottom: 26px; padding: 4px 4px 12px; border-left: 2px solid color-mix(in srgb, var(--tema) 50%, transparent); }
@@ -19461,3 +19459,13 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .op2-cenario-contos .op2-hab-aba:not(.ativa)::before { opacity: 0.45; }
 .op2-cenario-contos .op2-hab-aba.ativa { background: none; color: #fff; }
 .op2-cenario-contos .op2-cabecalho { border-color: color-mix(in srgb, var(--tema) 70%, #fff); }
+/* Barras de PV (escura, em cima) e PD (clara, embaixo) na cor do perfil; o coração e a estrela são recoloridos por filtro. */
+.op2-folha { --pv-barra: linear-gradient(90deg, #521d1d 0%, #8d1515 48%, #b91e1e 100%); --pd-barra: linear-gradient(90deg, #8f2c22 0%, #c43c2c 48%, #e4604e 100%); --pv-icone: none; --pd-icone: hue-rotate(150deg) saturate(1.1) brightness(1.3); }
+.op2-tema-analista { --pv-barra: linear-gradient(90deg, #0a2348 0%, #11397a 48%, #1a4f9f 100%); --pd-barra: linear-gradient(90deg, #1c69b0 0%, #2f88d4 48%, #5aa9ee 100%); --pv-icone: hue-rotate(215deg) saturate(1.1); --pd-icone: brightness(1.45) saturate(1.05); }
+.op2-tema-vigilante { --pv-barra: linear-gradient(90deg, #15360f 0%, #1f5517 48%, #2a7320 100%); --pd-barra: linear-gradient(90deg, #3a8a2a 0%, #55aa3a 48%, #7ccc58 100%); --pv-icone: hue-rotate(118deg) saturate(0.9); --pd-icone: hue-rotate(-95deg) brightness(1.65) saturate(0.95); }
+.op2-cenario-contos.op2-tema-analista { --pv-barra: linear-gradient(90deg, #0b363c 0%, #12545c 48%, #1b717b 100%); --pd-barra: linear-gradient(90deg, #208694 0%, #31a5b2 48%, #5cc4ce 100%); --pv-icone: hue-rotate(190deg) saturate(0.85); --pd-icone: hue-rotate(-22deg) brightness(1.4) saturate(0.9); }
+.op2-cenario-contos.op2-tema-vigilante { --pv-barra: linear-gradient(90deg, #0e3a23 0%, #165834 48%, #207548 100%); --pd-barra: linear-gradient(90deg, #2a9558 0%, #3db470 48%, #68d290 100%); --pv-icone: hue-rotate(140deg) saturate(0.85); --pd-icone: hue-rotate(-62deg) brightness(1.6) saturate(0.9); }
+.stat-bar-fill.op2pv { background: var(--pv-barra); }
+.stat-bar-fill.op2pd { background: var(--pd-barra); }
+.op2-barra:nth-child(1) .vtt-stat-icon { filter: var(--pv-icone); }
+.op2-barra:nth-child(2) .vtt-stat-icon { filter: var(--pd-icone); }
