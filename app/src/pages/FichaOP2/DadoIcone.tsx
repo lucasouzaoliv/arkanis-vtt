@@ -11,7 +11,7 @@ const poligono = (lados: number, r: number, giro = -90) =>
   }).join(' ')
 
 const FORMA: Record<Dado, { tipo: 'polygon' | 'rect'; pontos?: string; textoY: number }> = {
-  4: { tipo: 'polygon', pontos: '20,3 37.5,35 2.5,35', textoY: 29 },
+  4: { tipo: 'polygon', pontos: '20,3 37.5,35 2.5,35', textoY: 25.5 },
   6: { tipo: 'rect', textoY: 21 },
   8: { tipo: 'polygon', pontos: '20,1.5 38.5,20 20,38.5 1.5,20', textoY: 21 },
   10: { tipo: 'polygon', pontos: poligono(10, 18.5), textoY: 21 },
@@ -34,7 +34,7 @@ export default function DadoIcone({ lados, tamanho = 22, pavor = false, numero, 
     <svg className={classe} width={tamanho} height={tamanho} viewBox="0 0 40 40" role="img" aria-label={titulo ?? `d${lados}`}>
       {titulo && <title>{titulo}</title>}
       {f.tipo === 'rect' ? <rect x="4" y="4" width="32" height="32" rx="5" /> : <polygon points={f.pontos} strokeLinejoin="round" />}
-      <text x="20" y={f.textoY} dominantBaseline="middle" textAnchor="middle" fontSize={String(numero ?? lados).length > 1 ? 15 : 19}>
+      <text x="20" y={f.textoY} dominantBaseline="middle" textAnchor="middle" fontSize={String(numero ?? lados).length > 1 ? (lados === 4 ? 12 : 15) : lados === 4 ? 15 : 19}>
         {numero ?? lados}
       </text>
     </svg>
