@@ -19252,10 +19252,6 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .op2-barras { display: flex; flex-direction: column; gap: 16px; }
 .op2-barra { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .op2-barra .stat-bar-row { width: 100%; }
-.op2-dt { display: inline-flex; align-items: stretch; transform: skewX(-14deg); }
-.op2-dt > * { transform: none; }
-.op2-dt button { border-radius: 0; width: 26px; border: 0; background: var(--tema); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
-.op2-dt span { padding: 1px 10px; margin: 0 3px; background: color-mix(in srgb, var(--tema) 80%, #000); color: #fff; font-family: 'Girassol', serif; font-size: 18px; }
 
 /* Modificadores de perícias. */
 .op2-mods { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; margin-bottom: 26px; padding: 4px 4px 12px; border-left: 2px solid color-mix(in srgb, var(--tema) 50%, transparent); }
@@ -19484,3 +19480,9 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .op2-pericia-nome { padding: 6px 6px; font-size: 15px; font-weight: 900; letter-spacing: -0.5px; -webkit-text-stroke: 0.3px #fff; }
 .op2-pericia-dados { gap: 6px; font-size: 17px; font-weight: 700; }
 .op2-etiqueta { padding: 4px 0; font-size: 12px; }
+/* DT acima das barras: cada peça inclinada, mas o texto em pé e tudo na mesma altura. */
+.op2-dt { display: inline-flex; align-items: stretch; gap: 3px; height: 30px; transform: none; }
+.op2-dt > button, .op2-dt > .op2-dt-valor { display: grid; place-items: center; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; transform: skewX(-14deg); }
+.op2-dt > button { width: 28px; background: var(--tema); color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; line-height: 1; }
+.op2-dt > .op2-dt-valor { padding: 0 12px; background: color-mix(in srgb, var(--tema) 80%, #000); color: #fff; font-family: 'Girassol', serif; font-size: 18px; line-height: 1; }
+.op2-dt > button > span, .op2-dt > .op2-dt-valor > span { display: block; transform: skewX(14deg); }

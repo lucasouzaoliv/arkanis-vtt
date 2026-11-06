@@ -257,9 +257,9 @@ export default function AbaAgente({ personagem, ficha }: { personagem: Personage
             return (
               <div key={b.id} className="op2-barra">
                 <div className="op2-dt">
-                  <button type="button" aria-label={`Diminuir DT de ${b.rotulo}`} onClick={() => mudarDt(-3)}>−</button>
-                  <span>DT {String(b.dt).padStart(2, '0')}</span>
-                  <button type="button" aria-label={`Aumentar DT de ${b.rotulo}`} onClick={() => mudarDt(3)}>+</button>
+                  <button type="button" aria-label={`Diminuir DT de ${b.rotulo}`} onClick={() => mudarDt(-3)}><span>−</span></button>
+                  <span className="op2-dt-valor"><span>DT {String(b.dt).padStart(2, '0')}</span></span>
+                  <button type="button" aria-label={`Aumentar DT de ${b.rotulo}`} onClick={() => mudarDt(3)}><span>+</span></button>
                 </div>
                 <StatBar
                   label={b.rotulo}
