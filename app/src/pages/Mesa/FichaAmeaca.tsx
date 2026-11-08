@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAnglesLeft, faAnglesRight, faChevronLeft, faChevronRight, faComment, faDiceD20, faPenToSquare, faPlus, faSkull } from '@fortawesome/free-solid-svg-icons'
+import { faAnglesLeft, faAnglesRight, faChevronLeft, faChevronRight, faComment, faDiceD20, faCheck, faPenToSquare, faPlus, faSkull } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../../lib/supabase'
 import { lerPericias, lerTeste, rolarDano, rolarTeste } from './combate'
 import type { Rolagem } from './chat'
@@ -8,6 +8,7 @@ import { ataqueDaCriatura, textoDosAlvos, type Alvo, type AtaqueDaAcao } from '.
 import CondicoesDaAmeaca from './CondicoesDaAmeaca'
 import { defesaDeCondicoes, penalidadeDeCondicoes, rotuloComCondicoes, type ContextoDoTeste } from '../CharacterSheet/condicoes'
 import { lerCondicoesPersonalizadas, type CondicaoPersonalizada } from '../CharacterSheet/efeitosEscolhidos'
+import { comAjuste, valorDoAjuste, type AlvoDoAjuste } from './ajustesDaAmeaca'
 
 type Acao = { nome: string; tipo?: string; teste?: string; dano?: string; descricao?: string }
 
@@ -43,6 +44,36 @@ type Criatura = {
 }
 
 type Aba = 'status' | 'combate' | 'descricao'
+
+const comSinal = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0')
+
+// Lápis do mestre ao lado da Defesa e das perícias: abre − [número] + pra ajustar só esta ameaça.
+function AjusteDoMestre({ valor, rotulo, onMudar }: { valor: number; rotulo: string; onMudar: (v: number) => void }) {
+  const [aberto, setAberto] = useState(false)
+  if (!aberto) {
+    return (
+      <button type="button" className={`ameaca-ajuste-botao${valor ? ' marcado' : ''}`} aria-label={`Ajustar ${rotulo}`} title={`Ajustar ${rotulo} desta ameaça`} onClick={() => setAberto(true)}>
+        <FontAwesomeIcon icon={faPenToSquare} />
+      </button>
+    )
+  }
+  return (
+    <span className="ameaca-ajuste-editor" role="group" aria-label={`Ajuste de ${rotulo}`}>
+      <button type="button" aria-label="Menos 1" onClick={() => onMudar(valor - 1)}>−</button>
+      <input
+        type="number"
+        value={valor}
+        autoFocus
+        aria-label={`Ajuste de ${rotulo}`}
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => onMudar(Math.round(Number(e.target.value)) || 0)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') setAberto(false) }}
+      />
+      <button type="button" aria-label="Mais 1" onClick={() => onMudar(valor + 1)}>+</button>
+      <button type="button" className="ameaca-ajuste-ok" aria-label="Pronto" onClick={() => setAberto(false)}><FontAwesomeIcon icon={faCheck} /></button>
+    </span>
+  )
+}
 
 const ATRIBUTOS = ['agi', 'for', 'int', 'pre', 'vig']
 const ATRIBUTO_DA_SIGLA: Record<string, string> = { agi: 'agilidade', for: 'forca', int: 'intelecto', pre: 'presenca', vig: 'vigor' }
@@ -104,6 +135,12 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, condicoes = []
   const autor = { nome: nome ?? c.name, foto: c.image_url }
 
   const proprias = lerCondicoesPersonalizadas(condicoesPersonalizadas)
+  const podeAjustar = podeEditar && !!onMudarCondicoes
+  const ajuste = (a: AlvoDoAjuste) => valorDoAjuste(proprias, condicoes, a)
+  const ajustar = (a: AlvoDoAjuste, v: number) => {
+    const r = comAjuste(condicoes, proprias, a, v)
+    onMudarCondicoes?.(r.condicoes, r.personalizadas)
+  }
   // Condição que tira (ou dá) dado no teste: vale sozinha e a rolagem diz por quê.
   function comCondicoes(t: { dados: number; bonus: number }, contexto: ContextoDoTeste) {
     const p = penalidadeDeCondicoes(condicoes, contexto, proprias)
@@ -239,7 +276,7 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, condicoes = []
             <dl className="ficha-ameaca-lista">
               {c.defesa !== null && (() => {
                 const d = defesaDeCondicoes(condicoes, proprias)
-                return <><dt>Defesa</dt><dd title={d.motivos.join(', ') || undefined}>{c.defesa + d.valor}{d.valor ? <small className="ficha-ameaca-motivo"> ({c.defesa} {d.motivos.join(', ')})</small> : null}</dd></>
+                return <><dt>Defesa</dt><dd title={d.motivos.join(', ') || undefined}>{c.defesa + d.valor}{d.valor ? <small className="ficha-ameaca-motivo"> ({c.defesa} {d.motivos.join(', ')})</small> : null}{podeAjustar && <AjusteDoMestre valor={ajuste({ tipo: 'defesa' })} rotulo="Defesa" onMudar={(v) => ajustar({ tipo: 'defesa' }, v)} />}</dd></>
               })()}
               {c.deslocamento && <><dt>Deslocamento</dt><dd>{c.deslocamento}</dd></>}
             </dl>
@@ -248,7 +285,8 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, condicoes = []
               {[...testes.filter(([, t]) => t), ...lerPericias(c.pericias).map((p) => [p.nome, p.teste] as [string, string])].map(([n, t]) => (
                 <li key={n}>
                   <span>{n.toUpperCase()}</span>
-                  <strong>{t}</strong>
+                  <strong>{t}{(() => { const v = ajuste({ tipo: 'pericia', nome: n }); return v ? <em className="ameaca-ajuste-valor" title="Ajuste do mestre">{comSinal(v)}</em> : null })()}</strong>
+                  {podeAjustar && <AjusteDoMestre valor={ajuste({ tipo: 'pericia', nome: n })} rotulo={n} onMudar={(v) => ajustar({ tipo: 'pericia', nome: n }, v)} />}
                   {dado(() => rolarPericia(n, t ?? '', contextoDaPericia(n)), `Rolar ${n}`)}
                 </li>
               ))}

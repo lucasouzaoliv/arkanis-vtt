@@ -19486,3 +19486,13 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .op2-dt > button { width: 28px; background: var(--tema); color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; line-height: 1; }
 .op2-dt > .op2-dt-valor { padding: 0 12px; background: color-mix(in srgb, var(--tema) 80%, #000); color: #fff; font-family: 'Girassol', serif; font-size: 18px; line-height: 1; }
 .op2-dt > button > span, .op2-dt > .op2-dt-valor > span { display: block; transform: skewX(14deg); }
+/* Ajuste do mestre na ficha de ameaça (08/11): lápis discreto que abre − número +. */
+.ameaca-ajuste-botao { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-left: 6px; padding: 0; border: 1px solid transparent; border-radius: 4px; background: none; color: var(--mesa-creme-dim); font-size: 0.7rem; vertical-align: middle; cursor: pointer; opacity: 0.55; }
+.ameaca-ajuste-botao:hover, .ameaca-ajuste-botao:focus-visible { opacity: 1; border-color: var(--mesa-borda); }
+.ameaca-ajuste-botao.marcado { opacity: 1; color: var(--mesa-dourado, #d9b45a); }
+.ameaca-ajuste-editor { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; vertical-align: middle; }
+.ameaca-ajuste-editor button { display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 1px solid var(--mesa-borda); border-radius: 4px; background: #1a181e; color: inherit; font-weight: 700; cursor: pointer; }
+.ameaca-ajuste-editor button:hover { background: #2a2730; }
+.ameaca-ajuste-editor input { width: 44px; height: 22px; padding: 0 2px; border: 1px solid var(--mesa-borda); border-radius: 4px; background: #0f0e12; color: inherit; font: inherit; font-weight: 700; text-align: center; -moz-appearance: textfield; appearance: textfield; }
+.ameaca-ajuste-editor input::-webkit-inner-spin-button, .ameaca-ajuste-editor input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.ameaca-ajuste-valor { margin-left: 5px; color: var(--mesa-dourado, #d9b45a); font-style: normal; font-size: 0.8em; }
