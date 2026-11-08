@@ -229,7 +229,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, corDe,
   // quando o mestre liberou (Configurar Propriedade). O banco confere de novo.
   const podeMover = useCallback(
     (o: ObjetoCena) =>
-      (souMestre && (!camadaAtiva || o.layer === camadaAtiva)) ||
+      // A lâmpada da Luz Ambiente e a chama do Efeito (só o mestre vê) mexem em qualquer camada (08/11).
+      (souMestre && (!camadaAtiva || o.layer === camadaAtiva || o.image_url === IMAGEM_LUZ || o.image_url === IMAGEM_EFEITO)) ||
       (!o.locked && o.layer !== 'mestre' &&
         ((o.character_id !== null && meusPersonagens.includes(o.character_id)) ||
           o.move_permission === 'todos' ||
