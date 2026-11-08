@@ -24,6 +24,9 @@ export type Ator = {
   // Condições e efeitos da ameaça na mesa (18/10): cada cópia tem as suas.
   condicoes?: string[]
   condicoes_personalizadas?: unknown
+  // Ajustes do mestre nesta cópia (08/11): Vida máxima própria e resistências a dano trocadas.
+  pv_maximo?: number | null
+  resistencias_ajustadas?: unknown
   sort: number
   created_at: string
 }

@@ -28,3 +28,27 @@ describe('ajustes do mestre na ameaça', () => {
     expect(r.personalizadas).toEqual([])
   })
 })
+
+import { comResistencia, resistenciasComAjustes } from './ajustesDaAmeaca'
+import { danoNoAlvo, perfilDoAlvo } from './mira'
+
+describe('resistências ajustadas da ameaça', () => {
+  const criatura = { tipo: 'criatura' as const, nome: 'X', defesa: 20, resistencias: 'Balístico 10, Sangue 20', vulnerabilidades: null }
+
+  it('troca, tira e adiciona tipos por cima do bestiário', () => {
+    let a = comResistencia([], 'sangue', 5)
+    a = comResistencia(a, 'balistico', 0)
+    a = comResistencia(a, 'fogo', 8)
+    expect(resistenciasComAjustes({ balistico: 10, sangue: 20 }, a)).toEqual({ sangue: 5, fogo: 8 })
+  })
+
+  it('o dano contra a ameaça usa as resistências ajustadas', () => {
+    const p = perfilDoAlvo({ ...criatura, resistencias_ajustadas: [{ tipo: 'sangue', valor: 5 }, { tipo: 'balistico', valor: 0 }] })
+    expect(danoNoAlvo([{ valor: 12, tipo: 'Sangue' }], p).pv).toBe(7)
+    expect(danoNoAlvo([{ valor: 12, tipo: 'Balístico' }], p).pv).toBe(12)
+  })
+
+  it('sem ajuste fica igual ao bestiário', () => {
+    expect(danoNoAlvo([{ valor: 12, tipo: 'Sangue' }], perfilDoAlvo(criatura)).pv).toBe(0)
+  })
+})

@@ -5,6 +5,7 @@ import { lerResistenciasExtras, resistenciasDoItemEquipado, resistenciasFinais, 
 import { defesaTotal } from '../CharacterSheet/defesa'
 import { defesaDeCondicoes } from '../CharacterSheet/condicoes'
 import { lerCondicoesPersonalizadas } from '../CharacterSheet/efeitosEscolhidos'
+import { lerResistenciasAjustadas, resistenciasComAjustes } from './ajustesDaAmeaca'
 import { lerTeste } from './combate'
 
 export type Alvo = { token_id: string; nome: string }
@@ -118,7 +119,7 @@ export type DadosDoAlvo =
       // Treino em Luta (nenhum/treinado/veterano/expert): contra-atacar exige treino (13/10).
       luta?: string | null
     }
-  | { tipo: 'criatura'; nome: string; defesa: number; resistencias: string | null; vulnerabilidades: string | null; pv_maximo?: number | null; condicoes?: string[]; condicoes_personalizadas?: unknown }
+  | { tipo: 'criatura'; nome: string; defesa: number; resistencias: string | null; vulnerabilidades: string | null; pv_maximo?: number | null; condicoes?: string[]; condicoes_personalizadas?: unknown; resistencias_ajustadas?: unknown }
   | { tipo: 'nenhum'; nome: string }
 
 export function normalizar(t: string): string {
@@ -189,7 +190,11 @@ export function lerResistenciasDaCriatura(resistencias: string | null, vulnerabi
 }
 
 export function perfilDoAlvo(d: DadosDoAlvo): Perfil {
-  if (d.tipo === 'criatura') return lerResistenciasDaCriatura(d.resistencias, d.vulnerabilidades)
+  if (d.tipo === 'criatura') {
+    // Resistências trocadas pelo mestre nesta cópia (08/11) valem por cima das do bestiário.
+    const p = lerResistenciasDaCriatura(d.resistencias, d.vulnerabilidades)
+    return { ...p, resist: resistenciasComAjustes(p.resist, lerResistenciasAjustadas(d.resistencias_ajustadas)) }
+  }
   if (d.tipo !== 'ficha') return PERFIL_VAZIO
   const resist: Record<string, number> = {}
   const deItens = d.itens.flatMap((item) => resistenciasDoItemEquipado(item.stats, item.mods))

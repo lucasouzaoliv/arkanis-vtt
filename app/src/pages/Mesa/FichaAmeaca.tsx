@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAnglesLeft, faAnglesRight, faChevronLeft, faChevronRight, faComment, faDiceD20, faCheck, faPenToSquare, faPlus, faSkull } from '@fortawesome/free-solid-svg-icons'
+import { faAnglesLeft, faAnglesRight, faChevronLeft, faChevronRight, faComment, faDiceD20, faCheck, faPenToSquare, faPlus, faSkull, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../../lib/supabase'
 import { lerPericias, lerTeste, rolarDano, rolarTeste } from './combate'
 import type { Rolagem } from './chat'
@@ -8,7 +8,8 @@ import { ataqueDaCriatura, textoDosAlvos, type Alvo, type AtaqueDaAcao } from '.
 import CondicoesDaAmeaca from './CondicoesDaAmeaca'
 import { defesaDeCondicoes, penalidadeDeCondicoes, rotuloComCondicoes, type ContextoDoTeste } from '../CharacterSheet/condicoes'
 import { lerCondicoesPersonalizadas, type CondicaoPersonalizada } from '../CharacterSheet/efeitosEscolhidos'
-import { comAjuste, valorDoAjuste, type AlvoDoAjuste } from './ajustesDaAmeaca'
+import { comAjuste, comResistencia, lerResistenciasAjustadas, nomeDaResistencia, resistenciasComAjustes, textoDasResistencias, TIPOS_DE_RESISTENCIA, valorDoAjuste, type AlvoDoAjuste } from './ajustesDaAmeaca'
+import { lerResistenciasDaCriatura } from './mira'
 
 type Acao = { nome: string; tipo?: string; teste?: string; dano?: string; descricao?: string }
 
@@ -47,10 +48,42 @@ type Aba = 'status' | 'combate' | 'descricao'
 
 const comSinal = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0')
 
+// Resistências a dano desta cópia: cada tipo com − número + e X; dá pra pôr um tipo novo.
+function EditorDeResistencias({ valores, onMudar, onDesfazer, onFechar }: { valores: Record<string, number>; onMudar: (tipo: string, valor: number) => void; onDesfazer: () => void; onFechar: () => void }) {
+  const tipos = Object.keys(valores)
+  const faltam = TIPOS_DE_RESISTENCIA.filter((t) => !(t.id in valores))
+  return (
+    <div className="ameaca-resist-editor">
+      {tipos.map((t) => (
+        <div key={t} className="ameaca-resist-linha">
+          <span>{nomeDaResistencia(t)}</span>
+          <span className="ameaca-ajuste-editor">
+            <button type="button" aria-label={`Menos 1 de ${nomeDaResistencia(t)}`} onClick={() => onMudar(t, Math.max(0, valores[t] - 1))}>−</button>
+            <input type="number" min={0} value={valores[t]} aria-label={`Resistência a ${nomeDaResistencia(t)}`} onFocus={(e) => e.target.select()} onChange={(e) => onMudar(t, Math.max(0, Math.round(Number(e.target.value)) || 0))} />
+            <button type="button" aria-label={`Mais 1 de ${nomeDaResistencia(t)}`} onClick={() => onMudar(t, valores[t] + 1)}>+</button>
+            <button type="button" aria-label={`Tirar ${nomeDaResistencia(t)}`} onClick={() => onMudar(t, 0)}><FontAwesomeIcon icon={faXmark} /></button>
+          </span>
+        </div>
+      ))}
+      {!tipos.length && <p className="janela-dica">Sem resistência a dano.</p>}
+      <div className="ameaca-resist-acoes">
+        {faltam.length > 0 && (
+          <select aria-label="Adicionar resistência" value="" onChange={(e) => e.target.value && onMudar(e.target.value, 5)}>
+            <option value="">+ Adicionar tipo…</option>
+            {faltam.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+          </select>
+        )}
+        <button type="button" className="mesa-botao" onClick={onDesfazer}>Voltar ao bestiário</button>
+        <button type="button" className="mesa-botao" onClick={onFechar}><FontAwesomeIcon icon={faCheck} /> Pronto</button>
+      </div>
+    </div>
+  )
+}
+
 // Lápis do mestre ao lado da Defesa e das perícias: abre − [número] + pra ajustar só esta ameaça.
-function AjusteDoMestre({ valor, rotulo, onMudar }: { valor: number; rotulo: string; onMudar: (v: number) => void }) {
+function AjusteDoMestre({ valor, rotulo, onMudar, sempreAberto = false }: { valor: number; rotulo: string; onMudar: (v: number) => void; sempreAberto?: boolean }) {
   const [aberto, setAberto] = useState(false)
-  if (!aberto) {
+  if (!aberto && !sempreAberto) {
     return (
       <button type="button" className={`ameaca-ajuste-botao${valor ? ' marcado' : ''}`} aria-label={`Ajustar ${rotulo}`} title={`Ajustar ${rotulo} desta ameaça`} onClick={() => setAberto(true)}>
         <FontAwesomeIcon icon={faPenToSquare} />
@@ -63,14 +96,14 @@ function AjusteDoMestre({ valor, rotulo, onMudar }: { valor: number; rotulo: str
       <input
         type="number"
         value={valor}
-        autoFocus
+        autoFocus={!sempreAberto}
         aria-label={`Ajuste de ${rotulo}`}
         onFocus={(e) => e.target.select()}
         onChange={(e) => onMudar(Math.round(Number(e.target.value)) || 0)}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') setAberto(false) }}
       />
       <button type="button" aria-label="Mais 1" onClick={() => onMudar(valor + 1)}>+</button>
-      <button type="button" className="ameaca-ajuste-ok" aria-label="Pronto" onClick={() => setAberto(false)}><FontAwesomeIcon icon={faCheck} /></button>
+      {!sempreAberto && <button type="button" className="ameaca-ajuste-ok" aria-label="Pronto" onClick={() => setAberto(false)}><FontAwesomeIcon icon={faCheck} /></button>}
     </span>
   )
 }
@@ -91,10 +124,13 @@ const contextoDaPericia = (nome: string): ContextoDoTeste => ({ atributo: ATRIBU
 // Ficha de Ameaça (12.4): cabeçalho, Vida com as setas e as abas Status / Combate / Descrição.
 // O mestre rola atributos, perícias, testes e danos e manda ações/poderes pro chat
 // (podeRolar); na escolha de ameaças ela é só pra ver, com o botão Adicionar no rodapé.
-export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, condicoes = [], condicoesPersonalizadas, onMudarCondicoes, podeEditar, podeRolar = false, nome, onMudarPv, onRolar, onMostrar, onAdicionar, alvos = [], onAtacar, meuId, onEditar }: {
+export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, resistenciasAjustadas, onAjustar, condicoes = [], condicoesPersonalizadas, onMudarCondicoes, podeEditar, podeRolar = false, nome, onMudarPv, onRolar, onMostrar, onAdicionar, alvos = [], onAtacar, meuId, onEditar }: {
   criaturaId: string
   pvAtual: number | null
   pvMax?: number | null
+  // Ajustes do mestre nesta cópia (08/11): resistências trocadas e onde salvar Vida máxima/resistências.
+  resistenciasAjustadas?: unknown
+  onAjustar?: (campos: { pv_maximo?: number | null; pv_atual?: number | null; resistencias_ajustadas?: unknown }) => void
   // Condições e efeitos desta ameaça na mesa (18/10); sem onMudarCondicoes é só pra ver.
   condicoes?: string[]
   condicoesPersonalizadas?: unknown
@@ -117,6 +153,7 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, condicoes = []
   const [c, setC] = useState<Criatura | null>(null)
   const [aba, setAba] = useState<Aba>('status')
   const [subaba, setSubaba] = useState<'acoes' | 'poderes'>('acoes')
+  const [editandoResist, setEditandoResist] = useState(false)
 
   useEffect(() => {
     const carregar = () => supabase.from('creatures').select('*').eq('id', criaturaId).single().then(({ data }) => setC(data as Criatura | null))
@@ -244,6 +281,22 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, condicoes = []
         </div>
       )}
 
+      {podeEditar && onAjustar && (
+        <div className="ameaca-vida-maxima">
+          <span>Vida máxima{pvMax != null && c.pv_maximo != null && pvMax !== c.pv_maximo ? <small> (bestiário: {c.pv_maximo})</small> : null}</span>
+          <AjusteDoMestre
+            valor={maximo}
+            rotulo="Vida máxima"
+            sempreAberto
+            onMudar={(v) => {
+              const novo = Math.max(1, v)
+              // Com a vida cheia, ela acompanha o máximo novo.
+              onAjustar({ pv_maximo: novo === c.pv_maximo ? null : novo, ...(pv >= maximo ? { pv_atual: novo } : pv > novo ? { pv_atual: novo } : {}) })
+            }}
+          />
+        </div>
+      )}
+
       <CondicoesDaAmeaca condicoes={condicoes} personalizadas={condicoesPersonalizadas} podeEditar={podeEditar && !!onMudarCondicoes} onMudar={onMudarCondicoes} />
 
       <nav className="janela-abas ficha-ameaca-abas" role="tablist">
@@ -293,7 +346,39 @@ export default function FichaAmeaca({ criaturaId, pvAtual, pvMax, condicoes = []
             </ul>
             <dl className="ficha-ameaca-lista">
               {!!c.descritores?.length && <><dt>Elementos</dt><dd>{c.descritores.join(', ')}</dd></>}
-              {c.resistencias && <><dt>Resistências</dt><dd>{c.resistencias}</dd></>}
+              {(() => {
+                const base = lerResistenciasDaCriatura(c.resistencias, null).resist
+                const ajustes = lerResistenciasAjustadas(resistenciasAjustadas)
+                const valores = resistenciasComAjustes(base, ajustes)
+                const podeMudar = podeEditar && !!onAjustar
+                if (!c.resistencias && !ajustes.length && !podeMudar) return null
+                // Imunidades e o texto do livro continuam valendo; mostra os números ajustados quando houver.
+                const texto = ajustes.length ? textoDasResistencias(valores) || 'Nenhuma' : c.resistencias || '—'
+                return (
+                  <>
+                    <dt>Resistências</dt>
+                    <dd>
+                      {texto}
+                      {ajustes.length > 0 && <small className="ficha-ameaca-motivo"> (ajustado)</small>}
+                      {podeMudar && !editandoResist && (
+                        <button type="button" className={`ameaca-ajuste-botao${ajustes.length ? ' marcado' : ''}`} aria-label="Ajustar resistências" title="Ajustar resistências a dano desta ameaça" onClick={() => setEditandoResist(true)}>
+                          <FontAwesomeIcon icon={faPenToSquare} />
+                        </button>
+                      )}
+                    </dd>
+                    {podeMudar && editandoResist && (
+                      <dd className="ameaca-resist-cheia">
+                        <EditorDeResistencias
+                          valores={valores}
+                          onMudar={(tipo, v) => onAjustar!({ resistencias_ajustadas: comResistencia(ajustes, tipo, v) })}
+                          onDesfazer={() => onAjustar!({ resistencias_ajustadas: [] })}
+                          onFechar={() => setEditandoResist(false)}
+                        />
+                      </dd>
+                    )}
+                  </>
+                )
+              })()}
               {c.vulnerabilidades && <><dt>Vulnerabilidades</dt><dd>{c.vulnerabilidades}</dd></>}
             </dl>
           </>

@@ -19496,3 +19496,12 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .ameaca-ajuste-editor input { width: 44px; height: 22px; padding: 0 2px; border: 1px solid var(--mesa-borda); border-radius: 4px; background: #0f0e12; color: inherit; font: inherit; font-weight: 700; text-align: center; -moz-appearance: textfield; appearance: textfield; }
 .ameaca-ajuste-editor input::-webkit-inner-spin-button, .ameaca-ajuste-editor input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .ameaca-ajuste-valor { margin-left: 5px; color: var(--mesa-dourado, #d9b45a); font-style: normal; font-size: 0.8em; }
+.ameaca-vida-maxima { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin: -2px 0 8px; font-size: 0.78rem; color: var(--mesa-creme-dim); }
+.ameaca-vida-maxima small { opacity: 0.8; }
+.ameaca-vida-maxima .ameaca-ajuste-editor input { width: 56px; }
+.ameaca-resist-editor { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding: 8px; border: 1px solid var(--mesa-borda); border-radius: 6px; background: #121116; }
+.ameaca-resist-linha { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ameaca-resist-linha > span:first-child { font-weight: 700; font-size: 0.8rem; }
+.ameaca-resist-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 2px; }
+.ameaca-resist-acoes select { flex: 1; min-width: 140px; height: 28px; padding: 0 6px; border: 1px solid var(--mesa-borda); border-radius: 4px; background: #0f0e12; color: inherit; font: inherit; font-size: 0.8rem; }
+.ficha-ameaca-lista .ameaca-resist-cheia { grid-column: 1 / -1; }

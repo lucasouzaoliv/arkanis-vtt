@@ -33,3 +33,38 @@ export function comAjuste(condicoes: string[], personalizadas: CondicaoPersonali
     personalizadas: [...semAjustes, { nome: NOME_DOS_AJUSTES, descricao: 'Valores mudados pelo mestre nesta ameaça.', icone: atual?.icone ?? '0', efeitos }],
   }
 }
+
+// ---- Resistências a dano da cópia (08/11) ----
+// Cada ajuste troca o valor daquele tipo (0 tira); "dano" vale pra todos os tipos.
+export type ResistenciaAjustada = { tipo: string; valor: number }
+
+export const TIPOS_DE_RESISTENCIA: { id: string; nome: string }[] = [
+  { id: 'dano', nome: 'Dano (todos)' },
+  { id: 'corte', nome: 'Corte' }, { id: 'impacto', nome: 'Impacto' }, { id: 'perfuracao', nome: 'Perfuração' }, { id: 'balistico', nome: 'Balístico' },
+  { id: 'fogo', nome: 'Fogo' }, { id: 'frio', nome: 'Frio' }, { id: 'eletricidade', nome: 'Eletricidade' }, { id: 'quimico', nome: 'Químico' },
+  { id: 'mental', nome: 'Mental' }, { id: 'sangue', nome: 'Sangue' }, { id: 'morte', nome: 'Morte' }, { id: 'conhecimento', nome: 'Conhecimento' },
+  { id: 'energia', nome: 'Energia' }, { id: 'medo', nome: 'Medo' },
+]
+export const nomeDaResistencia = (id: string) => TIPOS_DE_RESISTENCIA.find((t) => t.id === id)?.nome ?? id
+
+export function lerResistenciasAjustadas(v: unknown): ResistenciaAjustada[] {
+  if (!Array.isArray(v)) return []
+  return v.filter((r) => r && typeof r.tipo === 'string' && Number.isFinite(Number(r.valor))).map((r) => ({ tipo: String(r.tipo), valor: Math.max(0, Math.round(Number(r.valor))) }))
+}
+
+// Resistências que valem (do bestiário, com os ajustes por cima).
+export function resistenciasComAjustes(base: Record<string, number>, ajustes: ResistenciaAjustada[]): Record<string, number> {
+  const r = { ...base }
+  for (const a of ajustes) {
+    if (a.valor > 0) r[a.tipo] = a.valor
+    else delete r[a.tipo]
+  }
+  return r
+}
+
+export function comResistencia(ajustes: ResistenciaAjustada[], tipo: string, valor: number): ResistenciaAjustada[] {
+  return [...ajustes.filter((a) => a.tipo !== tipo), { tipo, valor: Math.max(0, Math.round(valor) || 0) }]
+}
+
+export const textoDasResistencias = (r: Record<string, number>) =>
+  Object.entries(r).sort(([a], [b]) => (a === 'dano' ? -1 : b === 'dano' ? 1 : nomeDaResistencia(a).localeCompare(nomeDaResistencia(b)))).map(([t, v]) => `${nomeDaResistencia(t)} ${v}`).join(', ')

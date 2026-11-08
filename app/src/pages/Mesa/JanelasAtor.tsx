@@ -443,11 +443,13 @@ function larguraDaFicha(): number {
   return Math.max(320, Math.min(1240, window.innerWidth - 32))
 }
 
-export function FichaPortatil({ ator, podeEditar, onMudarPv, onMudarCondicoes, onRolar, onMostrar, onFechar, alvos, onAtacar, meuId, onEditarAmeaca }: {
+export function FichaPortatil({ ator, podeEditar, onMudarPv, onMudarCondicoes, onAjustar, onRolar, onMostrar, onFechar, alvos, onAtacar, meuId, onEditarAmeaca }: {
   ator: Ator
   podeEditar: boolean
   onMudarPv: (pv: number) => void
   onMudarCondicoes?: (condicoes: string[], personalizadas: unknown) => void
+  // Vida máxima e resistências desta cópia (ajustes do mestre, 08/11).
+  onAjustar?: (campos: { pv_maximo?: number | null; pv_atual?: number | null; resistencias_ajustadas?: unknown }) => void
   onRolar?: (rolagem: Rolagem, autor: { nome: string; foto: string | null }) => void
   onMostrar?: (html: string, autor: { nome: string; foto: string | null }) => void
   onFechar: () => void
@@ -462,7 +464,7 @@ export function FichaPortatil({ ator, podeEditar, onMudarPv, onMudarCondicoes, o
     // aparecerem sem precisar esticar a janela (pedido 16/10), centralizada.
     <Janela titulo={ator.name} icone={ameaca ? faSkull : faUser} largura={ameaca ? 440 : larguraDaFicha()} altura={ameaca ? 620 : Math.min(820, window.innerHeight - 40)} inicial={ameaca ? { x: 40, y: 30 } : { x: Math.max(8, (window.innerWidth - larguraDaFicha()) / 2), y: 20 }} onFechar={onFechar}>
       {ameaca ? (
-        <FichaAmeaca criaturaId={ator.creature_id!} nome={ator.name} pvAtual={ator.pv_atual} condicoes={ator.condicoes ?? []} condicoesPersonalizadas={ator.condicoes_personalizadas} onMudarCondicoes={onMudarCondicoes} podeEditar={podeEditar} podeRolar={podeEditar} onMudarPv={onMudarPv} onRolar={onRolar} onMostrar={onMostrar} alvos={alvos} onAtacar={onAtacar} meuId={meuId} onEditar={onEditarAmeaca} />
+        <FichaAmeaca criaturaId={ator.creature_id!} nome={ator.name} pvAtual={ator.pv_atual} pvMax={ator.pv_maximo} resistenciasAjustadas={ator.resistencias_ajustadas} onAjustar={onAjustar} condicoes={ator.condicoes ?? []} condicoesPersonalizadas={ator.condicoes_personalizadas} onMudarCondicoes={onMudarCondicoes} podeEditar={podeEditar} podeRolar={podeEditar} onMudarPv={onMudarPv} onRolar={onRolar} onMostrar={onMostrar} alvos={alvos} onAtacar={onAtacar} meuId={meuId} onEditar={onEditarAmeaca} />
       ) : (
         <iframe className="ficha-portatil" title={`Ficha de ${ator.name}`} src={`/personagem/${ator.character_id}?mesa=${ator.campaign_id}`} />
       )}

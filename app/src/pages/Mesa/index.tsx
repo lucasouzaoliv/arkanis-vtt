@@ -768,7 +768,7 @@ export default function Mesa() {
   function vidaDoCombatente(c: Combatente): [number, number | null] | null {
     const a = c.actor_id ? atores.atores.find((x) => x.id === c.actor_id) : undefined
     if (!a?.creature_id) return null
-    const max = atores.criaturas[a.creature_id]?.pv_maximo ?? null
+    const max = a.pv_maximo ?? atores.criaturas[a.creature_id]?.pv_maximo ?? null
     return [a.pv_atual ?? max ?? 0, max]
   }
 
@@ -1593,6 +1593,7 @@ export default function Mesa() {
             podeEditar={nivel === 'dono'}
             onMudarPv={(pv) => atores.salvar(a.id, { pv_atual: pv })}
             onMudarCondicoes={(condicoes, condicoes_personalizadas) => atores.salvar(a.id, { condicoes, condicoes_personalizadas })}
+            onAjustar={(campos) => atores.salvar(a.id, campos)}
             onRolar={rolarNoChat}
             onMostrar={mostrarNoChat}
             alvos={alvosComNome}
