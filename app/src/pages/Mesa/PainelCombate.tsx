@@ -144,8 +144,8 @@ export default function PainelCombate({ souMestre, combates, vdDoCombate, ativo,
                   {b && (c.tipo === 'jogador' || souMestre) && (
                     <span className="combate-barras">
                       {barra(b.pv, 'vida')}
-                      {barra(b.pe, 'esforco')}
-                      {barra(b.san, 'sanidade')}
+                      {!b.op2 && barra(b.pe, 'esforco')}
+                      {barra(b.san, b.op2 ? 'sanidade determinacao' : 'sanidade')}
                     </span>
                   )}
                   {souMestre && !b && vida && <span className="combate-barras">{barra(vida, 'vida')}</span>}

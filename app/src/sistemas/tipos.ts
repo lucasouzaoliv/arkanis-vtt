@@ -5,7 +5,8 @@
 export type Opcao = { id: string; rotulo: string }
 
 // Teste montado a partir da ficha de um personagem: quantos dados e quanto de bônus.
-export type TesteDoPersonagem = { nome: string; dados: number; bonus: number }
+// rolar: o sistema que não usa d20 (OP2: dados em passos) rola do jeito dele.
+export type TesteDoPersonagem = { nome: string; dados: number; bonus: number; rolar?: () => RolagemDeTeste }
 
 // Resultado de uma rolagem de teste.
 export type RolagemDeTeste = { rolls: number[]; kept: number; bonus: number; total: number }

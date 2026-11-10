@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { copiaDoAtor, variacoesDaCriatura, type Ator } from './atores'
 import type { Pasta } from './cenas'
+import { ID_OP2 } from '../../sistemas/ordemParanormal2'
+import { fichaVazia } from '../../sistemas/op2/ficha'
 
 const CAMPOS =
   'id, campaign_id, folder_id, tipo, character_id, creature_id, name, token_url, token_variacoes, token_pastas, acesso_padrao, acesso_jogadores, mostrar_mestres, pv_atual, condicoes, condicoes_personalizadas, pv_maximo, resistencias_ajustadas, sort, created_at'
@@ -76,11 +78,14 @@ export function useAtores(campanhaId: string | undefined) {
   }, [carregarApoio])
 
   // NPC: uma ficha completa de Ordem Paranormal do mestre, sem as 5 etapas de criação (12.7).
-  const criarNPC = useCallback(async (mestreId: string, nome: string, pastaId: string | null) => {
+  const criarNPC = useCallback(async (mestreId: string, nome: string, pastaId: string | null, sistemaId = 'ordem_paranormal') => {
     if (!campanhaId) return null
     const { data: ficha } = await supabase
       .from('characters')
-      .insert({ user_id: mestreId, campaign_id: campanhaId, name: nome, npc: true, system: 'ordem_paranormal' })
+      // OP2: ficha vazia de Contos da Vigília (o playtest mais novo), Executor; o mestre ajusta na ficha.
+      .insert(sistemaId === ID_OP2
+        ? (() => { const n = fichaVazia('contos', 'executor'); return { user_id: mestreId, campaign_id: campanhaId, name: nome, npc: true, system: ID_OP2, current_pv: n.pv, max_pv_override: n.pv, current_pd: n.pd, op2: n.op2 } as Record<string, unknown> })()
+        : { user_id: mestreId, campaign_id: campanhaId, name: nome, npc: true, system: 'ordem_paranormal' })
       .select('id')
       .single()
     if (!ficha) return null

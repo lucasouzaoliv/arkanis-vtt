@@ -5,6 +5,7 @@ import { patenteOf } from '../CharacterSheet/InventarioTopBox'
 import Janela from './Janela'
 import { supabase } from '../../lib/supabase'
 import { sistemaDe } from '../../sistemas'
+import type { TesteDoPersonagem } from '../../sistemas/tipos'
 import { sanitizarHtml } from './chat'
 import type { ObjetoCena } from './cenas'
 import { ICONE_ATIVIDADE } from './FichaItem'
@@ -105,8 +106,8 @@ export default function JanelaInteracao({ token, objetos, meuToken, characterId,
   // O jogador nem recebe a DT: quem diz se passou é o banco (passou_no_teste). O mestre confere aqui.
   async function testar(nome: string, t: { pericia: string; atributo: string; dt?: number | null }, atividadeId: string) {
     const base = characterId ? await sistema.testeDoPersonagem(characterId, t.pericia, t.atributo) : null
-    const teste = base ?? { nome: t.pericia || nome, dados: 1, bonus: 0 }
-    const r = sistema.rolarTeste(teste)
+    const teste: TesteDoPersonagem = base ?? { nome: t.pericia || nome, dados: 1, bonus: 0 }
+    const r = teste.rolar ? teste.rolar() : sistema.rolarTeste(teste)
     let passou = passouNoTeste(r.total, t.dt)
     if (!souMestre) {
       const { data, error } = await supabase.rpc('passou_no_teste', { p_token_id: token.id, p_atividade_id: atividadeId, p_total: r.total })
@@ -131,7 +132,7 @@ export default function JanelaInteracao({ token, objetos, meuToken, characterId,
       const { error } = await supabase.rpc('aplicar_por_item', { p_token_id: token.id, p_atividade_id: a.id, p_alvo_token: alvo.id, p_recurso: recurso, p_valor: v, p_maximo: null })
       if (error) return motivo(error)!
     }
-    const partes = [r.pv ? `−${r.pv} PV` : '', r.san ? `−${r.san} SAN` : ''].filter(Boolean).join(' ')
+    const partes = [r.pv ? `−${r.pv} PV` : '', r.san ? `−${r.san} ${sistema.recursos.find((x) => x.id === 'san')?.rotulo === 'PD' ? 'PD' : 'SAN'}` : ''].filter(Boolean).join(' ')
     return partes || (r.motivos.length ? r.motivos.join(', ') : 'sem dano')
   }
 

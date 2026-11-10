@@ -28,7 +28,8 @@ export type Combate = {
 
 // Barrinhas do jogador (12.4): Vida, Esforço (PE) e Sanidade, atual e máximo.
 // mortes: caveiras marcadas na ficha (pv_death_marks, 3 bits) — morrendo, uma por turno.
-export type Barras = { pv: [number, number | null]; pe: [number, number | null]; san: [number, number | null]; mortes?: number }
+// op2: ficha de Ordem Paranormal 2, que só tem PV e PD (o PD vem no lugar da Sanidade e não há PE).
+export type Barras = { pv: [number, number | null]; pe: [number, number | null]; san: [number, number | null]; mortes?: number; op2?: boolean }
 
 type FichaBarras = {
   id: string
@@ -44,11 +45,12 @@ type FichaBarras = {
   max_sanity_override: number | null
   max_pe_override?: number | null
   pv_death_marks: number | null
+  system?: string | null
   conditions?: string[] | null
   condicoes_personalizadas?: unknown
 }
 
-const CAMPOS_FICHA = 'id, name, avatar_url, attributes, nex_percent, class_id, current_pv, current_pe, current_sanity, max_pv_override, max_pe_override, max_sanity_override, pv_death_marks, conditions, condicoes_personalizadas'
+const CAMPOS_FICHA = 'id, name, avatar_url, attributes, nex_percent, class_id, current_pv, current_pe, current_sanity, max_pv_override, max_pe_override, max_sanity_override, pv_death_marks, system, conditions, condicoes_personalizadas'
 
 type FichaIniciativa = { id: string; user_id: string; name: string | null; avatar_url: string | null; attributes: unknown; conditions: unknown; condicoes_personalizadas?: unknown }
 
@@ -59,7 +61,10 @@ function trocar<T extends { id: string }>(lista: T[], item: T): T[] {
 // Combates da campanha, a ordem de iniciativa do que está rodando e as barras de cada um.
 // Toda ameaça do combate é um personagem da aba Personagens: a vida dela fica nele, então o
 // combate, o token e a ficha mexem na mesma vida.
-export function useCombate(campanhaId: string | undefined) {
+export function useCombate(campanhaId: string | undefined, sistemaId?: string | null) {
+  // OP2 não tem iniciativa: a rodada é por fases, e os NPCs agem por último (13.6). Sem rolagem;
+  // a ordem fica jogadores, NPCs e ameaças.
+  const semIniciativa = sistemaId === 'ordem_paranormal_2'
   const [combates, setCombates] = useState<Combate[]>([])
   const [combatentes, setCombatentes] = useState<Combatente[]>([])
   const [fichas, setFichas] = useState<Record<string, FichaBarras>>({})
@@ -148,6 +153,7 @@ export function useCombate(campanhaId: string | undefined) {
     const max = cls ? computeDerivedStats(cls, f.attributes as Parameters<typeof computeDerivedStats>[1], f.nex_percent, poderesDe[f.id]) : null
     const maxPv = f.max_pv_override ?? max?.maxPv ?? null
     const maxSan = f.max_sanity_override ?? max?.maxSanity ?? null
+    if (f.system === 'ordem_paranormal_2') return { pv: [f.current_pv ?? maxPv ?? 0, maxPv], pe: [0, null], san: [f.current_sanity ?? maxSan ?? 0, maxSan], op2: true }
     return {
       pv: [f.current_pv ?? maxPv ?? 0, maxPv],
       pe: [f.current_pe ?? f.max_pe_override ?? max?.maxPe ?? 0, f.max_pe_override ?? max?.maxPe ?? null],
@@ -192,6 +198,12 @@ export function useCombate(campanhaId: string | undefined) {
   // tokenDe: o token atual do personagem (Configurar Token), que vale mais que a foto da ficha.
   const iniciativaDasFichas = useCallback(async (lista: FichaIniciativa[], combate: Combate, tipo: 'jogador' | 'npc', atorDe: Map<string, string>, tokenDe: Map<string, string | null> = new Map()) => {
     if (!campanhaId || !lista.length) return []
+    if (semIniciativa) {
+      return lista.map((j) => ({
+        combat_id: combate.id, campaign_id: campanhaId, tipo, character_id: j.id, creature_id: null, actor_id: atorDe.get(j.id) ?? null,
+        name: j.name || 'Sem nome', image_url: tokenDe.get(j.id) || j.avatar_url, iniciativa: tipo === 'jogador' ? 2 : 1, desempate: 0,
+      }))
+    }
     const { data: pericia } = await supabase.from('skills').select('id').eq('name', 'Iniciativa').maybeSingle()
     const { data: treinos } = pericia
       ? await supabase.from('character_skills').select('character_id, training, extra_bonus').eq('skill_id', pericia.id).in('character_id', lista.map((j) => j.id))
@@ -219,7 +231,7 @@ export function useCombate(campanhaId: string | undefined) {
     })
     if (rolagens.length) await supabase.from('character_rolls').insert(rolagens)
     return linhas
-  }, [campanhaId])
+  }, [campanhaId, semIniciativa])
 
   // Pasta com o nome do combate ("Floresta", "Luta no banco"…) na aba Personagens (cria se não existir).
   const pastaDoCombate = useCallback(async (combate: Combate) => {
@@ -268,7 +280,7 @@ export function useCombate(campanhaId: string | undefined) {
       const t = { dados: base.dados + p.dados, bonus: base.bonus + p.valor }
       return {
         combat_id: combate.id, campaign_id: campanhaId, tipo: 'ameaca', actor_id: a.id, creature_id: a.creature_id, character_id: null,
-        name: a.name, image_url: a.token_url ?? c?.image_url ?? null, iniciativa: rolarTeste(t).total, desempate: t.bonus,
+        name: a.name, image_url: a.token_url ?? c?.image_url ?? null, iniciativa: semIniciativa ? 0 : rolarTeste(t).total, desempate: semIniciativa ? 0 : t.bonus,
       }
     })
     const npcs = lista.filter((a) => a.tipo !== 'ameaca' && a.character_id && !deJogador(a))
@@ -287,7 +299,7 @@ export function useCombate(campanhaId: string | undefined) {
     const novos = (data ?? []) as Combatente[]
     setCombatentes((l) => novos.reduce(trocar, l))
     return novos
-  }, [campanhaId, iniciativaDasFichas])
+  }, [campanhaId, iniciativaDasFichas, semIniciativa])
 
   // Já está nesse combate? Rodando, vale a ordem de iniciativa (quem foi tirado pode voltar);
   // parado, a lista de quem vai lutar.

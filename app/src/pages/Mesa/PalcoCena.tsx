@@ -138,7 +138,7 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, corDe,
   deslocamentoDe?: (o: ObjetoCena) => number | null
   turnoDoCombate?: string | null
   // Sanidade do personagem (atual, máximo), pra tela derreter com ela baixa (KAN-116).
-  barrasDe?: (characterId: string) => { pv: [number, number | null]; san: [number, number | null] } | null
+  barrasDe?: (characterId: string) => { pv: [number, number | null]; san: [number, number | null]; op2?: boolean } | null
   // Tem poder de enxergar no escuro (Visão do Oculto e afins)?
   enxergaNoEscuro?: (characterId: string) => boolean
   // Tem Visão do Oculto? Dentro da escuridão, borda dourada e sigilos na tela.
@@ -217,7 +217,8 @@ export default function PalcoCena({ cena, souMestre, userId, nomeUsuario, corDe,
   // jogador do personagem).
   const loucuraLigada = useLoucuraLigada()
   const barrasDaVisao = loucuraLigada && !veTudo && personagensDaVisao[0] ? barrasDe?.(personagensDaVisao[0]) : null
-  const loucura = barrasDaVisao ? loucuraDaSanidade(...barrasDaVisao.san) : SEM_LOUCURA
+  // OP2 não tem Sanidade (o PD é pequeno e cai o tempo todo): a tela só reage à vida.
+  const loucura = barrasDaVisao && !barrasDaVisao.op2 ? loucuraDaSanidade(...barrasDaVisao.san) : SEM_LOUCURA
   const ferimento = barrasDaVisao ? ferimentoDaVida(...barrasDaVisao.pv) : SEM_FERIMENTO
   const filtroVisao = filtroDaVisao(loucura, ferimento)
   // Quem enxerga no escuro não tem a escuridão por cima (os outros continuam vendo tudo escuro).

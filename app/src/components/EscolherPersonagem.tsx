@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { SISTEMAS } from '../lib/sistemas'
 import { useAuth } from '../lib/AuthContext'
 import { fallbackAvatarColor } from '../lib/color'
 import { esquecerDestino, guardarDestino } from '../lib/convitePendente'
@@ -27,24 +28,34 @@ export default function EscolherPersonagem({ campanha, codigoConvite, voltarPara
   const [escolhido, setEscolhido] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  // Jogo da campanha: só entram fichas dele (Ordem 1 ou Ordem 2).
+  const [jogo, setJogo] = useState<(typeof SISTEMAS)[number] | null>(null)
 
   useEffect(() => {
     if (!session) return
-    supabase
-      .from('characters')
-      .select('id, name, avatar_url, campaign_id')
-      .eq('user_id', session.user.id)
-      // NPCs do mestre vivem na aba Personagens da mesa, não aqui.
-      .eq('npc', false)
-      // Ordem Paranormal 2 ainda não joga na mesa.
-      .neq('system', 'ordem_paranormal_2')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => setOpcoes(data ?? []))
-  }, [session])
+    let cancelado = false
+    ;(async () => {
+      const { data: sistema } = await supabase.rpc('sistema_da_campanha', { p_campaign_id: campanha.id })
+      const doJogo = SISTEMAS.find((s) => s.id === sistema) ?? SISTEMAS[0]
+      const { data } = await supabase
+        .from('characters')
+        .select('id, name, avatar_url, campaign_id')
+        .eq('user_id', session.user.id)
+        // NPCs do mestre vivem na aba Personagens da mesa, não aqui.
+        .eq('npc', false)
+        .eq('system', doJogo.id)
+        .order('created_at', { ascending: false })
+      if (cancelado) return
+      setJogo(doJogo)
+      setOpcoes(data ?? [])
+    })()
+    return () => { cancelado = true }
+  }, [session, campanha.id])
+  const nomeDoJogo = jogo?.name ?? 'Ordem Paranormal'
 
   function criarNovo() {
     guardarDestino(voltarPara)
-    navigate('/personagem/criar/ordem-paranormal')
+    navigate(`/personagem/criar/${jogo?.slug ?? 'ordem-paranormal'}`)
   }
 
   async function entrar() {
@@ -97,9 +108,9 @@ export default function EscolherPersonagem({ campanha, codigoConvite, voltarPara
   const conteudo = (
     <div className={janela ? 'modal-box escolher-personagem' : 'escolher-personagem'} onClick={(e) => e.stopPropagation()}>
       <h2>Escolha seu personagem</h2>
-      <p className="character-list-desc">Pra entrar em <strong>{campanha.name}</strong>, crie um personagem de Ordem Paranormal, leve um que você já criou ou entre sem ficha (o mestre te dá uma).</p>
+      <p className="character-list-desc">Pra entrar em <strong>{campanha.name}</strong>, crie um personagem de {nomeDoJogo}, leve um que você já criou ou entre sem ficha (o mestre te dá uma).</p>
 
-      <button type="button" className="btn-pill btn-pill-danger" onClick={criarNovo}>Criar personagem de Ordem Paranormal</button>
+      <button type="button" className="btn-pill btn-pill-danger" onClick={criarNovo} disabled={!jogo}>Criar personagem de {nomeDoJogo}</button>
 
       {opcoes === null && <p>Carregando…</p>}
       {opcoes && opcoes.length > 0 && (
@@ -117,7 +128,7 @@ export default function EscolherPersonagem({ campanha, codigoConvite, voltarPara
                 {!c.avatar_url && <img className="character-tile-watermark" src={arkanisLogo} alt="" />}
                 <div className="character-tile-info">
                   <strong>{c.name || 'Sem nome'}</strong>
-                  <span>{c.campaign_id && c.campaign_id !== campanha.id ? 'Em outra campanha' : 'Ordem Paranormal'}</span>
+                  <span>{c.campaign_id && c.campaign_id !== campanha.id ? 'Em outra campanha' : nomeDoJogo}</span>
                 </div>
               </button>
             ))}

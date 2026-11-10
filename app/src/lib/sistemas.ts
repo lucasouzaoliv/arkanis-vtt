@@ -21,7 +21,5 @@ export const SISTEMAS = [
     version: 'Atualizado v0.1',
     image: cardOrdemParanormal2,
     botao: 'btn-pill-verde',
-    // A mesa ainda não roda a ficha do OP2: sem campanha por enquanto.
-    semCampanha: true,
   },
 ]

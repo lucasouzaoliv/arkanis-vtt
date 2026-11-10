@@ -19605,3 +19605,5 @@ textarea.pista-legenda.editando { min-height: 1.6em; padding: 4px 8px 5px; }
 .quadro-uv-texto { box-sizing: border-box; width: 100%; min-height: 90px; padding: 8px; resize: vertical; border: 1px solid rgba(180, 140, 255, 0.45); border-radius: 6px; background: rgba(40, 24, 90, 0.6); color: #fff; font: inherit; }
 .quadro-uv-rastro { display: flex; align-items: flex-start; gap: 8px; margin-top: 4px; color: #cfc6ee; cursor: pointer; }
 @media (max-width: 760px) { .quadro-uv-editor { flex-direction: column; } .quadro-uv-painel { width: auto; max-height: 45%; } }
+/* OP2 na mesa: a barra de PD (Determinação) no combate, em azul. */
+.combate-barra.sanidade.determinacao > span { background: linear-gradient(90deg, #054983, #2185d0); }

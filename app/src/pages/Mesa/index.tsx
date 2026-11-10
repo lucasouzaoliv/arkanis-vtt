@@ -261,7 +261,7 @@ export default function Mesa() {
   const [excluindoAtor, setExcluindoAtor] = useState<string | null>(null)
   const [fichasAbertas, setFichasAbertas] = useState<string[]>([])
   const [tokenDasVariacoes, setTokenDasVariacoes] = useState<string | null>(null)
-  const combate = useCombate(pronta?.campanha.id)
+  const combate = useCombate(pronta?.campanha.id, pronta?.campanha.system)
   const docs = useDocumentos(pronta?.campanha.id, userId ?? '', !!pronta && pronta.campanha.owner_id === userId, (d) => setDocLendo(d))
   const pistas = usePistas(pronta?.campanha.id)
   const [montandoCombate, setMontandoCombate] = useState<{ editando?: Combate; adicionarEm?: Combate } | null>(null)
@@ -722,7 +722,7 @@ export default function Mesa() {
   async function criarNPC(nome: string, pasta: string | null) {
     setCriandoAtor(null)
     if (!userId) return
-    const novo = await atores.criarNPC(userId, nome, pasta)
+    const novo = await atores.criarNPC(userId, nome, pasta, pronta?.campanha.system)
     if (novo) abrirFicha(novo.id)
   }
 
