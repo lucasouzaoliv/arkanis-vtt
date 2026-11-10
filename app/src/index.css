@@ -19026,38 +19026,20 @@ textarea.mesa-nota.editando { resize: none; outline: 2px solid var(--mesa-destaq
 .quadro.ligando { cursor: crosshair; }
 .quadro-mundo { position: absolute; left: 0; top: 0; }
 .quadro-vazio { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 20px; text-align: center; pointer-events: none; color: rgba(255, 244, 225, 0.9); font-family: 'Caveat', cursive; font-size: 26px; text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6); }
-.pista { position: absolute; box-sizing: border-box; box-shadow: 0 7px 14px rgba(0, 0, 0, 0.45); cursor: grab; user-select: none; }
 .quadro.ligando .pista { cursor: pointer; }
 .pista.escolhida { outline: 3px solid #ffd27a; outline-offset: 3px; }
-.pista-tachinha { position: absolute; z-index: 2; top: 2px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff9a9a, #c4161c 55%, #6e0a0d); box-shadow: 1px 3px 4px rgba(0, 0, 0, 0.55); }
 .pista-texto { margin: 0; white-space: pre-wrap; word-break: break-word; }
-textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 100%; min-height: 90px; padding: 2px; resize: none; background: transparent; border: 1px dashed rgba(0, 0, 0, 0.35); outline: none; font: inherit; color: inherit; }
-.pista-nota { min-height: 120px; padding: 24px 12px 14px; background: linear-gradient(#f8eba8, #efdc86); color: #2b2410; font-family: 'Caveat', cursive; font-size: 22px; line-height: 1.2; }
-.pista-nota .pista-texto:empty, .pista-nota p.pista-texto { min-height: 60px; }
-.pista-foto { padding: 12px 10px 8px; background: #fbfbf6; }
-.pista-foto img { display: block; width: 100%; height: 130px; object-fit: cover; filter: sepia(0.25) contrast(1.05); pointer-events: none; }
-.pista-foto .pista-texto, .pista-foto textarea.pista-texto { margin-top: 6px; min-height: 24px; text-align: center; color: #222; font-family: 'Caveat', cursive; font-size: 20px; }
 .pista-doc-abrir { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; padding: 24px 10px 14px; border: 0; background: linear-gradient(#ece0c2, #dfcfa5); color: #3a2d1a; font-family: 'Special Elite', 'Courier New', monospace; font-size: 14px; cursor: pointer; }
 .pista-doc-abrir svg { font-size: 26px; color: #7a6640; }
 /* Item da aba Itens preso no quadro: etiqueta de evidência com a imagem do item. */
-.pista-item { padding: 22px 10px 10px; background: #f3efe4; border-top: 14px solid #c9b48a; }
-.pista-item-abrir { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; margin: 0; padding: 0; border: 0; background: none; color: #2b2418; font-family: 'Special Elite', 'Courier New', monospace; font-size: 14px; line-height: 1.2; text-align: center; cursor: pointer; }
-.pista-item-imagem { display: grid; place-items: center; width: 100%; height: 110px; background: #e4ddcb; border: 1px solid rgba(0, 0, 0, 0.12); overflow: hidden; }
-.pista-item-imagem img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-.pista-item-imagem svg { font-size: 34px; color: #7a6640; }
 .quadro-zoom { display: inline-flex; align-items: center; gap: 2px; }
 .quadro-zoom-valor { min-width: 52px; justify-content: center; font-variant-numeric: tabular-nums; }
 .quadro.soltando { box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.55), 0 0 0 2px #ffd27a; }
-.pista-acoes { position: absolute; z-index: 3; top: -12px; right: -12px; display: none; gap: 4px; }
-.pista:hover .pista-acoes { display: flex; }
 .pista-acoes button { box-sizing: border-box; display: grid; place-items: center; padding: 0; margin: 0; line-height: 1; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(16, 16, 20, 0.92); color: #e8e8ec; cursor: pointer; font-size: 11px; }
 .pista-acoes button:hover { color: #ffd27a; }
 .quadro-barbantes { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
-.quadro-barbante-fio { fill: none; stroke: #c0121b; stroke-width: 2.5; stroke-linecap: round; }
-.quadro-barbante-sombra { fill: none; stroke: rgba(0, 0, 0, 0.35); stroke-width: 3; transform: translate(2px, 5px); }
 .quadro-barbante-toque { fill: none; stroke: transparent; stroke-width: 14; }
 .quadro.ligando .quadro-barbante-toque { pointer-events: stroke; cursor: pointer; }
-.quadro.ligando .quadro-barbante:hover .quadro-barbante-fio { stroke: #ff6262; stroke-dasharray: 6 4; }
 .quadro-barbante-fio.previa { stroke-dasharray: 6 5; opacity: 0.85; }
 .config-grupo .janela-check { white-space: normal; align-items: flex-start; min-width: 0; }
 /* Roleta do combate: a seta desliza de cabeça em cabeça e, quando para, pula em cima do sorteado. */
@@ -19505,3 +19487,121 @@ textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 1
 .ameaca-resist-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 2px; }
 .ameaca-resist-acoes select { flex: 1; min-width: 140px; height: 28px; padding: 0 6px; border: 1px solid var(--mesa-borda); border-radius: 4px; background: #0f0e12; color: inherit; font: inherit; font-size: 0.8rem; }
 .ficha-ameaca-lista .ameaca-resist-cheia { grid-column: 1 / -1; }
+/* ---- Quadro de pistas aprimorado (10/11) ---- */
+.quadro-janela .quadro { height: min(74vh, 760px); }
+.quadro-area { position: relative; }
+.quadro.ferramenta-ligar, .quadro.ferramenta-marcador .pista { cursor: crosshair; }
+.quadro.ferramenta-escrever { cursor: text; }
+.quadro.ferramenta-lupa { cursor: zoom-in; }
+.quadro.ferramenta-uv { cursor: none; }
+.quadro.ferramenta-lupa .pista, .quadro.ferramenta-uv .pista { cursor: inherit; }
+
+/* O papel fica pendurado na tachinha: a inclinação e o balanço giram em volta dela. */
+.pista { position: absolute; box-sizing: border-box; box-shadow: 0 7px 14px rgba(0, 0, 0, 0.45); cursor: grab; user-select: none; will-change: transform; }
+.pista-tachinha { position: absolute; z-index: 5; top: 2px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff9a9a, #c4161c 55%, #6e0a0d); box-shadow: 1px 3px 4px rgba(0, 0, 0, 0.55); pointer-events: none; }
+.pista-texto { margin: 0; white-space: pre-wrap; word-break: break-word; }
+textarea.pista-texto.editando { display: block; box-sizing: border-box; width: 100%; min-height: 3.75em; margin: 0; padding: 0; resize: none; background: transparent; border: 0; border-radius: 0; outline: none; font: inherit; line-height: inherit; color: inherit; field-sizing: content; }
+.pista.escrevendo { outline: 2px dashed rgba(255, 255, 255, 0.75); outline-offset: 3px; cursor: text; }
+
+/* Imagem (foto ou item): a imagem inteira, só com uma bordinha preta. */
+.pista-imagem { padding: 0; background: #111; border: 2px solid #0b0b0b; }
+.pista-imagem img { display: block; width: 100%; height: auto; min-height: 30px; pointer-events: none; }
+.pista-legenda { display: block; box-sizing: border-box; width: 100%; margin: 0; padding: 4px 8px 5px; background: #f3efe4; color: #222; font-family: 'Caveat', cursive; font-size: 19px; line-height: 1.15; text-align: center; }
+textarea.pista-legenda.editando { min-height: 1.6em; padding: 4px 8px 5px; }
+.pista-item { background: #f3efe4; }
+.pista-item-abrir { display: block; width: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; background: none; color: inherit; font: inherit; cursor: inherit; }
+.pista-item:not(.pista-imagem) { padding: 24px 10px 0; border-top: 14px solid #c9b48a; }
+.pista-item-imagem { display: grid; place-items: center; width: 100%; height: 90px; color: #7a6640; font-size: 34px; }
+.quadro.ferramenta-mover .pista-item-abrir, .quadro.ferramenta-mover .pista-doc-abrir { cursor: pointer; }
+
+/* Notas: folha de caderno, folha parda e post-its. Letra de mão; as linhas acompanham o tamanho da letra. */
+.pista-nota { min-height: 110px; color: #1f2a55; font-family: 'Caveat', cursive; }
+.pista-folha { box-sizing: border-box; min-height: inherit; padding: 1.25em 0.55em 0.5em; line-height: 1.25em; }
+.pista-nota p.pista-texto { min-height: 3.75em; }
+.papel-caderno { background-color: #fdfdf8; }
+.papel-caderno .pista-folha { padding-left: 1.75em; background-image: linear-gradient(90deg, transparent 1.3em, #e9a3a3 1.3em, #e9a3a3 calc(1.3em + 1.5px), transparent calc(1.3em + 1.5px)), linear-gradient(transparent calc(1.25em - 1.5px), #a9c6ee calc(1.25em - 1.5px)); background-size: 100% 100%, 100% 1.25em; background-position: 0 0, 0 -0.12em; }
+.papel-pardo { background-color: #d8c19a; color: #3a2a17; }
+.papel-pardo .pista-folha { background-image: linear-gradient(transparent calc(1.25em - 1.5px), rgba(110, 80, 45, 0.35) calc(1.25em - 1.5px)); background-size: 100% 1.25em; background-position: 0 -0.12em; }
+.papel-amarelo { background: linear-gradient(#fff07a, #f7dc4f); color: #2b2410; }
+.papel-rosa { background: linear-gradient(#ffa9d0, #ff86bb); color: #3a1026; }
+.papel-verde { background: linear-gradient(#a5ec8b, #86db6a); color: #12300a; }
+.papel-azul { background: linear-gradient(#93cdff, #6fb8f7); color: #0c2540; }
+.papel-laranja { background: linear-gradient(#ffc27a, #ffa94d); color: #3a1f05; }
+.papel-vermelho { background: linear-gradient(#ff8a80, #f2665c); color: #3a0906; }
+.papel-preto { background: linear-gradient(#26262b, #17171a); color: #f6f6f6; }
+
+/* Grifos de marca-texto: cada traço é translúcido, então grifar por cima deixa mais forte. */
+.pista-marcas { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+.pista-marcas path { fill: none; opacity: 0.42; stroke-linecap: butt; stroke-linejoin: round; }
+
+/* Ações do papel (aparecem com o mouse em cima, na ferramenta Mover) e alça de tamanho. */
+.pista-acoes { position: absolute; z-index: 6; top: -12px; right: -12px; display: none; gap: 4px; }
+.pista:hover .pista-acoes { display: flex; }
+.pista-alca { position: absolute; z-index: 6; right: -6px; bottom: -6px; display: none; width: 16px; height: 16px; border-radius: 3px; background: rgba(16, 16, 20, 0.92); border: 1px solid rgba(255, 255, 255, 0.35); cursor: nwse-resize; }
+.pista:hover .pista-alca { display: block; }
+
+/* Barbante: fio vermelho torcido (base escura + trama clara em tracinhos) com sombra. */
+.quadro-barbante-fio { fill: none; stroke: #a3121a; stroke-width: 4; stroke-linecap: round; }
+.quadro-barbante-trama { fill: none; stroke: #f0666b; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2.5 4; pointer-events: none; }
+.quadro-barbante-sombra { fill: none; stroke: rgba(0, 0, 0, 0.32); stroke-width: 4.5; stroke-linecap: round; transform: translate(2px, 5px); }
+.quadro-barbante.previa { opacity: 0.7; }
+.quadro.ligando .quadro-barbante:hover .quadro-barbante-fio { stroke: #ffd27a; }
+.quadro.ligando .quadro-barbante:hover .quadro-barbante-trama { stroke: #fff; }
+
+/* Barra de ferramentas flutuando embaixo, com a dica e as opções da ferramenta. */
+.quadro-ferramentas { position: absolute; z-index: 8; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: calc(100% - 40px); pointer-events: none; }
+.quadro-ferramentas > * { pointer-events: auto; }
+.quadro-ferramentas .quadro-dica { margin: 0; padding: 4px 12px; border-radius: 999px; background: rgba(18, 16, 14, 0.82); color: #f1e9dc; font-size: 0.74rem; text-align: center; pointer-events: none; }
+.quadro-opcoes { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px; border-radius: 10px; background: rgba(18, 16, 14, 0.9); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45); }
+.quadro-opcao { display: inline-flex; align-items: center; gap: 6px; height: 30px; margin: 0; padding: 0 12px; border: 1px solid transparent; border-radius: 7px; background: rgba(255, 255, 255, 0.06); color: #e9e2d6; font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+.quadro-opcao:hover { background: rgba(255, 255, 255, 0.14); }
+.quadro-opcao.ativa { background: #efe3c8; color: #2a2114; }
+.quadro-opcoes-nome { color: #cfc6b6; font-size: 0.75rem; margin-left: 4px; }
+.quadro-amostra { box-sizing: border-box; width: 26px; height: 26px; margin: 0; padding: 0; border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 4px; cursor: pointer; }
+.quadro-amostra.redonda { border-radius: 50%; }
+.quadro-amostra.ativa { border-color: #fff; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35); transform: scale(1.12); }
+.quadro-amostra.papel-caderno { background: repeating-linear-gradient(#fdfdf8 0 5px, #a9c6ee 5px 6px); }
+
+/* Menu do botão direito no papel. */
+.quadro-menu { position: absolute; z-index: 9; min-width: 200px; margin: 0; padding: 4px; list-style: none; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 8px; background: rgba(18, 17, 22, 0.97); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55); cursor: default; }
+.quadro-menu button { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 7px 10px; border: 0; border-radius: 5px; background: none; color: #e8e8ec; font: inherit; font-size: 0.82rem; text-align: left; cursor: pointer; }
+.quadro-menu button:hover { background: rgba(255, 255, 255, 0.1); }
+.quadro-menu button.perigo { color: #ff8a80; }
+.quadro-menu svg { width: 14px; }
+
+/* Lupa e luz UV: uma cópia do mural dentro de um círculo que segue o mouse. */
+.quadro-lente { position: absolute; z-index: 7; overflow: hidden; border-radius: 50%; pointer-events: none; background-color: #a9794a; background-image: radial-gradient(rgba(70, 40, 15, 0.38) 1px, transparent 1.6px), radial-gradient(rgba(255, 220, 170, 0.2) 1px, transparent 1.8px), radial-gradient(rgba(60, 30, 10, 0.3) 1.6px, transparent 2.3px); }
+.quadro-lente.lupa { border: 4px solid #f4f4f4; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), inset 0 0 22px rgba(0, 0, 0, 0.3); }
+.quadro-lente.uv { background-color: #2a1680; background-blend-mode: multiply; box-shadow: 0 0 34px 12px rgba(120, 70, 255, 0.5); -webkit-mask-image: radial-gradient(circle, #000 58%, transparent 71%); mask-image: radial-gradient(circle, #000 58%, transparent 71%); }
+
+/* Papel debaixo da luz UV: fica azul-violeta e a tinta UV acende. */
+.pista.sob-uv::after { content: ''; position: absolute; z-index: 3; inset: 0; background: #3a22e6; mix-blend-mode: multiply; pointer-events: none; }
+.pista.sob-uv { box-shadow: 0 0 18px rgba(110, 70, 255, 0.55); }
+.pista-uv { position: absolute; z-index: 4; inset: 0; overflow: hidden; pointer-events: none; }
+.pista-uv.fantasma { opacity: 0.55; }
+.pista-uv.rastro { opacity: 0.16; }
+.uv-item { position: absolute; }
+.uv-texto { white-space: pre; line-height: 1.1; transform-origin: 0 0; text-shadow: 0 0 0.12em currentColor, 0 0 0.45em #a45cff, 0 0 0.9em #6a2cff; }
+.uv-pingo { overflow: visible; filter: drop-shadow(0 0 3px #b47aff) drop-shadow(0 0 8px rgba(110, 50, 255, 0.7)); }
+.uv-item.escura { text-shadow: none; filter: none; }
+.pista-uv.rastro .uv-item { filter: none; color: #d9c2ff !important; }
+.pista-uv.fantasma .uv-texto { text-shadow: 0 0 0.25em #7b3cff; }
+.pista-uv.fantasma .uv-item.escura { text-shadow: 0 0 0.2em #fff; }
+
+/* Escrever com UV: o papel ampliado e o painel do lado. */
+.quadro-uv-editor { position: absolute; z-index: 10; inset: 0; display: flex; gap: 14px; padding: 14px; background: rgba(8, 6, 20, 0.93); border-radius: 4px; }
+.quadro-uv-papel { flex: 1; min-width: 0; overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 16px; }
+.uv-folha.pista { position: relative; left: auto; top: auto; flex: none; transform: none; cursor: crosshair; }
+.uv-folha .pista-tachinha { display: none; }
+.pista-uv.editavel { pointer-events: auto; overflow: visible; }
+.pista-uv.editavel .uv-item { cursor: move; touch-action: none; }
+.pista-uv.editavel .uv-item.selecionado { outline: 1.5px dashed rgba(255, 255, 255, 0.85); outline-offset: 3px; }
+.quadro-uv-painel { flex: none; width: 270px; overflow: auto; display: flex; flex-direction: column; gap: 8px; color: #e9e4ff; font-size: 0.82rem; }
+.quadro-uv-painel h4 { margin: 0; font-size: 1rem; color: #cdb2ff; }
+.quadro-uv-painel .janela-dica { margin: 0; }
+.quadro-uv-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.quadro-uv-linha.fim { margin-top: auto; justify-content: flex-end; padding-top: 8px; }
+.quadro-uv-linha .janela-botao.ativo { background: #cdb2ff; color: #1a1030; }
+.quadro-uv-texto { box-sizing: border-box; width: 100%; min-height: 90px; padding: 8px; resize: vertical; border: 1px solid rgba(180, 140, 255, 0.45); border-radius: 6px; background: rgba(40, 24, 90, 0.6); color: #fff; font: inherit; }
+.quadro-uv-rastro { display: flex; align-items: flex-start; gap: 8px; margin-top: 4px; color: #cfc6ee; cursor: pointer; }
+@media (max-width: 760px) { .quadro-uv-editor { flex-direction: column; } .quadro-uv-painel { width: auto; max-height: 45%; } }

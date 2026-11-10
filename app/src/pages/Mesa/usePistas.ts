@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { inclinacao, jaLigadas, type Barbante, type Pista } from './pistas'
+import { inclinacao, jaLigadas, lerMarcas, lerUv, type Barbante, type Pista } from './pistas'
 
-const normal = (p: Pista): Pista => ({ ...p, x: Number(p.x), y: Number(p.y), rotacao: Number(p.rotacao) })
+const normal = (p: Pista): Pista => ({ ...p, x: Number(p.x), y: Number(p.y), rotacao: Number(p.rotacao), largura: p.largura == null ? null : Number(p.largura), marcas: lerMarcas(p.marcas), uv: lerUv(p.uv) })
 function trocar<T extends { id: string }>(l: T[], x: T): T[] {
   return l.some((y) => y.id === x.id) ? l.map((y) => (y.id === x.id ? x : y)) : [...l, x]
 }
@@ -48,9 +48,12 @@ export function usePistas(campanhaId: string | undefined) {
   }, [campanhaId])
 
   const criar = useCallback(async (campos: Pick<Pista, 'tipo' | 'x' | 'y'> & Partial<Pista>) => {
-    if (!campanhaId) return
+    if (!campanhaId) return null
     const { data } = await supabase.from('clue_board_cards').insert({ campaign_id: campanhaId, rotacao: inclinacao(), ...campos }).select('*').single()
-    if (data) setPistas((l) => trocar(l, normal(data as Pista)))
+    if (!data) return null
+    const nova = normal(data as Pista)
+    setPistas((l) => trocar(l, nova))
+    return nova
   }, [campanhaId])
 
   const alterar = useCallback(async (id: string, campos: Partial<Pista>, salvar = true) => {

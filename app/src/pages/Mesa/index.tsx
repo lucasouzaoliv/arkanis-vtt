@@ -1659,6 +1659,7 @@ export default function Mesa() {
         <QuadroDePistas
           q={pistas}
           itens={itens.itens}
+          souMestre={souMestre}
           onAbrirDocumento={abrirDocumento}
           onAbrirItem={abrirItemDoQuadro}
           onEnviarImagem={(f) => (userId ? enviarArquivoDoDiario(userId, f) : Promise.resolve(null))}
